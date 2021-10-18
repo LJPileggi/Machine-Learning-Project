@@ -1,3 +1,5 @@
+#pylint: disable = C0114, C0103
+
 import numpy as np
 
 class nn_unit:
@@ -6,7 +8,7 @@ class nn_unit:
      - x: input vector; class type: numpy.ndarray;
      - w_i: weight vector; class type: numpy.ndarray;
      - f_i: activation function; class type: function.
-    
+
     properties:
      - net_i: scalar product between x and w_i; class type: float;
      - o_i: output vector; class type: float or numpy.ndarray.
@@ -23,9 +25,14 @@ class nn_unit:
 
     @property
     def net_i(self):
+        """net_i
+        returns argument for activation function f. Type: float
+        """
         return float((self.x * self.w_i).sum())
 
     @property
     def o_i(self):
-        return self.f(self.net_i)
-
+        """o_i
+        returns output units. Type: either float or np.ndarray
+        """
+        return self.f_i(self.net_i)
