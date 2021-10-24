@@ -17,10 +17,12 @@ class nn_unit:
     def __init__(self, x, w_i, f_i):
         if not isinstance(type(x), np.ndarray):
             raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
-        self.x = x
+        else:
+            self.x = x
         if not isinstance(type(w_i), np.ndarray):
             raise TypeError(f'TypeError: argument w_i must be <{np.ndarray}>, not <{type(w_i)}>')
-        self.w_i = w_i
+        else:
+            self.w_i = w_i
         self.f_i = f_i
 
     @property
