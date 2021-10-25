@@ -30,7 +30,7 @@ def threshold_func(x, w_i, boolean=True):
      set by default to True; class type: bool.
 
     returns:
-     - 1./0. (boolean=True); 1./-1. (boolean=False).
+     - 1/0 (boolean=True); 1/-1 (boolean=False).
     """
     if not isinstance(type(x), np.ndarray):
         raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
@@ -38,11 +38,11 @@ def threshold_func(x, w_i, boolean=True):
         raise TypeError(f'TypeError: argument w_i must be <{np.ndarray}>, not <{type(w_i)}>')
     if boolean:
         if float((x * w_i).sum()) >= 0.:
-            return 1.
-        return 0.
+            return 1
+        return 0
     if float((x * w_i).sum()) >= 0.:
-        return 1.
-    return -1.
+        return 1
+    return -1
 
 def sigmoidal(x, w_i, a=1., thr=0., hyperbol=False):
     """
@@ -59,7 +59,7 @@ def sigmoidal(x, w_i, a=1., thr=0., hyperbol=False):
        or to [-1., 1.] (True); set by default to False; class type: bool.
 
     returns:
-     - 1./0. (hyperbol=False); 1./-1. (hyperbol=True).
+     - 1/0 (hyperbol=False); 1/-1 (hyperbol=True).
     """
     if (thr > 1.) | (thr < 0.):
         raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
@@ -70,12 +70,12 @@ def sigmoidal(x, w_i, a=1., thr=0., hyperbol=False):
             if ((out > 0.5*(1. - thr)) and (out < 0.5*(1. + thr))):
                 raise ValueError('ValueError: unit output falls within rejection zone')
         if out >= 0.5*(1. + thr):
-            return 1.
-        return 0.
+            return 1
+        return 0
     out = np.tanh(-a*z/2.)
     if thr!= 0.:
         if ((out > (1. - thr)) and (out < (1. + thr))):
             raise ValueError('ValueError: unit output falls within rejection zone')
     if out >= 1. + thr:
-        return 1.
-    return -1.
+        return 1
+    return -1
