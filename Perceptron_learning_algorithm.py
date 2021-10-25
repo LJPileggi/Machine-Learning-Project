@@ -1,7 +1,8 @@
+#pylint: disable = C0114, C0103
+
 import numpy as np
 
-import nn_unit
-import activation_functions
+from activation_functions import threshold_func
 
 def Perceptron_learn_alg(x, w_init, d, eta=0.5, thr=0.01):
     """
