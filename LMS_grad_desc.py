@@ -11,17 +11,17 @@ def Error(x, w, y):
     params:
      - x: input vector; class type: numpy.ndarray;
      - w: weight vector; class type: numpy.ndarray;
-     - y: output vector; class type: numpy.ndarray.
+     - y: output vector; class type: float.
     """
     #error handling
     if not isinstance(type(x), np.ndarray):
         raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
     if not isinstance(type(w), np.ndarray):
         raise TypeError(f'TypeError: argument w must be <{np.ndarray}>, not <{type(w)}>')
-    if not isinstance(type(y), np.ndarray):
-        raise TypeError(f'TypeError: argument y must be <{np.ndarray}>, not <{type(y)}>')
+    if not isinstance(type(y), float):
+        raise TypeError(f'TypeError: argument y must be <{float}>, not <{type(y)}>')
     ###################
-    err = ((y - x*w)*(y - x*w)).sum()
+    err = (y - (x*w).sum())**2
     return err
 
 def D_Error(x, w, y):
@@ -31,17 +31,17 @@ def D_Error(x, w, y):
     params:
      - x: input vector; class type: numpy.ndarray;
      - w: weight vector; class type: numpy.ndarray;
-     - y: output vector; class type: numpy.ndarray.
+     - y: output vector; class type: float.
     """
     #error handling
     if not isinstance(type(x), np.ndarray):
         raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
     if not isinstance(type(w), np.ndarray):
         raise TypeError(f'TypeError: argument w must be <{np.ndarray}>, not <{type(w)}>')
-    if not isinstance(type(y), np.ndarray):
-        raise TypeError(f'TypeError: argument y must be <{np.ndarray}>, not <{type(y)}>')
+    if not isinstance(type(y), float):
+        raise TypeError(f'TypeError: argument y must be <{float}>, not <{type(y)}>')
     ###################
-    D_err = (x*w - y)*x
+    D_err = ((x*w).sum() - y)*x
     return D_err
 
 def LMS_grad_desc(x, w_init, y, eta=0.5, thr=0.01, N_max=1000):
@@ -53,7 +53,7 @@ def LMS_grad_desc(x, w_init, y, eta=0.5, thr=0.01, N_max=1000):
     params:
      - x: input vector; class type: numpy.ndarray;
      - w_init: initialised weight vector; class type: numpy.ndarray;
-     - y: output vector; class type: numpy.ndarray;
+     - y: output vector; class type: float;
      - eta: learning rate, must lie between 0 and 1; default value: 0.5;
      class type: float;
      - thr: learning threshold, if Err < thr then returns; must be
@@ -70,8 +70,8 @@ def LMS_grad_desc(x, w_init, y, eta=0.5, thr=0.01, N_max=1000):
         raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
     if not isinstance(type(w_init), np.ndarray):
         raise TypeError(f'TypeError: argument w_init must be <{np.ndarray}>, not <{type(w_init)}>')
-    if not isinstance(type(y), np.ndarray):
-        raise TypeError(f'TypeError: argument y must be <{np.ndarray}>, not <{type(y)}>')
+    if not isinstance(type(y), float):
+        raise TypeError(f'TypeError: argument y must be <{float}>, not <{type(y)}>')
     if not (eta >= 0.) | (eta <= 1.):
         raise ValueError('ValueError: eta must fall between 0. and 1.')
     if thr < 0.:
