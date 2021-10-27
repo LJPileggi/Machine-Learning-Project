@@ -19,7 +19,7 @@ def Perceptron_learn_alg(x, w_init, d, eta=0.5, thr=0.01, N_max=1000):
      - x: input vector; class type: numpy.ndarray;
      - w_init: initialised weight vectors; class type: numpy.ndarray;
      - d: class classificator, must be either 1 or -1; class type: int;
-     - eta: learning rate, must be between 0 and 1; default value: 0.5;
+     - eta: learning rate, must lie between 0 and 1; default value: 0.5;
      class type: float;
      - thr: learning threshold, if Dw < thr then returns; must be
      positive; default value: 0.01; class type: float;
@@ -53,4 +53,5 @@ def Perceptron_learn_alg(x, w_init, d, eta=0.5, thr=0.01, N_max=1000):
         d_w = w_new - w_old
         if np.all((d_w < thr) & (d_w > -thr)):
             return w_new
+        w_old = w_new
         i -= 1
