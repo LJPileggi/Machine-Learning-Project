@@ -55,3 +55,4 @@ def Perceptron_learn_alg(x, w_init, d, eta=0.5, thr=0.01, N_max=1000):
             return w_new
         w_old = w_new
         i -= 1
+    return w_old
