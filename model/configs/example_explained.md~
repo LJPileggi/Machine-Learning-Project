@@ -1,7 +1,0 @@
-#Esempio Davanti a voi
-
-Banalmente, le cartelle superiori sono per sapere dove recuperare i dati,
-salvare l'output, ed il modello zippato (possiamo anche salvarlo in .h5 e non
-in .zip, ma per ora faremo zip)
-seed è per le operazioni randomiche, mentre DEVICE serve per dire che
-GPU/dispositivo CUDA useremo. 
