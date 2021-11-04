@@ -1,0 +1,16 @@
+{
+    "data_dir": "data",
+    "output_dir": "output",
+    "zipped_model": "output/zipped_model.zip",
+    "log_dir": "log"
+    "seed" = 2021,
+    "DEVICE" = "cuda:0",
+    "model" = {
+	"batch_size": 40,
+	"max_epochs": 20000,
+	"learning_rate": 1e-4,
+	"eta": 1e-4,
+	"lambda": 1e-5,
+	"epsilon": 3e-6,
+    }
+}
