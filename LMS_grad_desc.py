@@ -138,3 +138,23 @@ def LMS_grad_desc_batch(x, w_init, y, eta=0.5, thr=0.01, N_max=1000):
         i -= 1
     return w_old
     """"
+
+
+"""def mean_square_error = Avg {Error(x, unit, y) for x in TS}
+def LMS_grad_descent(TS, eta=0.5, thr=0.01, N_max=1000, batch=false)
+    random_small_weights = Numpy.randomVectorLEssThenSomething
+    unit = NNunit(random_small_weights, )
+    while mean_square_error(TS, unit) > thr:
+       if batch = false:
+            for x, y in TS:
+                Dw = step(unit, x, y)
+                unit.update(Dw)
+       else
+            for x,y in Ts:
+                Dw = step(unit, x, y)
+                totalDw += Dw
+            unit.update(totalDw)"""
+            
+            
+        
+        
