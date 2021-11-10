@@ -23,3 +23,7 @@
 	- usare la libreria per trainare
 3. ### Implementare la validazione
 4. ### Ottimizzare e parallelizzare (ad es il batch) su gpu
+
+
+## LOGS
+ - 10/11: organizzato le cartelle di codice
