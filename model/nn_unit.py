@@ -13,11 +13,12 @@ class nn_unit:
      - output: output vector; class type: float or numpy.ndarray.
     """
     typecode = 'f'
-    def __init__(self, x, weights, activation_function):
+    def __init__(self, x, weights, eta, activation_function):
         if not isinstance(type(w_i), np.ndarray):
             raise TypeError(f'TypeError: argument w_i must be <{np.ndarray}>, not <{type(w_i)}>')
         else:
             self.weights = weights
+        self.eta = eta
         self.activation = activation_function #Also, questo metodo conta solo per funzioni di attivazioni senza extra parametri oltre al net_value. Consiglerei di fare una stringa e poi qui all'interno viene istanziata la funzione
 
     @property
@@ -40,21 +41,19 @@ class nn_unit:
     Funzione di backward dove si fa la backpropagation
 
     params:
-     - delta_vector: il delta degli output sui pesi.
+     - error_signal: l'errore calcolato, equivalente a (d - o) per output units, e np.sum(delta * weights)_j per hidden unit
     return:
-     - il delta di questa unità
+     - delta * weights di questa unità
     """
     @property
-    def backward(self, delta_vector):
-        delta = np.sum(np.multiply(delta_vector, self.weights), axis = 1)
-        delta = delta * activation_derivative(self.network_value)
+    def backward(self, error_signal):
 
-        self.weights = self.weights + self.eta * delta * output
-        return delta
+        delta = error_signal * out_prime (self.network_value)
 
-    def activation_derivative (self, network_value):
-        if (activatio_function == "linear"):
-            
+        back_signal = delta * self.weights
+        
+        self.weights = self.weights + self.eta * delta * self.output
+        return back_signal
 
     @property
     def output_mike (self, input_vector):
@@ -66,6 +65,7 @@ class nn_unit:
         """
         self.network_value = (input_vector * self.weights).sum()
         if (activation_function == "linear"):
-            return linear(network_value)
+            self.output = linear(network_value
         elif(activation_function == "threshold"):
-            return threshold(network_value)
+            self.output = threshold(network_value)
+        return self.output
