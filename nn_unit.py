@@ -1,6 +1,12 @@
 #pylint: disable = C0114, C0103, R0913
 
 import numpy as np
+import enum
+
+class ActivationFunction(enum.Enum):
+    IDENTITY = lambda x:x
+    TANH = np.tanh
+
 
 class nn_unit:
     """Object class for the NN unit
@@ -13,7 +19,7 @@ class nn_unit:
      - out: output vector; class type: float or numpy.ndarray.
     """
     typecode = 'f'
-    def __init__(self, w_size, f = lambda x: x):
+    def __init__(self, w_size, f = ActivationFunction.IDENTITY):
         self.act_f = f
         self.w = np.random.randn(w_size)
 
