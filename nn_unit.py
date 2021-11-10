@@ -1,40 +1,37 @@
-#pylint: disable = C0114, C0103
+#pylint: disable = C0114, C0103, R0913
 
 import numpy as np
 
 class nn_unit:
     """Object class for the NN unit
     params:
-     - x: input vector; class type: numpy.ndarray;
-     - w_i: weight vector; class type: numpy.ndarray;
+     - w_size: size of weight vector, which is the same to the size of anu input vector; class type: int
      - f_i: activation function; class type: function.
 
     properties:
-     - net_i: scalar product between x and w_i; class type: float;
-     - o_i: output vector; class type: float or numpy.ndarray.
+     - net: scalar product between x and w_i; class type: float;
+     - out: output vector; class type: float or numpy.ndarray.
     """
     typecode = 'f'
-    def __init__(self, x, w_i, f_i):
-        if not isinstance(type(x), np.ndarray):
-            raise TypeError(f'TypeError: argument x must be <{np.ndarray}>, not <{type(x)}>')
-        else:
-            self.x = x
-        if not isinstance(type(w_i), np.ndarray):
-            raise TypeError(f'TypeError: argument w_i must be <{np.ndarray}>, not <{type(w_i)}>')
-        else:
-            self.w_i = w_i
-        self.f_i = f_i
+    def __init__(self, w_size, f = lambda x: x):
+        self.act_f = f
+        self.w = np.random.randn(w_size)
 
-    @property
-    def net_i(self):
-        """net_i
+    def _net(self,x:np.ndarray):
+        """_net_i
         returns argument for activation function f. Type: float
         """
-        return float((self.x * self.w_i).sum())
+        return (x * self.w).sum()
 
-    @property
-    def o_i(self):
-        """o_i
+    def out(self, x:np.ndarray):
+        """out
         returns output units. Type: either float or np.ndarray
         """
-        return self.f_i(self.net_i)
+        return self.act_f(self._net(x))
+
+    def out_prime(self, x:np.ndarray):
+        return 1
+
+    def update(self, delta_w:np.ndarray):
+        self.w = self.w + delta_w
+        
