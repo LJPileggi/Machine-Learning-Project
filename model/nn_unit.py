@@ -36,6 +36,26 @@ class nn_unit:
 
     #proposta: mergiamo le due funzioni!
 
+    """
+    Funzione di backward dove si fa la backpropagation
+
+    params:
+     - delta_vector: il delta degli output sui pesi.
+    return:
+     - il delta di questa unità
+    """
+    @property
+    def backward(self, delta_vector):
+        delta = np.sum(np.multiply(delta_vector, self.weights), axis = 1)
+        delta = delta * activation_derivative(self.network_value)
+
+        self.weights = self.weights + self.eta * delta * output
+        return delta
+
+    def activation_derivative (self, network_value):
+        if (activatio_function == "linear"):
+            
+
     @property
     def output_mike (self, input_vector):
         """
@@ -44,8 +64,8 @@ class nn_unit:
         in questa versione presniamo in considerazione che la funzione venga passata come stringa, quindi activation_function = "linear"
         returns the unit's output. Type: float or np.ndarray
         """
-        network_value = (input_vector * self.weights).sum()
-        if (activation_function = "linear"):
+        self.network_value = (input_vector * self.weights).sum()
+        if (activation_function == "linear"):
             return linear(network_value)
-        elif(activation_function = "threshold"):
+        elif(activation_function == "threshold"):
             return threshold(network_value)
