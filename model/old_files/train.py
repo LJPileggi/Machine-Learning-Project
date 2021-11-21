@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+import nn_unit
+
 
 """
 Funzione per impostare il seed a tutti i moduli che lo richiedono
@@ -13,22 +15,6 @@ def set_seed (seed):
     np.random.seed(seed)
 
 
-class layer():
-    def __init__(self, layer_prec = None, input = [], net = [], out= [], weights = [][], activation = "linear"):
-        self.layer_prec = layer_prec #None == input layer
-        self.input = input
-        self.net = net
-        self.out = out
-        self.weights = weights
-        self.activation = activation
-        """
-        in = [1, 2, 3, 4, 5]
-        out = [1, 2, 3]
-
-        weigths = [ 1, 2, 3, 4, 5],
-                  [ 2, 4, 6, 8, 10],
-                  [ 3, 6, 9, 12, 15],
-        """
 
     def backprog (self, patterns = []): #online
         if (self.error_signal == None and patterns != None): #per vedere se fare come output layer o come hidden layer.

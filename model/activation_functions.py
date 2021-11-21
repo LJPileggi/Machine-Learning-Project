@@ -91,3 +91,54 @@ def d_sigmoidal(network_value, a=1., hyperbol=False):
     else:
         out = 2.*a*np.exp(-a*network_value)/(1. + np.exp(-a*network_value))**2
         return out
+
+def ReLu(network_value):
+    """
+    ReLu activation function. Its derivative is simply the boolean threshold function.
+    Returns the identity if network_value > 0, 0 otherwise.
+    """
+    if network_value >= 0.:
+        return network_value
+    else:
+        return 0.
+
+def softplus(network_value, a):
+    """
+    Softplus activation function. Gives a smooth approximation of ReLu function.
+    """
+    out = np.log(1 + np.exp(a*network_value))/a
+    return out
+
+def d_softplus(network_value, a):
+    """
+    Derivative of softplus.
+    """
+    out = 1./(1. + np.exp(-a*network_value))
+    return out
+
+def gaussian(network_value, a):
+    """
+    Gaussian activation function.
+    """
+    out = np.exp(-a*network_value**2)
+    return out
+
+def d_gaussian(network_value, a):
+    """
+    Derivative of gaussian.
+    """
+    out = -2.*a*network_value*np.exp(-a*network_value**2)
+    return out
+def SiLu(network_value, a):
+    """
+    Sigmoidal linear unit: other smooth approximation for ReLu.
+    """
+    out = network_value/(1. + np.exp(-a*network_value))
+    return out
+
+def d_SiLu(network_value, a):
+    """
+    Derivative of SiLu.
+    """
+    out = np.exp(a*network_value)*(a*network_value + np.exp(a*network_value) + 1.)/(np.exp(a*network_value) + 1.)**2
+    return out

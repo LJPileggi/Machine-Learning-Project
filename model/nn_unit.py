@@ -1,71 +1,91 @@
-#pylint: disable = C0114, C0103
+#pylint: disable = C0114, C0103, R0913
 
 import numpy as np
+import enum
+
+import activation_functions
 
 class nn_unit:
-    """Object class for the NN unit
-    params:
-     - weights: weight vector; class type: numpy.ndarray;
-     - activation: activation function; class type: function.
-
-    properties:
-     - network_step: function that calculate the scalar product between the input vector and the weights; class type: float;
-     - output: output vector; class type: float or numpy.ndarray.
     """
-    typecode = 'f'
-    def __init__(self, x, weights, eta, activation_function):
-        if not isinstance(type(w_i), np.ndarray):
-            raise TypeError(f'TypeError: argument w_i must be <{np.ndarray}>, not <{type(w_i)}>')
-        else:
-            self.weights = weights
-        self.eta = eta
-        self.activation = activation_function #Also, questo metodo conta solo per funzioni di attivazioni senza extra parametri oltre al net_value. Consiglerei di fare una stringa e poi qui all'interno viene istanziata la funzione
+    Object class for the NN unit
+    Attributes:
+     - inputs: inputs of the unit; class type: numpy.ndarray;
+     - activation: list containing, in order, the name of the activation func (str) and its
+     params in the order they appear in such func.
 
-    @property
-    def network_step(self, input_vector):
-        """net_i
-        returns argument for activation function f. Type: float
+    Private attributes:
+     - net: scalar product between x and w_i; class type: float.
+
+    Methods:
+     - out: returns output vector; returns float or numpy.ndarray.
+     - out_prime: returns derivative of output vector; returns float or numpy.ndarray;
+     - update_inputs: updates inputs of unit; returns None;
+     - update_weights: updates weights of unit; returns None.
+    """
+    def __init__(self, inputs, activation):
+        self.inputs = inputs
+        self.weights = np.random.randn(len(inputs))
+        if activation[0] == "linear":
+            self.activation = linear
+            self.activation_prime = d_linear
+        elif activation[0] == "threshold":
+            if activation[1] == True:
+                self.activation = threshold
+                self.activation_prime = None
+            else:
+                self.activation = threshold(boolean=False)
+                self.activation_prime = None
+        elif activation[0] == "sigmoidal":
+            if activation[3] == False:
+                self.activation = sigmoidal(a=activation[1], thr=activation[2])
+                self.activation_prime = sigmoidal(a=activation[1])
+            else:
+                self.activation = sigmoidal(a=activation[1], thr=activation[2], hyperbol=True)
+                self.activation_prime = sigmoidal(a=activation[1], hyperbol=True)
+        elif activation[0] == "softplus":
+            self.activation = softplus(a=activation[1])
+            self.activation_prime = d_softplus(a=activation[1])
+        elif activation[0] == "gaussian":
+            self.activation = gaussian(a=activation[1])
+            self.activation_prime = d_gaussian(a=activation[1])
+        elif activation[0] == "SiLu":
+            self.activation = SiLu(a=activation[1])
+            self.activation_prime = d_SiLu(a=activation[1])
+        elif activation[0] == "ReLu":
+            self.activation = ReLu
+            self.activation_prime = threshold
+
+    def _net(self):
         """
-        return float((input_vector * self.weights).sum())
-
-    @property
-    def output(self, input_vector):
-        """o_i
-        returns output units. Type: either float or np.ndarray
+        returns argument for activation function. Type: float
         """
-        return self.activation(input_vector)
+        return (self.inputs * self.weights).sum()
 
-    #proposta: mergiamo le due funzioni!
+    def out(self):
+        """
+        returns output units. Type: either float or numpy.ndarray
+        """
+        return self.activation(self._net(self.inputs))
 
-    """
-    Funzione di backward dove si fa la backpropagation
+    def out_prime(self):
+        """
+        returns output of derivative of activation function.
+        Type: either float or numpy.ndarray
+        """
+        return self.activation_prime(self._net(self.inputs))
 
-    params:
-     - error_signal: l'errore calcolato, equivalente a (d - o) per output units, e np.sum(delta * weights)_j per hidden unit
-    return:
-     - delta * weights di questa unità
-    """
-    @property
-    def backward(self, error_signal):
-
-        delta = error_signal * out_prime (self.network_value)
-
-        back_signal = delta * self.weights
+    def update_inputs(self, inputs_new):
+        """
+        Updates inputs of unit.
         
-        self.weights = self.weights + self.eta * delta * self.output
-        return back_signal
+        Wouldn't it be more convenient though to use properties and setters?
+        """
+        self.inputs = inputs_new
 
-    @property
-    def output_mike (self, input_vector):
+    def update_weights(self, weights_new):
         """
-        output_mike
-        versione alternativa in cui le due funzioni sopra diventano un unica funzione.
-        in questa versione presniamo in considerazione che la funzione venga passata come stringa, quindi activation_function = "linear"
-        returns the unit's output. Type: float or np.ndarray
+        Updates weights of unit.
+        
+        Wouldn't it be more convenient though to use properties and setters?
         """
-        self.network_value = (input_vector * self.weights).sum()
-        if (activation_function == "linear"):
-            self.output = linear(network_value
-        elif(activation_function == "threshold"):
-            self.output = threshold(network_value)
-        return self.output
+        self.weights = weights_new
