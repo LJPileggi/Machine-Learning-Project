@@ -3,15 +3,14 @@
 import numpy as np
 import enum
 
-import activation_functions
+from model.activation_functions import *
 
 class nn_unit:
     """
     Object class for the NN unit
     Attributes:
      - inputs: inputs of the unit; class type: numpy.ndarray;
-     - activation: list containing, in order, the name of the activation func (str) and its
-     params in the order they appear in such func.
+     - activation: string containing the name of the activation func (str) 
 
     Private attributes:
      - net: scalar product between x and w_i; class type: float.
@@ -25,33 +24,28 @@ class nn_unit:
     def __init__(self, inputs, activation):
         self.inputs = inputs
         self.weights = np.random.randn(len(inputs))
-        if activation[0] == "linear":
+        if activation == "linear":
             self.activation = linear
             self.activation_prime = d_linear
-        elif activation[0] == "threshold":
-            if activation[1] == True:
-                self.activation = threshold
-                self.activation_prime = None
-            else:
-                self.activation = threshold(boolean=False)
-                self.activation_prime = None
-        elif activation[0] == "sigmoidal":
-            if activation[3] == False:
-                self.activation = sigmoidal(a=activation[1], thr=activation[2])
-                self.activation_prime = sigmoidal(a=activation[1])
-            else:
-                self.activation = sigmoidal(a=activation[1], thr=activation[2], hyperbol=True)
-                self.activation_prime = sigmoidal(a=activation[1], hyperbol=True)
-        elif activation[0] == "softplus":
-            self.activation = softplus(a=activation[1])
-            self.activation_prime = d_softplus(a=activation[1])
-        elif activation[0] == "gaussian":
-            self.activation = gaussian(a=activation[1])
-            self.activation_prime = d_gaussian(a=activation[1])
-        elif activation[0] == "SiLu":
-            self.activation = SiLu(a=activation[1])
-            self.activation_prime = d_SiLu(a=activation[1])
-        elif activation[0] == "ReLu":
+        elif activation == "threshold":
+            self.activation = threshold
+            self.activation_prime = None
+        elif activation == "tanh":
+            self.activation = tanh
+            self.activation_prime = d_tanh
+        elif activation == "sigmoidal":
+            self.activation = sigmoidal
+            self.activation_prime = d_sigmoidal
+        elif activation == "softplus":
+            self.activation = softplus
+            self.activation_prime = d_softplus
+        elif activation == "gaussian":
+            self.activation = gaussian
+            self.activation_prime = d_gaussian
+        elif activation == "SiLu":
+            self.activation = SiLu
+            self.activation_prime = d_SiLu
+        elif activation == "ReLu":
             self.activation = ReLu
             self.activation_prime = threshold
 
