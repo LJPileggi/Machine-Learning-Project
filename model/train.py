@@ -25,7 +25,7 @@ if __name__ == '__main__':
     max_step   = model_conf["max_step"]
     check_step = model_conf["check_step"]
 
-    nn = MLP ([10, 20, 4], ["linear", "linear", "linear"])
+    nn = MLP ([10, 20, 1], ["tanh", "tanh", "threshold"])
     dl = DataLoader ()
 
     dl.load_data ("train", train_set)
