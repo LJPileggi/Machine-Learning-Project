@@ -21,9 +21,8 @@ class nn_unit:
      - update_inputs: updates inputs of unit; returns None;
      - update_weights: updates weights of unit; returns None.
     """
-    def __init__(self, inputs, activation):
-        self.inputs = inputs
-        self.weights = np.random.randn(len(inputs))
+    def __init__(self, activation, dim):
+        self.weights = np.random.randn(dim)
         if activation == "linear":
             self.activation = linear
             self.activation_prime = d_linear
@@ -49,32 +48,24 @@ class nn_unit:
             self.activation = ReLu
             self.activation_prime = threshold
 
-    def _net(self):
+    def _net(self, inputs):
         """
         returns argument for activation function. Type: float
         """
-        return (self.inputs * self.weights).sum()
+        return (inputs * self.weights).sum()
 
-    def out(self):
+    def out(self, inputs):
         """
         returns output units. Type: either float or numpy.ndarray
         """
-        return self.activation(self._net(self.inputs))
+        return self.activation(self._net(inputs))
 
-    def out_prime(self):
+    def out_prime(self, inputs):
         """
         returns output of derivative of activation function.
         Type: either float or numpy.ndarray
         """
-        return self.activation_prime(self._net(self.inputs))
-
-    def update_inputs(self, inputs_new):
-        """
-        Updates inputs of unit.
-        
-        Wouldn't it be more convenient though to use properties and setters?
-        """
-        self.inputs = inputs_new
+        return self.activation_prime(self._net(inputs))
 
     def update_weights(self, weights_new):
         """
@@ -83,3 +74,6 @@ class nn_unit:
         Wouldn't it be more convenient though to use properties and setters?
         """
         self.weights = weights_new
+
+    def get_weights (self):
+        return self.weights

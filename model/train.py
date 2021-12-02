@@ -27,8 +27,7 @@ if __name__ == '__main__':
 
     nn = MLP ([10, 20, 4], ["linear", "linear", "linear"])
     dl = DataLoader ()
-    
-    nn.initialise_weight_matrix()
+
     dl.load_data ("train", train_set)
     dl.load_data ("test", test_set)
     err = np.inf

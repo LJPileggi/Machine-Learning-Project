@@ -1,6 +1,6 @@
 import numpy as np
 
-import nn_unit
+from nn_unit import nn_unit
 import activation_functions
 
 class layer:
@@ -30,27 +30,28 @@ class layer:
      - update_unit_weights: update each unit's weights with the ones in the
        weight matrix; returns None
     """
-    def __init__(self, layer_dim, inputs, weights = None, activation = "linear", layer_prec = None, dropout=None):
+    def __init__(self, layer_dim, activation = "linear", layer_prec = None, dropout=None):
         self.layer_prec = layer_prec #None == input layer
-        self.inputs = inputs
-        self.weights = weights if weights is not None else np.random.rand((layer_dim,))
+        prec_dim = self.layer_prec.get_output_dim() if self.layer_prec is not None else 6 #per ora hardcoded, poi ci pensiamo
         self.activation = activation
-        self.unit_set = {i : nn_unit(weights.shape[1], activation) for x in range(layer_dim)}
-        self._net_set = np.array([self.unit_set[k]._net(inputs) for k in self.unit_set])
-        self._output_set = np.array([self.unit_set[k].out(inputs) for k in self.unit_set])
-        self._output_prime_set = np.array([self.unit_set[k].out_prime(inputs) for k in self.unit_set])
+        print(f"{layer_dim}; {activation}")
+        self.unit_set = {x: nn_unit(activation, prec_dim) for x in range(layer_dim)}
+        self.initialize_weight_matrix()
+        #self._net_set = np.array([self.unit_set[k]._net(inputs) for k in self.unit_set])
+        #self._output_set = np.array([self.unit_set[k].out(inputs) for k in self.unit_set])
+        #self._output_prime_set = np.array([self.unit_set[k].out_prime(inputs) for k in self.unit_set])
         self.dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
-    def initialise_weight_matrix(self):
-        self.weights = np.array([unit.weights for unit in self.unit_set])
-
-    def update_unit_inputs(self, inputs_new):
-        for i, unit in self.unit_set:
-            unit.update_inputs(inputs_new)
+    def initialize_weight_matrix(self):
+        print(self.unit_set[0])
+        self.weights = np.array([self.unit_set[k].get_weights() for k in range(len(self.unit_set))])
 
     def update_unit_weights(self):
         for i, unit in self.unit_set:
             unit.update_weights(self.weights[i])
+
+    def get_output_dim (self):
+        return len(self.unit_set)
 
 class MLP:
     """
@@ -76,18 +77,9 @@ class MLP:
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.update({i : layer(layer_dim, layer_inputs, activation=activation, layer_prec=layer_prec)})
-            layer_inputs = self.layer_set[i].output_set.append(1.)
-            layer_prec = i
+            self.layer_set.update({i : layer(layer_dim, activation=activation, layer_prec=layer_prec)})
+            layer_prec = self.layer_set[i]
             i += 1
-        self._output = self.layer_set[i]._output_set()
-
-    def update_network_inputs(self, inputs_new):
-        self.inputs = inputs_new
-        new_layer_inputs = self.inputs
-        for i in range(len(self.layer_set)):
-            self.layer_set[i].update_unit_inputs(new_layer_inputs)
-            new_layer_inputs = self.layer_set[i]._output_set
 
     def update_all_weights(self):
         for layer in NN.layer_set:
