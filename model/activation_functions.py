@@ -169,7 +169,3 @@ def d_SiLu(network_value, a=1.):
 
 usoftplus = np.frompyfunc(lambda x: softplus(x, 0.5), 1, 1)
 
-for x in range(1,4):
-    print(f"{softplus(x, 0.5)}") 
-
-print(usoftplus([1, 2, 3]))

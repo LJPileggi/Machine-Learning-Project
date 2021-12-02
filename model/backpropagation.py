@@ -30,6 +30,7 @@ def backpropagation_step(batch, NN, eta):
         print(f"{current_layer.unit_set}")
         for k in range(len(current_layer.unit_set)):
             unit = current_layer.unit_set[k]
+            #bisognerà fare pattern[1][k] se l'output è vettoriale
             delta_k = (pattern[1] - unit.out(pattern[0]) * unit.out_prime(pattern[0]))
             np.append(delta_up, delta_k)
             for i, weight in enumerate(unit.weights):
