@@ -9,7 +9,7 @@ class layer:
 
     Attributes:
      - layer_dim: number of units of the layer; class type: int;
-     - layer_prec: key to the previous layer; class type: int;
+     - layer_prec: key to the previous layer; class type: layer;
      - inputs; inputs of the layer; class type: numpy.ndarray;
      - weights: matrix of weights of the single units; 
        class type: numpy.ndarray of shape(#outputs, #inputs);
@@ -75,13 +75,13 @@ class MLP:
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.update({i : layer(layer_dim, activation=activation, layer_prec=layer_prec)})
+            self.layer_set[i] = layer(layer_dim, activation=activation, layer_prec=layer_prec)
             layer_prec = self.layer_set[i]
             i += 1
 
     def update_all_weights(self):
-        for layer in layer_set:
+        for layer in self.layer_set:
             layer.update_unit_weights()
 
     def get_output_layer(self):
-        return layer_set[-1]
+        return self.layer_set[-1]
