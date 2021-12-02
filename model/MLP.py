@@ -71,9 +71,7 @@ class MLP:
     """
     def __init__(self, layer_struct, activation_set):
         self.layer_struct = layer_struct
-        self.inputs = None
         self.layer_set = {}
-        layer_inputs = self.inputs
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
@@ -82,5 +80,8 @@ class MLP:
             i += 1
 
     def update_all_weights(self):
-        for layer in NN.layer_set:
+        for layer in layer_set:
             layer.update_unit_weights()
+
+    def get_output_layer(self):
+        return layer_set[-1]
