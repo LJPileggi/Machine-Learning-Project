@@ -9,10 +9,10 @@ import activation_functions
 
 def MSE_over_network(batch, NN):
     errors = []
-    for layer in NN.layer_set:
-        for unit in layer.unit_set:
-            for pattern in batch:
-                errors.append((unit.out(pattern[:-1]) - pattern[-1])**2)
+    out_layer = NN.get_output_layer()
+    for unit in output_layer:
+        for pattern in batch:
+            errors.append((unit.out(pattern[0]) - pattern[1])**2)
     mse = sum(errors)/len(errors)
     return mse
 
@@ -22,13 +22,15 @@ def pick_batch(TS, len_epoch):
 
 def backpropagation_step(batch, NN, eta):
     for pattern in batch:
-        NN.update_network_inputs(pattern)
+        print(f"pattern: {pattern[0]}, {pattern[1]}")
         current_layer_key = len(NN.layer_struct) - 1
         current_layer = NN.layer_set[current_layer_key]
         delta_up = np.array([])
         delta_curr = np.array([])
-        for key, unit in current_layer.unit_set:
-            delta_k = (pattern[-1] - unit.out(pattern[:-1]) * unit.out_prime(pattern[:-1]))
+        print(f"{current_layer.unit_set}")
+        for k in range(len(current_layer.unit_set)):
+            unit = current_layer.unit_set[k]
+            delta_k = (pattern[1] - unit.out(pattern[0]) * unit.out_prime(pattern[0]))
             np.append(delta_up, delta_k)
             for i, weight in enumerate(unit.weights):
                 delta_w = delta_up * unit.inputs[i]
@@ -36,7 +38,8 @@ def backpropagation_step(batch, NN, eta):
         current_layer_key -= 1
         current_layer = NN.layer_set[current_layer_key]            
         while current_layer.layer_prec != None:
-            for key, unit in current_layer.unit_set:
+            for k in range(len(current_layer.unit_set)):
+                unit = current_layer.unit_set[k]
                 delta_k = (delta_up * NN.layer_set[current_layer_key+1]).sum() * unit.out_prime(pattern[:-1])
                 np.append(delta_curr, delta_k)
                 for i, weight in enumerate(unit.weights):
