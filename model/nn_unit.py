@@ -52,20 +52,23 @@ class nn_unit:
         """
         returns argument for activation function. Type: float
         """
-        return (inputs * self.weights).sum()
+        self._net_value = (inputs * self.weights).sum()
+        return self._net_value
 
     def out(self, inputs):
         """
         returns output units. Type: either float or numpy.ndarray
         """
-        return self.activation(self._net(inputs))
+        self._out_value = self.activation(self._net(inputs))
+        return self._out_value
 
     def out_prime(self, inputs):
         """
         returns output of derivative of activation function.
         Type: either float or numpy.ndarray
         """
-        return self.activation_prime(self._net(inputs))
+        self._out_prime_value = self.activation_prime(self._net(inputs)) if self.activation_prime is not None else 1
+        return self._out_prime_value
 
     def update_weights(self, weights_new):
         """
@@ -77,3 +80,6 @@ class nn_unit:
 
     def get_weights (self):
         return self.weights
+
+    def get_outputs (self):
+        return self._out_value, self._out_prime_value

@@ -25,6 +25,8 @@ if __name__ == '__main__':
     max_step   = model_conf["max_step"]
     check_step = model_conf["check_step"]
 
+    print(f"eta: {eta}")
+
     nn = MLP ([10, 20, 1], ["tanh", "tanh", "threshold"])
     dl = DataLoader ()
 
@@ -36,9 +38,10 @@ if __name__ == '__main__':
     for i in range (max_step):
         current_batch = dl.get_train_batch(batch_size)
         backpropagation.backpropagation_step(current_batch, nn, eta)
-        err = MSE_over_network (current_batch, nn)
-        train_err.append(Error)
-        if (abs(err) > epsilon):
+        err = backpropagation.MSE_over_network (current_batch, nn)
+        print (f"{i}: {err}")
+        train_err.append(err)
+        if (abs(err) < epsilon):
             break
 
     print(f"train_err: {train_err}")
