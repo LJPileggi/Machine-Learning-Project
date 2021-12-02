@@ -3,7 +3,7 @@
 import numpy as np
 import enum
 
-from model.activation_functions import *
+from activation_functions import *
 
 class nn_unit:
     """

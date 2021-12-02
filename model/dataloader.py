@@ -5,7 +5,7 @@ import random
 class DataLoader():
 
     def __init__(self):
-        self.DATA_PATH = os.path.join("..", "dataset")
+        self.DATA_PATH = os.path.join(".", "data")
         self.batch_size = 32
         self.data = {}
         

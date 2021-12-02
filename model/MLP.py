@@ -30,16 +30,16 @@ class layer:
      - update_unit_weights: update each unit's weights with the ones in the
        weight matrix; returns None
     """
-    def __init__(self, layer_dim, inputs, weights, activation = "linear", layer_prec = None, dropout=np.ones(layer_dim,)):
+    def __init__(self, layer_dim, inputs, weights = None, activation = "linear", layer_prec = None, dropout=None):
         self.layer_prec = layer_prec #None == input layer
         self.inputs = inputs
-        self.weights = weights
+        self.weights = weights if weights is not None else np.random.rand((layer_dim,))
         self.activation = activation
-        self.unit_set = {x : nn_unit(weights.shape[1], activation for x in range(layer_dim))}
+        self.unit_set = {i : nn_unit(weights.shape[1], activation) for x in range(layer_dim)}
         self._net_set = np.array([self.unit_set[k]._net(inputs) for k in self.unit_set])
         self._output_set = np.array([self.unit_set[k].out(inputs) for k in self.unit_set])
         self._output_prime_set = np.array([self.unit_set[k].out_prime(inputs) for k in self.unit_set])
-        self.dropout = dropout
+        self.dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def initialise_weight_matrix(self):
         self.weights = np.array([unit.weights for unit in self.unit_set])
@@ -68,15 +68,15 @@ class MLP:
      - update_network_inputs: update inputs of the whole network; returns None;
      - update_all_weights: update weights of the whole network; returns None
     """
-    def __init__(self, layer_struct, inputs, activation_set):
+    def __init__(self, layer_struct, activation_set):
         self.layer_struct = layer_struct
-        self.inputs = inputs
+        self.inputs = None
         self.layer_set = {}
-        layer_inputs = inputs
+        layer_inputs = self.inputs
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.update({i : layer(layer_dim, layer_input, activation, layer_prec)})
+            self.layer_set.update({i : layer(layer_dim, layer_inputs, activation=activation, layer_prec=layer_prec)})
             layer_inputs = self.layer_set[i].output_set.append(1.)
             layer_prec = i
             i += 1

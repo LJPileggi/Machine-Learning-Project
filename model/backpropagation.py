@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 
+from dataloader import DataLoader
 import nn_unit
 import MLP
 import activation_functions
@@ -27,7 +28,7 @@ def backpropagation_step(batch, NN, eta):
         delta_up = np.array([])
         delta_curr = np.array([])
         for key, unit in current_layer.unit_set:
-            delta_k = (pattern[-1] - unit.out(pattern[:-1]) * unit.out_prime(pattern[:-1])
+            delta_k = (pattern[-1] - unit.out(pattern[:-1]) * unit.out_prime(pattern[:-1]))
             np.append(delta_up, delta_k)
             for i, weight in enumerate(unit.weights):
                 delta_w = delta_up * unit.inputs[i]
