@@ -72,12 +72,14 @@ class MLP:
     def __init__(self, layer_struct, activation_set):
         self.layer_struct = layer_struct
         self.inputs = None
-        self.layer_set = {}
         layer_inputs = self.inputs
+        
+        
+        self.layer_set = {}
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.update({i : layer(layer_dim, activation=activation, layer_prec=layer_prec)})
+            self.layer_set[i] = layer(layer_dim, activation=activation, layer_prec=layer_prec)
             layer_prec = self.layer_set[i]
             i += 1
 
