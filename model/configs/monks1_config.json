@@ -1,11 +1,23 @@
 {
     "train_set": "monks-1.train",
     "test_set": "monks-1.test",
+	"input_size": 6,
+	"output_size": 1,
+	"preprocessing": {
+		"1_hot_enc": [
+			[1, 2, 3],
+			[1, 2, 3],
+			[1, 2],
+			[1, 2, 3],
+			[1, 2, 3, 4],
+			[1, 2 ]
+		]
+	},
     "model": {
-	"epsilon": 1e-2,
-	"eta": 1e-4,
-	"max_step": 1000,
-	"check_step": 100,
-	"batch_size": 32
+		"epsilon": 1e-2,
+		"eta": 1e-4,
+		"max_step": 1000,
+		"check_step": 100,
+		"batch_size": 32
     }
 }

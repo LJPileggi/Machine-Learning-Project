@@ -17,8 +17,10 @@ if __name__ == '__main__':
 
     train_set  = config["train_set"]
     test_set   = config["test_set"]
+
+    encoding = config["preprocessing"]["1_hot_enc"]
+
     model_conf = config["model"]
-    
     batch_size = model_conf["batch_size"]
     epsilon    = model_conf["epsilon"]
     eta        = model_conf["eta"]
@@ -28,8 +30,8 @@ if __name__ == '__main__':
     nn = MLP ([10, 20, 1], ["tanh", "tanh", "threshold"])
     dl = DataLoader ()
 
-    dl.load_data ("train", train_set)
-    dl.load_data ("test", test_set)
+    dl.load_data ("train", train_set, encoding)
+    dl.load_data ("test", test_set, encoding)
     err = np.inf
     train_err = []
 
