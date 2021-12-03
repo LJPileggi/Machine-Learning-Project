@@ -17,8 +17,10 @@ if __name__ == '__main__':
 
     train_set  = config["train_set"]
     test_set   = config["test_set"]
+
+    encoding = config["preprocessing"]["1_hot_enc"]
+
     model_conf = config["model"]
-    
     batch_size = model_conf["batch_size"]
     epsilon    = model_conf["epsilon"]
     eta        = model_conf["eta"]
