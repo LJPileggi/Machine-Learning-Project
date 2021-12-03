@@ -32,8 +32,8 @@ if __name__ == '__main__':
     nn = MLP ([10, 20, 1], ["tanh", "tanh", "threshold"])
     dl = DataLoader ()
 
-    dl.load_data ("train", train_set, encoding)
-    dl.load_data ("test", test_set, encoding)
+    dl.load_data ("train", train_set)
+    dl.load_data ("test", test_set)
     err = np.inf
     train_err = []
 

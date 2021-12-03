@@ -13,7 +13,7 @@ def _1_hot_enc(inputs, domains):
         if not (input in dom):
             raise Exception("Incorrect encoding!")
         vector = [(1 if input == val else 0) for val in dom]
-        encoded.append(vector)
+        encoded.extend(vector)
     return encoded
 
 class DataLoader():
@@ -30,7 +30,10 @@ class DataLoader():
         for line in f.readlines():
             l = list(map(int, line.split()[:-1]))
             data = list(map(int, line.split()[:-1]))
-            inputs = _1_hot_enc(data[1:], encoding)
+            if encoding != None:
+                inputs = _1_hot_enc(data[1:], encoding)
+            else:
+                inputs = data[1:]
             output = data[0]
             pattern = (np.array(inputs), np.array(output))
             self.data[data_key].append(pattern)
