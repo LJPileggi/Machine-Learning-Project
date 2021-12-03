@@ -55,10 +55,10 @@ class layer:
         return ret_es #da controllare se gli assi son giusti. looks like it!
         
     def forward (self, inputs):
-        out_list = []
+        out_list = np.array([])
         for unit in self.unit_set: #magari usare un ufunc
 #            print(f"\tRecuperando informazioni dall'unità {unit}\n\t{inputs}")
-            out_list.append(unit.forward(inputs))
+            out_list = np.append(out_list, unit.forward(inputs))
         return out_list
         
 

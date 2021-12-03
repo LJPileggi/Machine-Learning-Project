@@ -11,7 +11,8 @@ def MSE_over_network(batch, NN):
     errors = []
     for pattern in batch:
         out = NN.forward(pattern[0])
-        errors.append((np.sign(out) - pattern[1])**2)
+        out = out > 0.5
+        errors.append((out - pattern[1])**2)
     mse = sum(errors)/len(errors)
     return mse
 

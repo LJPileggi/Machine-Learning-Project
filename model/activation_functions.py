@@ -96,8 +96,9 @@ def sigmoidal(network_value, a=1., thr=0.):
         if ((out > 0.5*(1. - thr)) and (out < 0.5*(1. + thr))): 
             raise ValueError('ValueError: unit output falls within rejection zone') #perché ritornare un errore?
         else:
-            return out >= 0.5*(1. + thr)
-    else: return out
+            return 1 if out >= 0.5*(1. + thr) else 0
+    else:
+        return out
 
 
 
