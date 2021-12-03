@@ -48,38 +48,20 @@ class nn_unit:
             self.activation = ReLu
             self.activation_prime = threshold
 
-    def _net(self, inputs):
-        """
-        returns argument for activation function. Type: float
-        """
-        self._net_value = (inputs * self.weights).sum()
-        return self._net_value
+    def forward(self, inputs):
+        self._net = (inputs * self.weights).sum()
+        self._out = self.activation(self._net)
+        self._out_prime = self.activation_prime(self._net) if self.activation_prime is not None else 1
+#        print(f"Unit values: {self._net}; {self._out}; {self._out_prime}")
+        return self._out
 
-    def out(self, inputs):
-        """
-        returns output units. Type: either float or numpy.ndarray
-        """
-        self._out_value = self.activation(self._net(inputs))
-        return self._out_value
+    def backwards(self, pattern):
+        self._delta = (pattern - self._out) * self._out_prime
+#        print(f"Unit delta: {self._delta}")
+        return self._delta * self.weights
 
-    def out_prime(self, inputs):
-        """
-        returns output of derivative of activation function.
-        Type: either float or numpy.ndarray
-        """
-        self._out_prime_value = self.activation_prime(self._net(inputs)) if self.activation_prime is not None else 1
-        return self._out_prime_value
-
-    def update_weights(self, weights_new):
-        """
-        Updates weights of unit.
+    def update_weights(self, eta):
+        self.weights += self._delta * eta * self._out
         
-        Wouldn't it be more convenient though to use properties and setters?
-        """
-        self.weights = weights_new
-
     def get_weights (self):
         return self.weights
-
-    def get_outputs (self):
-        return self._out_value, self._out_prime_value

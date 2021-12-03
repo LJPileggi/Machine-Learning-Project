@@ -46,22 +46,32 @@ class layer:
         print(self.unit_set[0])
         self.weights = np.array([self.unit_set[k].get_weights() for k in range(len(self.unit_set))])
 
-    def update_unit_weights(self, delta_w, eta):
+    def update_unit_weights(self, eta):
         for i in range(len(self.unit_set)):
-#            print(f"{i}: {delta_w[i]} * {eta}")
+#            print(f"{i}: {weights_coef[i]}")
             unit = self.unit_set[i]
-            self.weights[i] += eta * delta_w[i]
-            unit.update_weights(self.weights[i])
+            unit.update_weights(eta)
 
     def get_output_dim (self):
         return len(self.unit_set)
 
+    def backwards(self, pattern):
+        new_patterns = None
+        for i in range(len(self.unit_set)):
+            unit = self.unit_set[i]
+#            print(f"\tBackwards dall'unità {i}")
+            patt_i = unit.backwards(pattern[i])
+#            print(f"np: {new_patterns} : {patt_i}")
+            new_patterns = patt_i if new_patterns is None else np.append(new_patterns, patt_i, axis=0) 
+#        print(f"{new_patterns.ndim}")
+        return new_patterns if new_patterns.ndim == 1 else np.sum(new_patterns, axis=1) #da controllare se gli assi son giusti
+        
     def forward (self, inputs):
         out_list = []
         for i in range(len(self.unit_set)): #magari usare un ufunc
             unit = self.unit_set[i]
-            out_list.append(unit.out(inputs))
-            unit.out_prime(inputs)
+#            print(f"\tRecuperando informazioni dall'unità {i}\n\t{inputs}")
+            out_list.append(unit.forward(inputs))
         return out_list
         
 
@@ -91,18 +101,22 @@ class MLP:
             layer_prec = self.layer_set[i]
             i += 1
 
-    def update_all_weights(self):
-        for layer in self.layer_set:
-            layer.update_unit_weights()
+    def update_all_weights(self, eta):
+        for i in range(len(self.layer_set)):
+            layer = self.layer_set[i]
+            layer.update_unit_weights(eta)
 
-    def get_output_layer(self):
-        return self.layer_set[-1]
-
+    def backwards(self, pattern):
+        for i in range(len(self.layer_set)):
+            layer = self.layer_set[-i-1]
+#            print(f"\t\tBackwards sul layer {-i-1}")
+            pattern = layer.backwards(pattern)
+    
     def forward(self, inputs):
         layer_inputs = inputs
         for i in range(len(self.layer_set)):
             layer = self.layer_set[i]
-#            print(f"{layer}")
+#            print(f"\t\tRecuperando info dal livello {i}")
             layer_output = layer.forward(layer_inputs)
             layer_inputs = layer_output
         return layer_output

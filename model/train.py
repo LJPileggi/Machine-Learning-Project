@@ -37,7 +37,12 @@ if __name__ == '__main__':
 
     for i in range (max_step):
         current_batch = dl.get_train_batch(batch_size)
-        backpropagation.backpropagation_step(current_batch, nn, eta)
+        for pattern in current_batch:
+#            print(f"{pattern}")
+            nn.forward(pattern[0])
+            nn.backwards([pattern[1]])
+            nn.update_all_weights(eta/batch_size)
+#        backpropagation.backpropagation_step(current_batch, nn, eta)
         err = backpropagation.MSE_over_network (current_batch, nn)
         print (f"{i}: {err}")
         train_err.append(err)
