@@ -68,6 +68,7 @@ def tanh(network_value, thr=0., a=1.):
             return 1 if out >= 0. else -1
     else:
         return out
+
 def d_tanh(network_value, a=1.):
     out = 2.*a*np.exp(-a*network_value)/(1. + np.exp(-a*network_value))**2
     return out
