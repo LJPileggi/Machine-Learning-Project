@@ -31,37 +31,33 @@ class layer:
        weight matrix; returns None
     """
     def __init__(self, prec_dim, layer_dim, activation = "linear", dropout=None):
-        self.layer_prec = layer_prec #None == input layer
         self.activation = activation
         print(f"{layer_dim}; {activation}")
         self.unit_set = [nn_unit(activation, prec_dim) for x in range(layer_dim)]
         self.dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def update_unit_weights(self, eta):
-        for i in range(len(self.unit_set)):
-#            print(f"{i}: {weights_coef[i]}")
-            unit = self.unit_set[i]
+        for unit in self.unit_set:
             unit.update_weights(eta)
 
     def get_output_dim (self):
         return len(self.unit_set)
 
-    def backwards(self, pattern):
-        new_patterns = None
-        for i in range(len(self.unit_set)):
-            unit = self.unit_set[i]
+    def backwards(self, error_signal):
+        new_es = None
+        for i, unit in enumerate(self.unit_set):
 #            print(f"\tBackwards dall'unità {i}")
-            patt_i = unit.backwards(pattern[i])
+            es_i = unit.backwards(error_signal[i])
 #            print(f"np: {new_patterns} : {patt_i}")
-            new_patterns = patt_i if new_patterns is None else np.append(new_patterns, patt_i, axis=0) 
-#        print(f"{new_patterns.ndim}")
-        return new_patterns if new_patterns.ndim == 1 else np.sum(new_patterns, axis=1) #da controllare se gli assi son giusti. looks like it!
+            new_es = es_i if new_es is None else np.append(new_es, es_i, axis=0)
+#        print(f"{new_es.ndim}")
+        ret_es = np.sum(new_es, axis=1) if new_es.ndim > 1 else new_es
+        return ret_es #da controllare se gli assi son giusti. looks like it!
         
     def forward (self, inputs):
         out_list = []
-        for i in range(len(self.unit_set)): #magari usare un ufunc
-            unit = self.unit_set[i]
-#            print(f"\tRecuperando informazioni dall'unità {i}\n\t{inputs}")
+        for unit in self.unit_set: #magari usare un ufunc
+#            print(f"\tRecuperando informazioni dall'unità {unit}\n\t{inputs}")
             out_list.append(unit.forward(inputs))
         return out_list
         
@@ -85,30 +81,26 @@ class MLP:
     def __init__(self, input_dim, layer_struct, activation_set):
         self.layer_struct = layer_struct
         self.layer_set = []
-        layer_prec = None
         i = 0
         prec_dim = input_dim
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.append(layer(prec_dim, layer_dim, activation=activation, layer_prec=layer_prec))
+            self.layer_set.append(layer(prec_dim, layer_dim, activation=activation))
             prec_dim = layer_dim
             i += 1
 
     def update_all_weights(self, eta):
-        for i in range(len(self.layer_set)):
-            layer = self.layer_set[i]
+        for layer in self.layer_set:
             layer.update_unit_weights(eta)
 
-    def backwards(self, pattern):
-        for i in range(len(self.layer_set)):
-            layer = self.layer_set[-i-1]
-#            print(f"\t\tBackwards sul layer {-i-1}")
-            pattern = layer.backwards(pattern)
+    def backwards(self, error_signal):
+        for layer in reversed(self.layer_set):
+#            print(f"\t\tBackwards sul layer {layer}")
+            error_signal = layer.backwards(error_signal)
     
     def forward(self, inputs):
         layer_inputs = inputs
-        for i in range(len(self.layer_set)):
-            layer = self.layer_set[i]
-#            print(f"\t\tRecuperando info dal livello {i}")
+        for layer in self.layer_set:
+#            print(f"\t\tRecuperando info dal livello {layer}")
             layer_output = layer.forward(layer_inputs)
             layer_inputs = layer_output
         return layer_output

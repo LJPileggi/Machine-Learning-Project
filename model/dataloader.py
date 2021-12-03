@@ -28,7 +28,6 @@ class DataLoader():
         full_fn = os.path.join(self.DATA_PATH, filename)
         f = open (full_fn, "r")
         for line in f.readlines():
-            l = list(map(int, line.split()[:-1]))
             data = list(map(int, line.split()[:-1]))
             if encoding != None:
                 inputs = _1_hot_enc(data[1:], encoding)
@@ -41,6 +40,3 @@ class DataLoader():
     def get_train_batch (self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)
         return batch_data
-
-    def get_inputs_dimension(self):
-        return self.data['train'].shape[1]

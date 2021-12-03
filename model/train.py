@@ -34,7 +34,7 @@ if __name__ == '__main__':
     dl.load_data ("train", train_set, encoding)
     dl.load_data ("test", test_set, encoding)
 
-    nn = MLP (dl.get_inputs_dimension(), [10, 20, 1], ["tanh", "tanh", "threshold"])
+    nn = MLP (17, [10, 20, 1], ["tanh", "tanh", "threshold"])
     err = np.inf
     train_err = []
 
@@ -42,8 +42,8 @@ if __name__ == '__main__':
         current_batch = dl.get_train_batch(batch_size)
         for pattern in current_batch:
 #            print(f"{pattern}")
-            nn.forward(pattern[0])
-            nn.backwards([pattern[1]])
+            out = nn.forward(pattern[0])
+            nn.backwards(pattern[1] - out)
             nn.update_all_weights(eta/batch_size)
 #        backpropagation.backpropagation_step(current_batch, nn, eta)
         err = backpropagation.MSE_over_network (current_batch, nn)
