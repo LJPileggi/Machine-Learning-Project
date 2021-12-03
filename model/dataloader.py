@@ -41,3 +41,6 @@ class DataLoader():
     def get_train_batch (self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)
         return batch_data
+
+    def get_inputs_dimension(self):
+        return self.data['train'].shape[1]

@@ -30,21 +30,12 @@ class layer:
      - update_unit_weights: update each unit's weights with the ones in the
        weight matrix; returns None
     """
-    def __init__(self, layer_dim, activation = "linear", layer_prec = None, dropout=None):
+    def __init__(self, prec_dim, layer_dim, activation = "linear", dropout=None):
         self.layer_prec = layer_prec #None == input layer
-        prec_dim = self.layer_prec.get_output_dim() if self.layer_prec is not None else 6 #per ora hardcoded, poi ci pensiamo
         self.activation = activation
         print(f"{layer_dim}; {activation}")
         self.unit_set = [nn_unit(activation, prec_dim) for x in range(layer_dim)]
-        self.initialize_weight_matrix()
-        #self._net_set = np.array([self.unit_set[k]._net(inputs) for k in self.unit_set])
-        #self._output_set = np.array([self.unit_set[k].out(inputs) for k in self.unit_set])
-        #self._output_prime_set = np.array([self.unit_set[k].out_prime(inputs) for k in self.unit_set])
         self.dropout = dropout if dropout is not None else np.ones((layer_dim,))
-
-    def initialize_weight_matrix(self):
-        print(self.unit_set[0])
-        self.weights = np.array([self.unit_set[k].get_weights() for k in range(len(self.unit_set))])
 
     def update_unit_weights(self, eta):
         for i in range(len(self.unit_set)):
@@ -64,7 +55,7 @@ class layer:
 #            print(f"np: {new_patterns} : {patt_i}")
             new_patterns = patt_i if new_patterns is None else np.append(new_patterns, patt_i, axis=0) 
 #        print(f"{new_patterns.ndim}")
-        return new_patterns if new_patterns.ndim == 1 else np.sum(new_patterns, axis=1) #da controllare se gli assi son giusti
+        return new_patterns if new_patterns.ndim == 1 else np.sum(new_patterns, axis=1) #da controllare se gli assi son giusti. looks like it!
         
     def forward (self, inputs):
         out_list = []
@@ -91,14 +82,15 @@ class MLP:
      - update_network_inputs: update inputs of the whole network; returns None;
      - update_all_weights: update weights of the whole network; returns None
     """
-    def __init__(self, layer_struct, activation_set):
+    def __init__(self, input_dim, layer_struct, activation_set):
         self.layer_struct = layer_struct
         self.layer_set = []
         layer_prec = None
         i = 0
+        prec_dim = input_dim
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set.append(layer(layer_dim, activation=activation, layer_prec=layer_prec))
-            layer_prec = self.layer_set[i]
+            self.layer_set.append(layer(prec_dim, layer_dim, activation=activation, layer_prec=layer_prec))
+            prec_dim = layer_dim
             i += 1
 
     def update_all_weights(self, eta):
