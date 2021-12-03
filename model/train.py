@@ -37,7 +37,7 @@ if __name__ == '__main__':
     nn = MLP (17, [10, 20, 1], ["tanh", "tanh", "sigmoidal"])
     err = np.inf
     train_err = []
-
+    whole_TS= dl.get_training_set()
     for i in range (max_step):
         current_batch = dl.get_train_batch(batch_size)
         for pattern in current_batch:
@@ -46,8 +46,9 @@ if __name__ == '__main__':
             nn.backwards(pattern[1] - np.sign(out))
             nn.update_all_weights(eta/batch_size)
 #        backpropagation.backpropagation_step(current_batch, nn, eta)
-        err = backpropagation.MSE_over_network (current_batch, nn)
-        print (f"{i}: {err}")
+        err = backpropagation.MSE_over_network (whole_TS, nn)
+        if(i % check_step == 0):
+            print (f"{i}: {err}")
         train_err.append(err)
         if (abs(err) < epsilon):
             break

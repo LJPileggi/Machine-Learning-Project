@@ -40,3 +40,6 @@ class DataLoader():
     def get_train_batch (self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)
         return batch_data
+
+    def get_training_set(self):
+        return self.data['train']
