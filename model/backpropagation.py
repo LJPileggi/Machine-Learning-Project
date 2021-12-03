@@ -10,9 +10,11 @@ import activation_functions
 def MSE_over_network(batch, NN):
     errors = []
     out_layer = NN.get_output_layer()
-    for unit in output_layer:
+    for k in range(len(out_layer.unit_set)):
+        unit = out_layer.unit_set[k]
         for pattern in batch:
-            errors.append((unit.out(pattern[0]) - pattern[1])**2)
+            out, out_prime = unit.get_outputs()
+            errors.append((out - pattern[1])**2)
     mse = sum(errors)/len(errors)
     return mse
 
@@ -22,35 +24,43 @@ def pick_batch(TS, len_epoch):
 
 def backpropagation_step(batch, NN, eta):
     for pattern in batch:
-        print(f"pattern: {pattern[0]}, {pattern[1]}")
+#        print(f"pattern: {pattern[0]}, {pattern[1]}")
+        NN.forward(pattern[0])
         current_layer_key = len(NN.layer_struct) - 1
         current_layer = NN.layer_set[current_layer_key]
         delta_up = np.array([])
         delta_curr = np.array([])
-        print(f"{current_layer.unit_set}")
+        delta_w = []
+#        print(f"{current_layer.unit_set}")
         for k in range(len(current_layer.unit_set)):
             unit = current_layer.unit_set[k]
+            out, out_prime = unit.get_outputs()
             #bisognerà fare pattern[1][k] se l'output è vettoriale
-            delta_k = (pattern[1] - unit.out(pattern[0]) * unit.out_prime(pattern[0]))
-            np.append(delta_up, delta_k)
-            for i, weight in enumerate(unit.weights):
-                delta_w = delta_up * unit.inputs[i]
-                current_layer.weights[key][i] += delta_w * eta/float(len(batch))
+            delta_k = (pattern[1] - out * out_prime)
+            delta_w.append(delta_k * out)
+#            np.append(delta_up, delta_k)
+
+        current_layer.update_unit_weights(delta_w, eta)
+        delta_w = []
+        
         current_layer_key -= 1
         current_layer = NN.layer_set[current_layer_key]            
         while current_layer.layer_prec != None:
             for k in range(len(current_layer.unit_set)):
                 unit = current_layer.unit_set[k]
-                delta_k = (delta_up * NN.layer_set[current_layer_key+1]).sum() * unit.out_prime(pattern[:-1])
+                out, out_prime = unit.get_outputs()
+                delta_k = ((delta_up * 1).sum() * out_prime) #l'1 è temporaneo
+                delta_w.append(delta_k * out)
                 np.append(delta_curr, delta_k)
-                for i, weight in enumerate(unit.weights):
-                    delta_w = delta * unit.inputs[i]
-                    current_layer.weights[key][i] += delta_w * eta/float(len(batch))
+                #non vi sento :P
+            current_layer.update_unit_weights(delta_w, eta)
+            
             current_layer_key -= 1
-            current_layer = NN.layer_set[current_layer.layer_prec]  
+            current_layer = NN.layer_set[current_layer_key]  
             delta_up = delta_curr
             delta_curr = np.array([])
-    NN.update_all_weights()
+            delta_w = []
+        
 
 def backpropagation(TS, NN, eta, len_epoch, thr=0.001, N_max=1000):
     NN.initialise_weight_matrix()

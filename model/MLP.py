@@ -35,7 +35,7 @@ class layer:
         prec_dim = self.layer_prec.get_output_dim() if self.layer_prec is not None else 6 #per ora hardcoded, poi ci pensiamo
         self.activation = activation
         print(f"{layer_dim}; {activation}")
-        self.unit_set = {x: nn_unit(activation, prec_dim) for x in range(layer_dim)}
+        self.unit_set = [nn_unit(activation, prec_dim) for x in range(layer_dim)]
         self.initialize_weight_matrix()
         #self._net_set = np.array([self.unit_set[k]._net(inputs) for k in self.unit_set])
         #self._output_set = np.array([self.unit_set[k].out(inputs) for k in self.unit_set])
@@ -46,12 +46,24 @@ class layer:
         print(self.unit_set[0])
         self.weights = np.array([self.unit_set[k].get_weights() for k in range(len(self.unit_set))])
 
-    def update_unit_weights(self):
-        for i, unit in self.unit_set:
+    def update_unit_weights(self, delta_w, eta):
+        for i in range(len(self.unit_set)):
+#            print(f"{i}: {delta_w[i]} * {eta}")
+            unit = self.unit_set[i]
+            self.weights[i] += eta * delta_w[i]
             unit.update_weights(self.weights[i])
 
     def get_output_dim (self):
         return len(self.unit_set)
+
+    def forward (self, inputs):
+        out_list = []
+        for i in range(len(self.unit_set)): #magari usare un ufunc
+            unit = self.unit_set[i]
+            out_list.append(unit.out(inputs))
+            unit.out_prime(inputs)
+        return out_list
+        
 
 class MLP:
     """
@@ -71,11 +83,11 @@ class MLP:
     """
     def __init__(self, layer_struct, activation_set):
         self.layer_struct = layer_struct
-        self.layer_set = {}
+        self.layer_set = []
         layer_prec = None
         i = 0
         for layer_dim, activation in zip(layer_struct, activation_set):
-            self.layer_set[i] = layer(layer_dim, activation=activation, layer_prec=layer_prec)
+            self.layer_set.append(layer(layer_dim, activation=activation, layer_prec=layer_prec))
             layer_prec = self.layer_set[i]
             i += 1
 
@@ -85,3 +97,12 @@ class MLP:
 
     def get_output_layer(self):
         return self.layer_set[-1]
+
+    def forward(self, inputs):
+        layer_inputs = inputs
+        for i in range(len(self.layer_set)):
+            layer = self.layer_set[i]
+#            print(f"{layer}")
+            layer_output = layer.forward(layer_inputs)
+            layer_inputs = layer_output
+        return layer_output
