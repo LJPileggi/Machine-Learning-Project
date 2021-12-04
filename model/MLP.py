@@ -44,15 +44,14 @@ class layer:
         return len(self.unit_set)
 
     def backwards(self, error_signal):
-        new_es = None
+        cumulative_es = 0 # this gets broadcasted to a all 0 vector
         for i, unit in enumerate(self.unit_set):
 #            print(f"\tBackwards dall'unità {i}")
             es_i = unit.backwards(error_signal[i])
 #            print(f"np: {new_patterns} : {patt_i}")
-            new_es = es_i if new_es is None else np.append(new_es, es_i, axis=0)
+            cumulative_es += es_i 
 #        print(f"{new_es.ndim}")
-        ret_es = np.sum(new_es, axis=1) if new_es.ndim > 1 else new_es
-        return ret_es #da controllare se gli assi son giusti. looks like it!
+        return cumulative_es 
         
     def forward (self, inputs):
         out_list = np.array([])

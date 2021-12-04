@@ -1,5 +1,5 @@
 {
-    "train_set": "monks-1.test",
+    "train_set": "monks-1.train",
     "test_set": "monks-1.test",
 	"input_size": 6,
 	"output_size": 1,
@@ -15,9 +15,9 @@
 	},
     "model": {
 		"epsilon": 1e-2,
-		"eta": 1e-4,
+		"eta": 2,
 		"max_step": 100000,
 		"check_step": 100,
-		"batch_size": 1
+		"batch_size": -1
     }
 }

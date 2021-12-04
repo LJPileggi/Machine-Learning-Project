@@ -11,6 +11,15 @@ parser = argparse.ArgumentParser(description="Train a model.")
 parser.add_argument('--config_path',
                     help='path to config file')
 
+def MSE_over_network(batch, NN):
+    errors = []
+    for pattern in batch:
+        out = NN.forward(pattern[0])
+        out = out > 0.5
+        errors.append((out - pattern[1])**2)
+    mse = sum(errors)/len(errors)
+    return mse
+
 if __name__ == '__main__':
     args = parser.parse_args()
     config = json.load(open(args.config_path))
@@ -34,23 +43,31 @@ if __name__ == '__main__':
     dl.load_data ("train", train_set, encoding)
     dl.load_data ("test", test_set, encoding)
 
-    nn = MLP (17, [2, 2, 1], ["linear", "linear", "sigmoidal"])
+   
+    nn = MLP (17, [4,  1], ["sigmoidal", "sigmoidal", "sigmoidal"])
     err = np.inf
     train_err = []
-    whole_TS= dl.get_training_set()
+    whole_TR= dl.get_training_set()
+    #whatch out! if batch_size = -1, it becomes len(TR)
+    batch_size = len(whole_TR) if batch_size == -1 else batch_size
     for i in range (max_step):
-        current_batch = dl.get_train_batch(batch_size)
-        for pattern in current_batch:
-#            print(f"{pattern}")
-            out = nn.forward(pattern[0])
-            nn.backwards(pattern[1] - out)
-            nn.update_all_weights(eta/batch_size)
-#        backpropagation.backpropagation_step(current_batch, nn, eta)
-        err = backpropagation.MSE_over_network (whole_TS, nn)
+        for current_batch in dl.training_set_partition(batch_size):
+            for pattern in current_batch:
+                #print(f"{pattern[0]}")
+                out = nn.forward(pattern[0])
+                nn.backwards(pattern[1] - out)
+            #we are updating with eta/TS_size in order to compute LMS, not simply LS
+            nn.update_all_weights(eta/len(whole_TR))
         if(i % check_step == 0):
+            err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
-        train_err.append(err)
+            train_err.append(err)
         if (abs(err) < epsilon):
             break
 
     print(f"train_err: {train_err}")
+
+    test_error = MSE_over_network (dl.get_test_set(), nn)
+    print(f"accuracy{(1-test_error)*100}%") 
+    #this accuracy calculation is wrong, because the error is squared and averaged
+

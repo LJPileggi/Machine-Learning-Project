@@ -24,6 +24,8 @@ class nn_unit:
     def __init__(self, activation, dim):
         self.weights = np.random.randn(dim)
         self._bias = np.random.randn(1)
+        self._DeltaW = 0
+        self._DeltaW0 = 0
         if activation == "linear":
             self.activation = linear
             self.activation_prime = d_linear
@@ -50,6 +52,7 @@ class nn_unit:
             self.activation_prime = threshold
 
     def forward(self, inputs):
+        self._input = inputs
         self._net = (inputs * self.weights).sum() + self._bias
         self._out = self.activation(self._net)
         self._out_prime = self.activation_prime(self._net) if self.activation_prime is not None else 1
@@ -57,13 +60,17 @@ class nn_unit:
         return self._out
 
     def backwards(self, error_signal):
-        self._delta = error_signal * self._out_prime 
+        delta = error_signal * self._out_prime #delta is a scalar
+        self._DeltaW += delta  * self._input #DeltaW is a vector and will be used to update this unit
+        self._DeltaW0 += delta # *x_0, which is 1
 #        print(f"Unit delta: {self._delta}")
-        return self._delta * self.weights
+        return delta * self.weights #the return value is used to update previous units
 
     def update_weights(self, eta):
-        self.weights += self._delta * eta * self._out
-        self._bias += self._delta * eta * self._out
+        self.weights += eta * self._DeltaW
+        self._bias += eta * self._DeltaW0 
+        self._DeltaW = 0
+        self._DeltaW0 = 0
         
-    def get_weights (self):
-        return self.weights
+    #def get_weights (self):
+     #   return self.weights

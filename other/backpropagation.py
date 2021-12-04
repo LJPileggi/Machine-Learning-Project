@@ -7,14 +7,7 @@ import nn_unit
 import MLP
 import activation_functions
 
-def MSE_over_network(batch, NN):
-    errors = []
-    for pattern in batch:
-        out = NN.forward(pattern[0])
-        out = out > 0.5
-        errors.append((out - pattern[1])**2)
-    mse = sum(errors)/len(errors)
-    return mse
+
 
 def pick_batch(TS, len_epoch):
     batch = random.sample(TS, len_epoch)

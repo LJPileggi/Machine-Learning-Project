@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import os
 import random
 
@@ -37,9 +38,21 @@ class DataLoader():
             pattern = (np.array(inputs), np.array(output))
             self.data[data_key].append(pattern)
 
-    def get_train_batch (self, batch_size):
-        batch_data = random.choices(self.data['train'], k=batch_size)
-        return batch_data
+    def training_set_partition (self, batch_size):
+        """
+        returns an iterator on minibatches:
+        if batch_size=n, returns a list of n patterns
+        if batch_size=1, returns 1 pattern at a time (techincally, a list conteining just one pattern)
+        after traversing the whole TS, the TS is shuffled
+        """
+        tr_size = len(self.data['train'])
+        batch_num = math.ceil(tr_size / batch_size) 
+        random.shuffle(self.data['train'])
+        for i in range(batch_num):
+            yield self.data['train'][i*batch_size:(i+1)*batch_size]
 
     def get_training_set(self):
         return self.data['train']
+
+    def get_test_set(self):
+        return self.data['test']
