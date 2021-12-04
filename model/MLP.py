@@ -1,4 +1,5 @@
 import numpy as np
+import h5py
 
 from nn_unit import nn_unit
 import activation_functions
@@ -59,7 +60,16 @@ class layer:
 #            print(f"\tRecuperando informazioni dall'unità {unit}\n\t{inputs}")
             out_list = np.append(out_list, unit.forward(inputs))
         return out_list
-        
+
+    def get_weights(self):
+        layer_w = []
+        for unit in self.unit_set:
+            layer_w.append(unit.get_weights())
+        return np.array(layer_w)
+
+    def load_weights(self, layer_weights):
+        for unit, weights in zip(self.unit_set, layer_weights):
+            unit.load_weights(weights)
 
 class MLP:
     """
@@ -103,3 +113,17 @@ class MLP:
             layer_output = layer.forward(layer_inputs)
             layer_inputs = layer_output
         return layer_output
+
+    def save_model (self, filename):
+        hf = h5py.File(filename, "w")
+        for i, layer in enumerate(self.layer_set):
+            layer_weights = layer.get_weights()
+            hf.create_dataset(f"layer_{i}", data=layer_weights)
+        hf.close()
+
+    def load_model (self, filename):
+        hf = h5py.File(filename, "r")
+        for i, layer in enumerate(self.layer_set):
+            layer_weights = np.array(hf.get(f"layer_{i}"))
+            layer.load_weights(layer_weights)
+        hf.close()

@@ -67,5 +67,8 @@ class nn_unit:
         self.weights += eta * self._DeltaW - lam*self.weights
         self._DeltaW = 0
         
-    #def get_weights (self):
-     #   return self.weights
+    def get_weights (self):
+        return self.weights
+
+    def load_weights (self, weights):
+        self.weights = weights
