@@ -47,28 +47,29 @@ if __name__ == '__main__':
     layers     = model_conf["hidden_units"]
     activation = model_conf["activation_units"]
 
-    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}")
 
     dl = DataLoader ()
-
     dl.load_data ("train", train_set, encoding)
     dl.load_data ("test", test_set, encoding)
-    input_size = dl.get_input_size ()
 
-    nn = MLP (input_size, layers, activation)
-    err = np.inf
-    train_err = []
     whole_TR= dl.get_training_set()
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
+    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}")
+    
+    input_size = dl.get_input_size ()
+    nn = MLP (input_size, layers, activation)
+    err = np.inf
+    
+    train_err = []
     for i in range (max_step):
         for current_batch in dl.training_set_partition(batch_size):
             for pattern in current_batch:
-                #print(f"{pattern[0]}")
                 out = nn.forward(pattern[0])
-                nn.backwards(pattern[1] - out)
+                error = pattern[1] - out
+                nn.backwards(error)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            nn.update_all_weights(eta/len(whole_TR), lam)
+            nn.update_weights(eta/len(whole_TR), lam)
         if(i % check_step == 0):
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
