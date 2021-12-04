@@ -36,9 +36,9 @@ class layer:
         self.unit_set = [nn_unit(activation, prec_dim) for x in range(layer_dim)]
         self.dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
-    def update_unit_weights(self, eta):
+    def update_unit_weights(self, eta, lam):
         for unit in self.unit_set:
-            unit.update_weights(eta)
+            unit.update_weights(eta, lam)
 
     def get_output_dim (self):
         return len(self.unit_set)
@@ -87,9 +87,9 @@ class MLP:
             prec_dim = layer_dim
             i += 1
 
-    def update_all_weights(self, eta):
+    def update_all_weights(self, eta, lam):
         for layer in self.layer_set:
-            layer.update_unit_weights(eta)
+            layer.update_unit_weights(eta, lam)
 
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):

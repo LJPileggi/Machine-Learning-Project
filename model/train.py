@@ -41,6 +41,7 @@ if __name__ == '__main__':
     batch_size = model_conf["batch_size"]
     epsilon    = model_conf["epsilon"]
     eta        = model_conf["eta"]
+    lam        = model_conf["lambda"]
     max_step   = model_conf["max_step"]
     check_step = model_conf["check_step"]
     layers     = model_conf["hidden_units"]
@@ -67,7 +68,7 @@ if __name__ == '__main__':
                 out = nn.forward(pattern[0])
                 nn.backwards(pattern[1] - out)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            nn.update_all_weights(eta/len(whole_TR))
+            nn.update_all_weights(eta/len(whole_TR), lam)
         if(i % check_step == 0):
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")

@@ -63,8 +63,8 @@ class nn_unit:
 #        print(f"Unit delta: {self._delta}")
         return delta * self.weights #the return value is used to update previous units
 
-    def update_weights(self, eta):
-        self.weights += eta * self._DeltaW
+    def update_weights(self, eta, lam):
+        self.weights += eta * self._DeltaW - lam*self.weights
         self._DeltaW = 0
         
     #def get_weights (self):
