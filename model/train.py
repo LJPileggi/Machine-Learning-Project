@@ -34,6 +34,7 @@ if __name__ == '__main__':
 
     train_set  = config["train_set"]
     test_set   = config["test_set"]
+    output_file= config["output_path"]
 
     encoding   = config["preprocessing"]["1_hot_enc"]
 
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
 
-    nn.load_model('best_model.h5')
+#    nn.load_model(output_file)
     
     for i in range (max_step):
         for current_batch in dl.training_set_partition(batch_size):
@@ -77,7 +78,7 @@ if __name__ == '__main__':
             print (f"{i}: {err}")
             train_err.append(err)
             if (np.allclose(err, 0, rtol=epsilon)):
-                nn.save_model('best_model.h5')
+                nn.save_model(output_file)
                 break
 
     print(f"train_err: {np.array(train_err)}")
