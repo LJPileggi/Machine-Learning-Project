@@ -47,7 +47,7 @@ if __name__ == '__main__':
     layers     = model_conf["hidden_units"]
     activation = model_conf["activation_units"]
 
-    print(f"eta: {eta}")
+    print(f"epsilon: {epsilon}\neta: {eta}\nbatch_size={batch_size}")
 
     dl = DataLoader ()
 
@@ -73,8 +73,8 @@ if __name__ == '__main__':
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
             train_err = np.append(train_err, err)
-        if (abs(err) < epsilon):
-            break
+            if (np.allclose(err, 0, rtol=epsilon)):
+                break
 
     print(f"train_err: {train_err.flatten()}")
 
