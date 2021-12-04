@@ -47,7 +47,7 @@ if __name__ == '__main__':
     layers     = model_conf["hidden_units"]
     activation = model_conf["activation_units"]
 
-    print(f"epsilon: {epsilon}\neta: {eta}\nlmbda: {lmbda}\nbatch_size={batch_size}")
+    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}")
 
     dl = DataLoader ()
 

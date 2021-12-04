@@ -20,7 +20,7 @@ def _1_hot_enc(inputs, domains):
 class DataLoader():
 
     def __init__(self):
-        self.DATA_PATH = os.path.join(".", "data")
+        self.DATA_PATH = os.path.join("..", "data")
         self.batch_size = 32
         self.data = {}
 
