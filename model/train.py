@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     nn = MLP (input_size, layers, activation)
     err = np.inf
-    train_err = np.array([])
+    train_err = []
     whole_TR= dl.get_training_set()
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
@@ -72,11 +72,11 @@ if __name__ == '__main__':
         if(i % check_step == 0):
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
-            train_err = np.append(train_err, err)
+            train_err.append(err)
             if (np.allclose(err, 0, rtol=epsilon)):
                 break
 
-    print(f"train_err: {train_err.flatten()}")
+    print(f"train_err: {np.array(train_err)}")
 
     test_error = accuracy (dl.get_test_set(), nn)
     print(f"accuracy: {(test_error)*100}%") 

@@ -20,10 +20,11 @@
 	"max_step": 100000,
 	"check_step": 100,
 	"batch_size": 32,
-	"hidden_units": [4, 1],
+	"hidden_units": [2, 2, 1],
 	"activation_units": [
 	    "sigmoidal",
-	    "sigmoidal"
-	    ]
+		"sigmoidal", 
+		"sigmoidal"
+	]
     }
 }
