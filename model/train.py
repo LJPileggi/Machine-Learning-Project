@@ -36,7 +36,6 @@ def create_graph (history, filename):
     plt.xlabel('Check Epochs')
     plt.ylabel('Loss')
     plt.legend()
-    plt.show()
     plt.savefig(filename)
 
 if __name__ == '__main__':
