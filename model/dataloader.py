@@ -51,6 +51,9 @@ class DataLoader():
         for i in range(batch_num):
             yield self.data['train'][i*batch_size:(i+1)*batch_size]
 
+    def get_input_size(self):
+        return len(self.data['train'][0][0])
+            
     def get_training_set(self):
         return self.data['train']
 

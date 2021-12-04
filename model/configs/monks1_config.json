@@ -14,10 +14,15 @@
 		]
 	},
     "model": {
-		"epsilon": 1e-2,
-		"eta": 2,
-		"max_step": 100000,
-		"check_step": 100,
-		"batch_size": -1
+	"epsilon": 1e-2,
+	"eta": 2,
+	"max_step": 100000,
+	"check_step": 100,
+	"batch_size": 32,
+	"hidden_units": [4, 1],
+	"activation_units": [
+	    "sigmoidal",
+	    "sigmoidal"
+	    ]
     }
 }

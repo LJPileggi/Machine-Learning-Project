@@ -1,0 +1,11 @@
+{
+    "train_set": "monks-1.train"
+    "test_set": "monks-1.test"
+    "model": {
+	"epsilon": 1e-2
+	"eta": 1e-4
+	"max_step": 1000
+	"check_step": 100
+	"batch_size": 32
+    }
+}
