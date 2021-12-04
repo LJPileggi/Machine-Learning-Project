@@ -5,6 +5,7 @@ import numpy as np
 import os
 import argparse
 import json
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description="Train a model.")
 parser.add_argument('--config_path',
@@ -28,13 +29,28 @@ def accuracy (batch, NN):
     accuracy = 1 - sum(errors)/len(errors)
     return accuracy
 
+def create_graph (history, filename):
+    epochs = range(1, history.size+1)
+    plt.plot(epochs, history, 'b', label='Training loss')
+    plt.title('Training Loss')
+    plt.xlabel('Check Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+    plt.savefig(filename)
+
 if __name__ == '__main__':
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
     train_set  = config["train_set"]
     test_set   = config["test_set"]
-    output_file= config["output_path"]
+    output_path= os.path.abspath(config["output_path"])
+    if (not os.path.exists(output_path)):
+        os.mkdir(output_file)
+    graph_path = os.path.abspath(config["graph_path"])
+    if (not os.path.exists(graph_path)):
+        os.mkdir(graph_path)
 
     encoding   = config["preprocessing"]["1_hot_enc"]
 
@@ -62,8 +78,6 @@ if __name__ == '__main__':
     whole_TR= dl.get_training_set()
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
-
-#    nn.load_model(output_file)
     
     for i in range (max_step):
         for current_batch in dl.training_set_partition(batch_size):
@@ -78,11 +92,12 @@ if __name__ == '__main__':
             print (f"{i}: {err}")
             train_err.append(err)
             if (np.allclose(err, 0, rtol=epsilon)):
-                nn.save_model(output_file)
+                nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
 
     print(f"train_err: {np.array(train_err)}")
 
+    create_graph(np.array(train_err), os.path.join(graph_path, "training_loss.png"))
     test_error = accuracy (dl.get_test_set(), nn)
     print(f"accuracy: {(test_error)*100}%") 
     #this accuracy calculation is wrong, because the error is squared and averaged

@@ -1,7 +1,8 @@
 {
     "train_set": "monks-2.train",
     "test_set": "monks-2.test",
-    "output_path": "output/best_model2.h5",
+    "output_path": "output/monks2/",
+    "graph_path": "graphs/monks2/",
 	"input_size": 6,
 	"output_size": 1,
 	"preprocessing": {
