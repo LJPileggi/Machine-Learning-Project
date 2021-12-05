@@ -49,7 +49,8 @@ class layer:
       return output
     
     def backwards(self, error_signal):
-        deltas = error_signal * self.output_prime #the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
+        #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
+        deltas = error_signal * self.output_prime 
         
         #here we compute the Dw for the current layer, but we don't apply it yet
         #   we add to the total Dw the current contribution, ie the Dw calculated from this pattern
@@ -57,13 +58,16 @@ class layer:
         self._DW += np.outer(self.inputs, deltas) 
 
         #here we compute the error signal for the previous layer
-        #    We operate on a copy of _WM without the last row, i.e. we ignore the w0 weights.
         #    deltas, seen as a row vector, is broadcasted to a matrix with all equal rows.
         #    The point-wise multiplicaion multiplies the w vector of unit t with it's corresponding d_t
-        #    (the w vector of unit t is justa columns vetor in the WM matrix).
+        #    (the w vector of unit t is just a column vetor in the WM matrix).
         #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
         #    i.e. the error signal for each unit in the previous layer
-        return np.sum(np.delete(self._WM, -1, 0)*deltas, axis=1)
+        #    We discard the last value of this error signal vector, because it does not correspond
+        #    to any input, as it is computed from w0, the unit bias
+        #    i checked with timeit that deleting last row of the result is faster then 
+        #    deleting the last row of wm and then calculating the result
+        return np.delete(np.sum(self._WM*deltas, axis=1), -1, 0)
 
 
     def update_weights(self, eta, lam):
