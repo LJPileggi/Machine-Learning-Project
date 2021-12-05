@@ -113,7 +113,7 @@ def d_sigmoidal(network_value, a=1.):
      - hyperbol: determines whether the derived function is a hyperbolic tangent
      (True) or sigmoid (False). Default value: False.
     """
-    k = np.exp(-a*network_value)
+    k = np.exp(a*network_value)
     out = k / ((k+1)**2)
     return out
 
