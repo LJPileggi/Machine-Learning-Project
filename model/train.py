@@ -17,21 +17,21 @@ parser.add_argument('--grid_search', dest='grid_search', action='store_true',
 parser.set_defaults(grid_search=False)
 
 def MSE_over_network(batch, NN):
-    errors = []
+    mse = 0
     for pattern in batch:
         out = NN.forward(pattern[0])
         out = out > 0.5
-        errors.append((out - pattern[1])**2)
-    mse = sum(errors)/len(errors)
+        mse += ((out - pattern[1])**2)
+    mse = mse/len(batch)
     return mse
 
 def accuracy (batch, NN):
-    errors = []
+    errors = 0
     for pattern in batch:
         out = NN.forward(pattern[0])
         out = out > 0.5
-        errors.append(abs(out - pattern[1]))
-    accuracy = 1 - sum(errors)/len(errors)
+        errors += (abs(out - pattern[1]))
+    accuracy = 1 - errors/len(errors)
     return accuracy
 
 def create_graph (history, filename):
