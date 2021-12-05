@@ -89,16 +89,17 @@ def sigmoidal(network_value, a=1., thr=0.):
     returns:
      - 1/0 (hyperbol=False); 1/-1 (hyperbol=True).
     """
-    if (thr > 1.) | (thr < 0.):
-        raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
     out = 1./(1. + np.exp(-a*network_value))
-    if thr != 0.: #possiamo anche levare questo check, perché nel caso, perché se è 0 allora il secondo if diviene "se out sta tra 1 ed 1, cosa che non accdrà mai.
+    if thr == 0.: 
+        return out
+    else:
+        if (thr > 1.) | (thr < 0.):
+            raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
         if ((out > 0.5*(1. - thr)) and (out < 0.5*(1. + thr))): 
             raise ValueError('ValueError: unit output falls within rejection zone') #perché ritornare un errore?
         else:
             return 1 if out >= 0.5*(1. + thr) else 0
-    else:
-        return out
+
 
 
 
