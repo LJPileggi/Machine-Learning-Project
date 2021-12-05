@@ -46,7 +46,7 @@ if __name__ == '__main__':
     test_set   = config["test_set"]
     output_path= os.path.abspath(config["output_path"])
     if (not os.path.exists(output_path)):
-        os.mkdir(output_file)
+        os.mkdir(output_path)
     graph_path = os.path.abspath(config["graph_path"])
     if (not os.path.exists(graph_path)):
         os.mkdir(graph_path)
@@ -90,7 +90,7 @@ if __name__ == '__main__':
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
             train_err.append(err)
-            if (np.allclose(err, 0, rtol=epsilon)):
+            if (np.allclose(err, 0, atol=epsilon)):
                 nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
 
