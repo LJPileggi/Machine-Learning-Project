@@ -10,22 +10,27 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description="Train a model.")
 parser.add_argument('--config_path',
                     help='path to config file')
+parser.add_argument('--graph_name',
+                    help='name of the loss graph you will generate')
+parser.add_argument('--grid_search', dest='grid_search', action='store_true',
+                    help='If you are going to do a grid_search')
+parser.set_defaults(grid_search=False)
 
 def MSE_over_network(batch, NN):
-    errors = np.array([])
+    errors = []
     for pattern in batch:
         out = NN.forward(pattern[0])
         out = out > 0.5
-        errors= np.append(errors, (out - pattern[1])**2)
+        errors.append((out - pattern[1])**2)
     mse = sum(errors)/len(errors)
     return mse
 
 def accuracy (batch, NN):
-    errors = np.array([])
+    errors = []
     for pattern in batch:
         out = NN.forward(pattern[0])
         out = out > 0.5
-        errors = np.append(errors, abs(out - pattern[1]))
+        errors.append(abs(out - pattern[1]))
     accuracy = 1 - sum(errors)/len(errors)
     return accuracy
 
@@ -46,10 +51,11 @@ if __name__ == '__main__':
     test_set   = config["test_set"]
     output_path= os.path.abspath(config["output_path"])
     if (not os.path.exists(output_path)):
-        os.mkdir(output_file)
+        os.makedirs(output_path)
     graph_path = os.path.abspath(config["graph_path"])
     if (not os.path.exists(graph_path)):
-        os.mkdir(graph_path)
+        os.makedirs(graph_path)
+    graph_name = args.graph_name if args.graph_name is not None else "training_loss.png"
 
     encoding   = config["preprocessing"]["1_hot_enc"]
 
@@ -90,13 +96,13 @@ if __name__ == '__main__':
             err = MSE_over_network (whole_TR, nn)
             print (f"{i}: {err}")
             train_err.append(err)
-            if (np.allclose(err, 0, rtol=epsilon)):
+            if (np.allclose(err, 0, atol=epsilon)):
                 nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
 
     print(f"train_err: {np.array(train_err)}")
 
-    create_graph(np.array(train_err), os.path.join(graph_path, "training_loss.png"))
+    create_graph(np.array(train_err), os.path.join(graph_path, graph_name))
     test_error = accuracy (dl.get_test_set(), nn)
     print(f"accuracy: {(test_error)*100}%") 
     #this accuracy calculation is wrong, because the error is squared and averaged

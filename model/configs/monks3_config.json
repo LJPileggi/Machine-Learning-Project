@@ -17,16 +17,16 @@
 	},
     "model": {
 	"epsilon": 1e-2,
-	"eta": 2,
-	"lambda": 1e-5,
-	"max_step": 100000,
+	"eta": 3,
+	"lambda": 1e-6,
+	"max_step": 2000,
 	"check_step": 100,
 	"batch_size": 32,
 	"hidden_units": [2, 2, 1],
 	"activation_units": [
 	    "sigmoidal",
-		"sigmoidal", 
-		"sigmoidal"
+	    "sigmoidal", 
+	    "sigmoidal"
 	]
     }
 }
