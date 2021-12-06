@@ -28,9 +28,10 @@ class layer:
     """
     def __init__(self, input_dim, layer_dim, activation = "sigmoidal", dropout=None):
         print(f"{layer_dim}; {activation}")
-        matrix_size = (input_dim+1, layer_dim) #input dim is augmented, in order to accomodate the w0 additional weight
-        self._WM = np.random.normal(loc=0.0, scale=0.5, size=matrix_size)
+        self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+        self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
         self._DW = 0
+        self._Dbiases = 0
         self.inputs = None
         self.output_prime = None
         if activation != "sigmoidal":
@@ -40,8 +41,7 @@ class layer:
         self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def forward (self, inputs):
-      inputs = np.append(inputs, 1)  #adds x0 to the inputs
-      net = np.dot(inputs, self._WM)     #computes the net of all units at one
+      net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
       output = self._activation(net)     #computes the out of all units at one
 
       self.inputs = inputs                      #stores inputs, for backprop calculation
@@ -56,6 +56,7 @@ class layer:
         #   we add to the total Dw the current contribution, ie the Dw calculated from this pattern
         #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
         self._DW += np.outer(self.inputs, deltas) 
+        self._Dbiases += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
 
         #here we compute the error signal for the previous layer
         #    deltas, seen as a row vector, is broadcasted to a matrix with all equal rows.
@@ -63,11 +64,7 @@ class layer:
         #    (the w vector of unit t is just a column vetor in the WM matrix).
         #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
         #    i.e. the error signal for each unit in the previous layer
-        #    We discard the last value of this error signal vector, because it does not correspond
-        #    to any input, as it is computed from w0, the unit bias
-        #    i checked with timeit that deleting last row of the result is faster then 
-        #    deleting the last row of wm and then calculating the result
-        return np.delete(np.sum(self._WM*deltas, axis=1), -1, 0)
+        return np.sum(self._WM*deltas, axis=1)
 
 
     def update_weights(self, eta, lam):
@@ -77,7 +74,9 @@ class layer:
         #In a (mini)batch alg, we call this.backward for each pattern, and
         #   this.update_weights just once per batch.
         self._WM += eta * self._DW - lam*self._WM
+        self._biases += eta * self._Dbiases
         self._DW = 0
+        self._Dbiases = 0
 
     # def get_output_dim (self):
     #     return len(self.unit_set)

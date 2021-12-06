@@ -16,12 +16,12 @@
 		]
 	},
     "model": {
-	"epsilon": 1e-2,
-	"eta": 2,
-	"lambda": 1e-4,
+		"epsilon": 1e-4,
+		"eta": 1,
+	"lambda": 0,
 	"max_step": 100000,
 	"check_step": 100,
-	"batch_size": 32,
+	"batch_size": 10,
 	"hidden_units": [4, 1],
 	"activation_units": [
 	    "sigmoidal",
