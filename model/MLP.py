@@ -45,14 +45,16 @@ class MLP:
     def save_model (self, filename):
         hf = h5py.File(filename, "w")
         for i, layer in enumerate(self.layer_set):
-            layer_weights = layer.get_weights()
-            hf.create_dataset(f"layer_{i}", data=layer_weights)
+            layer_weights, biases = layer.get_weights()
+            hf.create_dataset(f"layer_{i}_weights", data=layer_weights)
+            hf.create_dataset(f"layer_{i}_biases", data=biases)
         hf.close()
 
     def load_model (self, filename):
         hf = h5py.File(filename, "r")
         for i, layer in enumerate(self.layer_set):
-            layer_weights = np.array(hf.get(f"layer_{i}"))
-            layer.load_weights(layer_weights)
+            layer_weights = np.array(hf.get(f"layer_{i}_weights"))
+            baiases = np.array(hf.get(f"layer_{i}_biases"))
+            layer.load_weights(layer_weights, baiases)
         hf.close()
             

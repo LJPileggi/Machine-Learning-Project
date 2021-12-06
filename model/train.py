@@ -97,7 +97,7 @@ if __name__ == '__main__':
             print (f"{i}: {err}")
             train_err.append(err)
             if (np.allclose(err, 0, atol=epsilon)):
-                #nn.save_model(os.path.join(output_path, "best_model.h5"))
+                nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
 
     print(f"train_err: {np.array(train_err)}")

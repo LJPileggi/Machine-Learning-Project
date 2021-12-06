@@ -77,7 +77,11 @@ class layer:
         self._biases += eta * self._Dbiases
         self._DW = 0
         self._Dbiases = 0
+    
+    def get_weights(self):
+      return (self._WM, self._biases)
 
-    # def get_output_dim (self):
-    #     return len(self.unit_set)
+    def load_weights(self, weights, biases):
+        self._WM = weights
+        self._biases = biases
         
