@@ -7,14 +7,7 @@ import argparse
 import json
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser(description="Train a model.")
-parser.add_argument('--config_path',
-                    help='path to config file')
-parser.add_argument('--graph_name',
-                    help='name of the loss graph you will generate')
-parser.add_argument('--grid_search', dest='grid_search', action='store_true',
-                    help='If you are going to do a grid_search')
-parser.set_defaults(grid_search=False)
+
 
 def MSE_over_network(batch, NN):
     mse = 0
@@ -62,7 +55,6 @@ def train(layers, batch_size, eta, lam, alpha):
             print (f"{i}: {train_err} - {val_err}")
             all_val_err.append(val_err)
             if (np.allclose(val_err, 0, atol=epsilon)):
-                #nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
     return all_train_err, all_val_err, nn
 
@@ -78,11 +70,54 @@ def create_graph (train_err, val_err, filename):
     plt.savefig(filename)
 
 if __name__ == '__main__':
+
+    ### Parsing cli arguments ###
+    parser = argparse.ArgumentParser(description="Train a model.")
+    parser.add_argument('--config_path',
+                        help='path to config file')
+    parser.add_argument('--graph_name',
+                        help='name of the loss graph you will generate')
+    parser.add_argument('--grid_search', dest='grid_search', action='store_true',
+                        help='If you are going to do a grid_search')
+    parser.set_defaults(grid_search=False)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
+
+    ### loading and preprocessing dataset from config ###
     train_set  = config["train_set"]
     test_set   = config["test_set"]
+    encoding   = config["preprocessing"]["1_hot_enc"]
+    dl = DataLoader ()
+    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
+    
+    ### loading CONSTANT parameters from config ###
+    model_conf = config["model"]
+    activation = model_conf["activation_units"]
+    max_step   = model_conf["max_step"]
+    check_step = model_conf["check_step"]
+    epsilon    = model_conf["epsilon"]
+    
+    
+    ### loding hyperparameters from config ###
+    layers     = model_conf["hidden_units"]
+    batch_size = model_conf["batch_size"]
+    eta        = model_conf["eta"]
+    lam        = model_conf["lambda"]
+    alpha      = model_conf["alpha"]
+    print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
+
+    ### training ###
+    #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
+    train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
+
+
+    ### printing results ###
+    print(f"train_err: {np.array(train_err)}")
+    test_error = accuracy (dl.get_partition_set('test'), nn)
+    print(f"accuracy: {(test_error)*100}%") 
+
+    ### plotting loss ###
     output_path= os.path.abspath(config["output_path"])
     if (not os.path.exists(output_path)):
         os.makedirs(output_path)
@@ -90,34 +125,9 @@ if __name__ == '__main__':
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
     graph_name = args.graph_name if args.graph_name is not None else "training_loss.png"
-
-    encoding   = config["preprocessing"]["1_hot_enc"]
-
-    model_conf = config["model"]
-    batch_size = model_conf["batch_size"]
-    epsilon    = model_conf["epsilon"]
-    eta        = model_conf["eta"]
-    lam        = model_conf["lambda"]
-    alpha      = model_conf["alpha"]
-    max_step   = model_conf["max_step"]
-    check_step = model_conf["check_step"]
-    layers     = model_conf["hidden_units"]
-    activation = model_conf["activation_units"]
-
-
-    dl = DataLoader ()
-    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
-#    dl.load_data ("train", train_set, encoding)
-#    dl.load_data ("test", test_set, encoding)
-
-    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
-    #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
-    train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
-
-    print(f"train_err: {np.array(train_err)}")
-
     create_graph(np.array(train_err), np.array(val_err), os.path.join(graph_path, graph_name))
-    test_error = accuracy (dl.get_partition_set('test'), nn)
-    print(f"accuracy: {(test_error)*100}%") 
-    #this accuracy calculation is wrong, because the error is squared and averaged
+
+    ### saving model ###
+    #nn.save_model(os.path.join(output_path, "best_model.h5"))
+    
 
