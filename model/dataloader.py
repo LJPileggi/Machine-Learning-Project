@@ -50,7 +50,7 @@ class DataLoader():
                 inputs = data[1:]
             output = data[0]
             pattern = (np.array(inputs), np.array(output))
-            dataset[data_key].append(pattern)
+            dataset.append(pattern)
         random.shuffle(dataset)
         tot_len = len(dataset)
         train_separator = int(tot_len*train_slice)
@@ -75,8 +75,6 @@ class DataLoader():
     def get_input_size(self):
         return len(self.data['train'][0][0])
             
-    def get_training_set(self):
-        return self.data['train']
+    def get_partition_set(self, datakey):
+        return self.data[datakey]
 
-    def get_test_set(self):
-        return self.data['test']

@@ -34,13 +34,19 @@ def accuracy (batch, NN):
     accuracy = 1 - errors/len(batch)
     return accuracy
 
-def train(dl, layers, activation, max_step, batch_size, eta, lam, alpha, check_step, epsilon):
+#it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
+def train(layers, batch_size, eta, lam, alpha):
     input_size = dl.get_input_size ()
-    whole_TR= dl.get_training_set()
+    whole_TR = dl.get_partition_set('train')
+    #whatch out! if batch_size = -1, it becomes len(TR)
+    batch_size = len(whole_TR) if batch_size == -1 else batch_size
+    whole_VL = dl.get_partition_set('val')
     nn = MLP (input_size, layers, activation)
-    err = np.inf
+    train_err = np.inf
+    val_err = np.inf
     
-    train_err = []
+    all_train_err = []
+    all_val_err = []
     for i in range (max_step):
         for current_batch in dl.dataset_partition('train', batch_size):
             for pattern in current_batch:
@@ -49,20 +55,24 @@ def train(dl, layers, activation, max_step, batch_size, eta, lam, alpha, check_s
                 nn.backwards(error)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
             nn.update_weights(eta/len(whole_TR), lam, alpha)
+        train_err = MSE_over_network (whole_TR, nn)
+        all_train_err.append(train_err)
         if(i % check_step == 0):
-            err = MSE_over_network (whole_TR, nn)
-            print (f"{i}: {err}")
-            train_err.append(err)
-            if (np.allclose(err, 0, atol=epsilon)):
+            val_err = MSE_over_network (whole_VL, nn)
+            print (f"{i}: {train_err} - {val_err}")
+            all_val_err.append(val_err)
+            if (np.allclose(val_err, 0, atol=epsilon)):
                 #nn.save_model(os.path.join(output_path, "best_model.h5"))
                 break
-    return train_err
+    return all_train_err, all_val_err, nn
 
-def create_graph (history, filename):
-    epochs = range(1, history.size+1)
-    plt.plot(epochs, history, 'b', label='Training loss')
+def create_graph (train_err, val_err, filename):
+    epochs = range(1, train_err.size+1)
+    val_epochs = [x*100 for x in range(val_err.size)]
+    plt.plot(epochs, train_err, 'b', label='Training loss')
+    plt.plot(val_epochs, val_err, 'g', label='Validation loss')
     plt.title('Training Loss')
-    plt.xlabel('Check Epochs')
+    plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(filename)
@@ -100,17 +110,14 @@ if __name__ == '__main__':
 #    dl.load_data ("train", train_set, encoding)
 #    dl.load_data ("test", test_set, encoding)
 
-    whole_TR = dl.get_training_set()
-    #whatch out! if batch_size = -1, it becomes len(TR)
-    batch_size = len(whole_TR) if batch_size == -1 else batch_size
     print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
-    
-    train_err = train(dl, layers, activation, max_step, batch_size, eta, lam, alpha, check_step, epsilon)
+    #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
+    train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
 
     print(f"train_err: {np.array(train_err)}")
 
-    create_graph(np.array(train_err), os.path.join(graph_path, graph_name))
-    test_error = accuracy (dl.get_test_set(), nn)
+    create_graph(np.array(train_err), np.array(val_err), os.path.join(graph_path, graph_name))
+    test_error = accuracy (dl.get_partition_set('test'), nn)
     print(f"accuracy: {(test_error)*100}%") 
     #this accuracy calculation is wrong, because the error is squared and averaged
 
