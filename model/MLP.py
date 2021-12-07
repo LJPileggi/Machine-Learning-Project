@@ -37,9 +37,9 @@ class MLP:
         for layer in reversed(self.layer_set):
             error_signal = layer.backwards(error_signal)
     
-    def update_weights(self, eta, lam):
+    def update_weights(self, eta, lam, alpha):
         for layer in self.layer_set:
-            layer.update_weights(eta, lam)
+            layer.update_weights(eta, lam, alpha)
 
 
     def save_model (self, filename):

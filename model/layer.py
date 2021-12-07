@@ -30,8 +30,10 @@ class layer:
         print(f"{layer_dim}; {activation}")
         self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
         self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
-        self._DW = 0
-        self._Dbiases = 0
+        self._negGrad = 0
+        self._biases_negGrad = 0
+        self._DWold = 0
+        self._biases_DWold = 0
         self.inputs = None
         self.output_prime = None
         if activation != "sigmoidal":
@@ -52,11 +54,11 @@ class layer:
         #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
         deltas = error_signal * self.output_prime 
         
-        #here we compute the Dw for the current layer, but we don't apply it yet
-        #   we add to the total Dw the current contribution, ie the Dw calculated from this pattern
+        #here we compute the negative gradient for the current layer, but we don't apply it yet
+        #   we add to the total neg gradient the current contribution, ie the neg grad calculated from this pattern
         #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
-        self._DW += np.outer(self.inputs, deltas) 
-        self._Dbiases += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
+        self._negGrad += np.outer(self.inputs, deltas) 
+        self._biases_negGrad += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
 
         #here we compute the error signal for the previous layer
         #    deltas, seen as a row vector, is broadcasted to a matrix with all equal rows.
@@ -67,16 +69,22 @@ class layer:
         return np.sum(self._WM*deltas, axis=1)
 
 
-    def update_weights(self, eta, lam):
-        #here we apply the Dw computed during backward.
+    def update_weights(self, eta, lam, alpha):
+        #here we apply the negGradient computed during backward.
         #In a online alg, we continously call this.backward and this.update_weights,
-        #   so for each pattern, dw is computed and applied immediately.
+        #   so for each pattern, negGrad is computed and applied immediately.
         #In a (mini)batch alg, we call this.backward for each pattern, and
         #   this.update_weights just once per batch.
-        self._WM += eta * self._DW - lam*self._WM
-        self._biases += eta * self._Dbiases
-        self._DW = 0
-        self._Dbiases = 0
+        DW = eta*self._negGrad + alpha*self._DWold
+        self._WM += DW - lam*self._WM
+        self._DWold = DW
+        
+        Dbias = eta * self._biases_negGrad + alpha*self._biases_DWold
+        self._biases += Dbias
+        self._biases_DWold = Dbias
+
+        self._negGrad = 0
+        self._biases_negGrad = 0
     
     def get_weights(self):
       return (self._WM, self._biases)
