@@ -1,6 +1,6 @@
 from dataloader import DataLoader
 from MLP import MLP
-
+from multiprocessing import Pool
 import numpy as np
 import os
 import argparse
@@ -29,6 +29,7 @@ def accuracy (batch, NN):
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
 def train(layers, batch_size, eta, lam, alpha):
+    print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
     input_size = dl.get_input_size ()
     whole_TR = dl.get_partition_set('train')
     #whatch out! if batch_size = -1, it becomes len(TR)
@@ -56,6 +57,8 @@ def train(layers, batch_size, eta, lam, alpha):
             all_val_err.append(val_err)
             if (np.allclose(val_err, 0, atol=epsilon)):
                 break
+    test_error = accuracy (dl.get_partition_set('test'), nn)
+    print(f"accuracy: {(test_error)*100}%") 
     return all_train_err, all_val_err, nn
 
 def create_graph (train_err, val_err, filename):
@@ -70,7 +73,6 @@ def create_graph (train_err, val_err, filename):
     plt.savefig(filename)
 
 if __name__ == '__main__':
-
     ### Parsing cli arguments ###
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument('--config_path',
@@ -88,11 +90,13 @@ if __name__ == '__main__':
     train_set  = config["train_set"]
     test_set   = config["test_set"]
     encoding   = config["preprocessing"]["1_hot_enc"]
+    global dl
     dl = DataLoader ()
     dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
     
     ### loading CONSTANT parameters from config ###
     model_conf = config["model"]
+    global activation, max_step, check_step, epsilon
     activation = model_conf["activation_units"]
     max_step   = model_conf["max_step"]
     check_step = model_conf["check_step"]
@@ -100,22 +104,27 @@ if __name__ == '__main__':
     
     
     ### loding hyperparameters from config ###
-    layers     = model_conf["hidden_units"]
-    batch_size = model_conf["batch_size"]
-    eta        = model_conf["eta"]
-    lam        = model_conf["lambda"]
-    alpha      = model_conf["alpha"]
-    print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
+    hyperparameters = [
+        (layers, batch_size, eta, lam, alpha)
+        for alpha       in model_conf["alpha"]
+        for lam         in model_conf["lambda"]
+        for eta         in model_conf["eta"]
+        for batch_size  in model_conf["batch_size"]
+        for layers      in model_conf["hidden_units"]
+    ]
 
     ### training ###
-    #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
-    train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
+    with Pool() as pool:
+        pool.starmap(train, hyperparameters)
+    # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
+    #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
+    #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
+    #     train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
 
-
-    ### printing results ###
-    print(f"train_err: {np.array(train_err)}")
-    test_error = accuracy (dl.get_partition_set('test'), nn)
-    print(f"accuracy: {(test_error)*100}%") 
+    #     ### printing results ###
+    #     print(f"train_err: {np.array(train_err)}")
+    #     test_error = accuracy (dl.get_partition_set('test'), nn)
+    #     print(f"accuracy: {(test_error)*100}%") 
 
     ### plotting loss ###
     output_path= os.path.abspath(config["output_path"])
@@ -129,5 +138,5 @@ if __name__ == '__main__':
 
     ### saving model ###
     #nn.save_model(os.path.join(output_path, "best_model.h5"))
-    
+
 

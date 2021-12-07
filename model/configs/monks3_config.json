@@ -16,18 +16,18 @@
 		]
 	},
     "model": {
-	"epsilon": 1e-2,
-	"eta": 1,
-	"lambda": 0.3e-4,
-	"alpha": 0,
-	"max_step": 5000,
-	"check_step": 100,
-	"batch_size": 32,
-	"hidden_units": [2, 2, 1],
-	"activation_units": [
-	    "sigmoidal",
-	    "sigmoidal", 
-	    "sigmoidal"
-	]
+		"epsilon": 1e-2,
+		"max_step": 5000,
+		"check_step": 100,
+		"activation_units": [
+			"sigmoidal",
+			"sigmoidal", 
+			"sigmoidal"
+		],
+		"eta": [1, 0.1],
+		"lambda": [3e-5, 2e-5, 1e-5],
+		"alpha": [0],
+		"batch_size": [32, 15, 10],
+		"hidden_units": [[2, 2, 1]]
     }
 }
