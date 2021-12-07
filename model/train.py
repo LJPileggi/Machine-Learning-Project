@@ -72,10 +72,11 @@ if __name__ == '__main__':
 
 
     dl = DataLoader ()
-    dl.load_data ("train", train_set, encoding)
-    dl.load_data ("test", test_set, encoding)
+    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
+#    dl.load_data ("train", train_set, encoding)
+#    dl.load_data ("test", test_set, encoding)
 
-    whole_TR= dl.get_training_set()
+    whole_TR = dl.get_training_set()
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
     print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     
     train_err = []
     for i in range (max_step):
-        for current_batch in dl.training_set_partition(batch_size):
+        for current_batch in dl.dataset_partition('train', batch_size):
             for pattern in current_batch:
                 out = nn.forward(pattern[0])
                 error = pattern[1] - out
