@@ -78,7 +78,7 @@ if __name__ == '__main__':
     whole_TR= dl.get_training_set()
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
-    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}")
+    print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
     
     input_size = dl.get_input_size ()
     nn = MLP (input_size, layers, activation)
