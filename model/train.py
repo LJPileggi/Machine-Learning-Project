@@ -34,6 +34,30 @@ def accuracy (batch, NN):
     accuracy = 1 - errors/len(batch)
     return accuracy
 
+def train(dl, layers, activation, max_step, batch_size, eta, lam, alpha, check_step, epsilon):
+    input_size = dl.get_input_size ()
+    whole_TR= dl.get_training_set()
+    nn = MLP (input_size, layers, activation)
+    err = np.inf
+    
+    train_err = []
+    for i in range (max_step):
+        for current_batch in dl.training_set_partition(batch_size):
+            for pattern in current_batch:
+                out = nn.forward(pattern[0])
+                error = pattern[1] - out
+                nn.backwards(error)
+            #we are updating with eta/TS_size in order to compute LMS, not simply LS
+            nn.update_weights(eta/len(whole_TR), lam, alpha)
+        if(i % check_step == 0):
+            err = MSE_over_network (whole_TR, nn)
+            print (f"{i}: {err}")
+            train_err.append(err)
+            if (np.allclose(err, 0, atol=epsilon)):
+                #nn.save_model(os.path.join(output_path, "best_model.h5"))
+                break
+    return train_err
+
 def create_graph (history, filename):
     epochs = range(1, history.size+1)
     plt.plot(epochs, history, 'b', label='Training loss')
@@ -80,26 +104,7 @@ if __name__ == '__main__':
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
     print(f"epsilon: {epsilon}\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
     
-    input_size = dl.get_input_size ()
-    nn = MLP (input_size, layers, activation)
-    err = np.inf
-    
-    train_err = []
-    for i in range (max_step):
-        for current_batch in dl.training_set_partition(batch_size):
-            for pattern in current_batch:
-                out = nn.forward(pattern[0])
-                error = pattern[1] - out
-                nn.backwards(error)
-            #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            nn.update_weights(eta/len(whole_TR), lam, alpha)
-        if(i % check_step == 0):
-            err = MSE_over_network (whole_TR, nn)
-            print (f"{i}: {err}")
-            train_err.append(err)
-            if (np.allclose(err, 0, atol=epsilon)):
-                nn.save_model(os.path.join(output_path, "best_model.h5"))
-                break
+    train_err = train(dl, layers, activation, max_step, batch_size, eta, lam, alpha, check_step, epsilon)
 
     print(f"train_err: {np.array(train_err)}")
 
