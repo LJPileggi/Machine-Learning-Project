@@ -28,19 +28,29 @@ def accuracy (batch, NN):
     return accuracy
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
-def train(layers, batch_size, eta, lam, alpha):
+def train(dl, confs, layers, batch_size, eta, lam, alpha):
     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
+    
+    #set global configurations#
+    activation = confs["activation_units"]
+    max_step   = confs["max_step"]
+    check_step = confs["check_step"]
+    epsilon    = confs["epsilon"]
     input_size = dl.get_input_size ()
     whole_TR = dl.get_partition_set('train')
+    whole_VL = dl.get_partition_set('val')
+    
+    #create mlp#
+    nn = MLP (input_size, layers, activation)
+    
+    #prepares variables used in epochs#
+    all_train_err = []
+    train_err = np.inf
+    all_val_err = []
+    val_err = np.inf
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
-    whole_VL = dl.get_partition_set('val')
-    nn = MLP (input_size, layers, activation)
-    train_err = np.inf
-    val_err = np.inf
     
-    all_train_err = []
-    all_val_err = []
     for i in range (max_step):
         for current_batch in dl.dataset_partition('train', batch_size):
             for pattern in current_batch:
@@ -49,8 +59,10 @@ def train(layers, batch_size, eta, lam, alpha):
                 nn.backwards(error)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
             nn.update_weights(eta/len(whole_TR), lam, alpha)
+        #after each epoch
         train_err = MSE_over_network (whole_TR, nn)
         all_train_err.append(train_err)
+        #once each check_step epoch
         if(i % check_step == 0):
             val_err = MSE_over_network (whole_VL, nn)
             print (f"{i}: {train_err} - {val_err}")
@@ -90,32 +102,26 @@ if __name__ == '__main__':
     train_set  = config["train_set"]
     test_set   = config["test_set"]
     encoding   = config["preprocessing"]["1_hot_enc"]
-    global dl
     dl = DataLoader ()
     dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
     
     ### loading CONSTANT parameters from config ###
-    model_conf = config["model"]
-    global activation, max_step, check_step, epsilon
-    activation = model_conf["activation_units"]
-    max_step   = model_conf["max_step"]
-    check_step = model_conf["check_step"]
-    epsilon    = model_conf["epsilon"]
-    
-    
+    global_conf = config["model"]["global_conf"]
+
     ### loding hyperparameters from config ###
-    hyperparameters = [
-        (layers, batch_size, eta, lam, alpha)
-        for alpha       in model_conf["alpha"]
-        for lam         in model_conf["lambda"]
-        for eta         in model_conf["eta"]
-        for batch_size  in model_conf["batch_size"]
-        for layers      in model_conf["hidden_units"]
+    hyperparameters = config["model"]["hyperparameters"]
+    configurations = [
+        (dl, global_conf, layers, batch_size, eta, lam, alpha)
+        for layers      in hyperparameters["hidden_units"]
+        for batch_size  in hyperparameters["batch_size"]
+        for eta         in hyperparameters["eta"]
+        for lam         in hyperparameters["lambda"]
+        for alpha       in hyperparameters["alpha"]
     ]
 
     ### training ###
     with Pool() as pool:
-        pool.starmap(train, hyperparameters)
+        pool.starmap(train, configurations)
     # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
     #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
     #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")

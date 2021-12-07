@@ -15,18 +15,22 @@
 			[1, 2 ]
 		]
 	},
-    "model": {
-	"epsilon": 1e-2,
-	"eta": [2],
-	"lambda": [1e-4],
-	"alpha": [0],
-	"max_step": 100000,
-	"check_step": 100,
-	"batch_size": [32],
-	"hidden_units": [[4, 1]],
-	"activation_units": [
-	    "sigmoidal",
-	    "sigmoidal"
-	    ]
+	"model": {
+		"global_conf": {
+			"epsilon": 1e-2,
+			"max_step": 100000,
+			"check_step": 100,
+			"activation_units": [
+				"sigmoidal",
+				"sigmoidal"
+			]
+		},
+		"hyperparameters": {
+			"eta": [2],
+			"lambda": [1e-4],
+			"alpha": [0],
+			"batch_size": [32],
+			"hidden_units": [[4, 1]]
+		}
     }
 }
