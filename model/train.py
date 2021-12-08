@@ -41,17 +41,22 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
         whole_TR = dl.get_partition_set('train')
         whole_VL = dl.get_partition_set('val')
         
+        ##setting history to store plots data
+        history = {}
+        history['training'] = []
+        history['validation'] = []
+        history['val_step'] = check_step
+        history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
+
         #create mlp#
         nn = MLP (input_size, layers, activation)
         
-        #prepares variables used in epochs#
-        all_train_err = []
-        train_err = np.inf
-        all_val_err = []
-        val_err = np.inf
         #whatch out! if batch_size = -1, it becomes len(TR)
         batch_size = len(whole_TR) if batch_size == -1 else batch_size
         
+        #prepares variables used in epochs#
+        train_err = np.inf
+        val_err = np.inf
         for i in range (max_step):
             for current_batch in dl.dataset_partition('train', batch_size):
                 for pattern in current_batch:
@@ -62,27 +67,28 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
                 nn.update_weights(eta/len(whole_TR), lam, alpha)
             #after each epoch
             train_err = MSE_over_network (whole_TR, nn)
-            all_train_err.append(train_err)
-            #once each check_step epoch
+            history['training'].append(train_err)
             if(i % check_step == 0):
+                #once each check_step epoch
                 val_err = MSE_over_network (whole_VL, nn)
+                history['validation'].append(train_err)
                 print (f"{i}: {train_err} - {val_err}")
-                all_val_err.append(val_err)
                 if (np.allclose(val_err, 0, atol=epsilon)):
                     break
         test_error = accuracy (dl.get_partition_set('test'), nn)
         print(f"accuracy: {(test_error)*100}%") 
-        return all_train_err, all_val_err, nn
+        return history, nn
     except KeyboardInterrupt:
         print('Interrupted')
-        exit
+        return None
+    
 
-def create_graph (train_err, val_err, filename):
-    epochs = range(1, train_err.size+1)
-    val_epochs = [x*100 for x in range(val_err.size)]
-    plt.plot(epochs, train_err, 'b', label='Training loss')
-    plt.plot(val_epochs, val_err, 'g', label='Validation loss')
-    plt.title('Training Loss')
+def create_graph (history, filename):
+    epochs = range(1, history['training'].size+1)
+    val_epochs = [x*history['val_step'] for x in range(history['validation'].size)]
+    plt.plot(epochs, history['training'], 'b', label='Training_{history["name"]} loss')
+    plt.plot(val_epochs, history['validation'], 'g', label='Validation_history["name"] loss')
+    plt.title('Training and Validation Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
@@ -125,7 +131,7 @@ if __name__ == '__main__':
 
     ### training ###
     with Pool() as pool:
-        pool.starmap(train, configurations)
+        results = pool.starmap(train, configurations)
     # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
     #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
     #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
@@ -143,8 +149,9 @@ if __name__ == '__main__':
     graph_path = os.path.abspath(config["graph_path"])
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
-    graph_name = args.graph_name if args.graph_name is not None else "training_loss.png"
-    create_graph(np.array(train_err), np.array(val_err), os.path.join(graph_path, graph_name))
+    for history, nn in results:
+        graph_name = f"training_loss_{history['name']}.png"
+        create_graph(history, os.path.join(graph_path, graph_name))
 
     ### saving model ###
     #nn.save_model(os.path.join(output_path, "best_model.h5"))
