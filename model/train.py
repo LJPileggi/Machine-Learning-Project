@@ -44,9 +44,11 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
     nn = MLP (input_size, layers, activation)
     
     #prepares variables used in epochs#
-    all_train_err = []
+    history = {}
+    history['training'] = []
     train_err = np.inf
-    all_val_err = []
+    history['validation'] = []
+    history['val_step'] = check_step
     val_err = np.inf
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
@@ -61,21 +63,21 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
             nn.update_weights(eta/len(whole_TR), lam, alpha)
         #after each epoch
         train_err = MSE_over_network (whole_TR, nn)
-        all_train_err.append(train_err)
+        history['training'].append(train_err)
         #once each check_step epoch
         if(i % check_step == 0):
             val_err = MSE_over_network (whole_VL, nn)
             print (f"{i}: {train_err} - {val_err}")
-            all_val_err.append(val_err)
+            history['validation'].append(val_err)
             if (np.allclose(val_err, 0, atol=epsilon)):
                 break
     test_error = accuracy (dl.get_partition_set('test'), nn)
     print(f"accuracy: {(test_error)*100}%") 
-    return all_train_err, all_val_err, nn
+    return history, nn
 
-def create_graph (train_err, val_err, filename):
-    epochs = range(1, train_err.size+1)
-    val_epochs = [x*100 for x in range(val_err.size)]
+def create_graph (history, filename):
+    epochs = range(1, history['training'].size+1)
+    val_epochs = [x*history['val_step'] for x in range(history['validation'].size)]
     plt.plot(epochs, train_err, 'b', label='Training loss')
     plt.plot(val_epochs, val_err, 'g', label='Validation loss')
     plt.title('Training Loss')
@@ -140,7 +142,7 @@ if __name__ == '__main__':
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
     graph_name = args.graph_name if args.graph_name is not None else "training_loss.png"
-    create_graph(np.array(train_err), np.array(val_err), os.path.join(graph_path, graph_name))
+    create_graph(history, os.path.join(graph_path, graph_name))
 
     ### saving model ###
     #nn.save_model(os.path.join(output_path, "best_model.h5"))
