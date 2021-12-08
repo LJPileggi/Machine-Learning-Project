@@ -153,6 +153,6 @@ if __name__ == '__main__':
     for history, nn in results:
         graph_name = f"training_loss_{history['name']}.png"
         create_graph(history, os.path.join(graph_path, graph_name))
+        ### saving model ###
+        nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
 
-    ### saving model ###
-    #nn.save_model(os.path.join(output_path, "best_model.h5"))
