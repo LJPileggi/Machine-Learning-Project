@@ -86,13 +86,14 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
 def create_graph (history, filename):
     epochs = range(len(history['training']))
     val_epochs = [x*history['val_step'] for x in range(len(history['validation']))]
-    plt.plot(epochs, history['training'], 'b', label='Training_{history["name"]} loss')
-    plt.plot(val_epochs, history['validation'], 'g', label='Validation_history["name"] loss')
+    plt.plot(epochs, history['training'], 'b', label=f'Training_{history["name"]} loss')
+    plt.plot(val_epochs, history['validation'], 'g', label=f'Validation_{history["name"]} loss')
     plt.title('Training and Validation Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(filename)
+    plt.clf()
 
 if __name__ == '__main__':
     ### Parsing cli arguments ###
