@@ -1,6 +1,7 @@
 from dataloader import DataLoader
 from MLP import MLP
 from multiprocessing import Pool
+from datetime import datetime
 import numpy as np
 import os
 import argparse
@@ -72,11 +73,11 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
                 #once each check_step epoch
                 val_err = MSE_over_network (whole_VL, nn)
                 history['validation'].append(train_err)
-                print (f"{i}: {train_err} - {val_err}")
+                print (f"{i} - {history['name']}: {train_err} - {val_err}")
                 if (np.allclose(val_err, 0, atol=epsilon)):
                     break
-        test_error = accuracy (dl.get_partition_set('test'), nn)
-        print(f"accuracy: {(test_error)*100}%") 
+        history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
+        print(f"accuracy - {history['name']}: {(history['testing'])}%") 
         return history, nn
     except KeyboardInterrupt:
         print('Interrupted')
@@ -88,8 +89,10 @@ def create_graph (history, filename):
     val_epochs = [x*history['val_step'] for x in range(len(history['validation']))]
     plt.plot(epochs, history['training'], 'b', label=f'Training_{history["name"]} loss')
     plt.plot(val_epochs, history['validation'], 'g', label=f'Validation_{history["name"]} loss')
-    plt.title('Training and Validation Loss')
+    print(f"{history['testing'][0]:.2f}")
+    plt.title(f'Training and Validation Loss - {history["testing"][0]:.2f}')
     plt.xlabel('Epochs')
+    plt.yscale('log')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(filename)
@@ -144,10 +147,18 @@ if __name__ == '__main__':
     #     print(f"accuracy: {(test_error)*100}%") 
 
     ### plotting loss ###
-    output_path= os.path.abspath(config["output_path"])
+    now = datetime.now()
+    date = str(datetime.date(now))
+    time = str(datetime.time(now))
+    time = time[:2] + time[3:5]
+    output_path = os.path.abspath(config["output_path"])
+    output_path = os.path.join(output_path, date, time)
+    print(output_path)
     if (not os.path.exists(output_path)):
         os.makedirs(output_path)
     graph_path = os.path.abspath(config["graph_path"])
+    graph_path = os.path.join(graph_path, date, time)
+    print(graph_path)
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
     for history, nn in results:
