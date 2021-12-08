@@ -29,49 +29,53 @@ def accuracy (batch, NN):
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
 def train(dl, confs, layers, batch_size, eta, lam, alpha):
-    print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
-    
-    #set global configurations#
-    activation = confs["activation_units"]
-    max_step   = confs["max_step"]
-    check_step = confs["check_step"]
-    epsilon    = confs["epsilon"]
-    input_size = dl.get_input_size ()
-    whole_TR = dl.get_partition_set('train')
-    whole_VL = dl.get_partition_set('val')
-    
-    #create mlp#
-    nn = MLP (input_size, layers, activation)
-    
-    #prepares variables used in epochs#
-    all_train_err = []
-    train_err = np.inf
-    all_val_err = []
-    val_err = np.inf
-    #whatch out! if batch_size = -1, it becomes len(TR)
-    batch_size = len(whole_TR) if batch_size == -1 else batch_size
-    
-    for i in range (max_step):
-        for current_batch in dl.dataset_partition('train', batch_size):
-            for pattern in current_batch:
-                out = nn.forward(pattern[0])
-                error = pattern[1] - out
-                nn.backwards(error)
-            #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            nn.update_weights(eta/len(whole_TR), lam, alpha)
-        #after each epoch
-        train_err = MSE_over_network (whole_TR, nn)
-        all_train_err.append(train_err)
-        #once each check_step epoch
-        if(i % check_step == 0):
-            val_err = MSE_over_network (whole_VL, nn)
-            print (f"{i}: {train_err} - {val_err}")
-            all_val_err.append(val_err)
-            if (np.allclose(val_err, 0, atol=epsilon)):
-                break
-    test_error = accuracy (dl.get_partition_set('test'), nn)
-    print(f"accuracy: {(test_error)*100}%") 
-    return all_train_err, all_val_err, nn
+    try:
+        print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
+        
+        #set global configurations#
+        activation = confs["activation_units"]
+        max_step   = confs["max_step"]
+        check_step = confs["check_step"]
+        epsilon    = confs["epsilon"]
+        input_size = dl.get_input_size ()
+        whole_TR = dl.get_partition_set('train')
+        whole_VL = dl.get_partition_set('val')
+        
+        #create mlp#
+        nn = MLP (input_size, layers, activation)
+        
+        #prepares variables used in epochs#
+        all_train_err = []
+        train_err = np.inf
+        all_val_err = []
+        val_err = np.inf
+        #whatch out! if batch_size = -1, it becomes len(TR)
+        batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        
+        for i in range (max_step):
+            for current_batch in dl.dataset_partition('train', batch_size):
+                for pattern in current_batch:
+                    out = nn.forward(pattern[0])
+                    error = pattern[1] - out
+                    nn.backwards(error)
+                #we are updating with eta/TS_size in order to compute LMS, not simply LS
+                nn.update_weights(eta/len(whole_TR), lam, alpha)
+            #after each epoch
+            train_err = MSE_over_network (whole_TR, nn)
+            all_train_err.append(train_err)
+            #once each check_step epoch
+            if(i % check_step == 0):
+                val_err = MSE_over_network (whole_VL, nn)
+                print (f"{i}: {train_err} - {val_err}")
+                all_val_err.append(val_err)
+                if (np.allclose(val_err, 0, atol=epsilon)):
+                    break
+        test_error = accuracy (dl.get_partition_set('test'), nn)
+        print(f"accuracy: {(test_error)*100}%") 
+        return all_train_err, all_val_err, nn
+    except KeyboardInterrupt:
+        print('Interrupted')
+        exit
 
 def create_graph (train_err, val_err, filename):
     epochs = range(1, train_err.size+1)
@@ -144,5 +148,3 @@ if __name__ == '__main__':
 
     ### saving model ###
     #nn.save_model(os.path.join(output_path, "best_model.h5"))
-
-
