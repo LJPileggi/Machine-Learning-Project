@@ -27,7 +27,7 @@
 			]
 		},
 		"hyperparameters":{
-			"eta": [1, 0.1],
+			"eta": [1],
 			"lambda": [3e-5, 2e-5, 1e-5],
 			"alpha": [0],
 			"batch_size": [32, 15, 10],
