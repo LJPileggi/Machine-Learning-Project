@@ -49,6 +49,7 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
     train_err = np.inf
     history['validation'] = []
     history['val_step'] = check_step
+    history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
     val_err = np.inf
     #whatch out! if batch_size = -1, it becomes len(TR)
     batch_size = len(whole_TR) if batch_size == -1 else batch_size
@@ -78,9 +79,9 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
 def create_graph (history, filename):
     epochs = range(1, history['training'].size+1)
     val_epochs = [x*history['val_step'] for x in range(history['validation'].size)]
-    plt.plot(epochs, train_err, 'b', label='Training loss')
-    plt.plot(val_epochs, val_err, 'g', label='Validation loss')
-    plt.title('Training Loss')
+    plt.plot(epochs, train_err, 'b', label='Training_{history["name"]} loss')
+    plt.plot(val_epochs, val_err, 'g', label='Validation_history["name"] loss')
+    plt.title('Training and Validation Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
@@ -123,7 +124,7 @@ if __name__ == '__main__':
 
     ### training ###
     with Pool() as pool:
-        pool.starmap(train, configurations)
+        results = pool.starmap(train, configurations)
     # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
     #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
     #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
@@ -141,8 +142,9 @@ if __name__ == '__main__':
     graph_path = os.path.abspath(config["graph_path"])
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
-    graph_name = args.graph_name if args.graph_name is not None else "training_loss.png"
-    create_graph(history, os.path.join(graph_path, graph_name))
+    for history, nn in results:
+        graph_name = f"training_loss_{history['name']}.png"
+        create_graph(history, os.path.join(graph_path, graph_name))
 
     ### saving model ###
     #nn.save_model(os.path.join(output_path, "best_model.h5"))
