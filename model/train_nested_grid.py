@@ -78,7 +78,7 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
                 print (f"{i} - {history['name']}: {train_err} - {val_err}")
                 if (np.allclose(val_err, 0, atol=epsilon)):
                     break
-        history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
+        history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100 #da cambiare con il val
         print(f"accuracy - {history['name']}: {(history['testing'])}%") 
         return history, nn
     except KeyboardInterrupt:
@@ -136,26 +136,29 @@ if __name__ == '__main__':
     ]
 
     ### training ###
-    results = []
+    history_res = []
+    nn_res = []
     shrink = 0.1
     for i in range(3):
         with Pool() as pool:
-            results_it = pool.starmap(train, configurations)
-            results.append(results_it)
-            test_vs_hyper = {result[0]['testing'] : result[0]['hyperparameters'] for result in results}
+            result_it = pool.starmap(train, configurations)
+            for history_it, nn_res in result_it:
+                history_res.append(history_it) #hai bisogno di estendere la lista per fare una lista unica, non di appendere una lista e fare una lista di liste
+                #nn_res.append(nn_it)
+            test_vs_hyper = {history['testing'][0] : history['hyperparameters'] for history in history_res}
             best3 = heapq.nlargest(3, test_vs_hyper.keys())
             best_hyper = [test_vs_hyper[best] for best in best3]
             if i < 3:
-                eta_new = best_hyper[4]
-                lam_new = best_hyper[5]
-                alpha_new = best_hyper[6]
+                eta_new = []
+                lam_new = []
+                alpha_new = []
                 for hyper in best_hyper:
-                    eta_new.append(hyper[4]*(1.+shrink))
-                    eta_new.append(hyper[4]*(1.-shrink))
-                    lam_new.append(10**(np.log10(hyper[5])(1.+shrink)))
-                    lam_new.append(10**(np.log10(hyper[5])(1.-shrink)))
-                    alpha_new.append(hyper[6]*(1.+shrink))
-                    alpha_new.append(hyper[6]*(1.-shrink))
+                    eta_new.append(hyper[2]*(1.+shrink))
+                    eta_new.append(hyper[2]*(1.-shrink))
+                    lam_new.append(10**(np.log10(hyper[3])(1.+shrink)))
+                    lam_new.append(10**(np.log10(hyper[3])(1.-shrink)))
+                    alpha_new.append(hyper[4]*(1.+shrink))
+                    alpha_new.append(hyper[4]*(1.-shrink))
                 configurations = [
                     (dl, global_conf, layers, batch_size, eta, lam, alpha)
                     for layers      in hyperparameters["hidden_units"]
