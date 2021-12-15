@@ -46,6 +46,7 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
         history = {}
         history['training'] = []
         history['validation'] = []
+        history['gradients'] = []
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
 
@@ -69,6 +70,7 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
             #after each epoch
             train_err = MSE_over_network (whole_TR, nn)
             history['training'].append(train_err)
+            history['gradients'].append(nn.get_output_grad_mean())
             if(i % check_step == 0):
                 #once each check_step epoch
                 val_err = MSE_over_network (whole_VL, nn)
@@ -88,11 +90,12 @@ def create_graph (history, filename):
     epochs = range(len(history['training']))
     val_epochs = [x*history['val_step'] for x in range(len(history['validation']))]
     plt.plot(epochs, history['training'], 'b', label=f'Training_{history["name"]} loss')
+    plt.plot(epochs, history['gradients'], 'r', label='last layer gradients mean')
     plt.plot(val_epochs, history['validation'], 'g', label=f'Validation_{history["name"]} loss')
     print(f"{history['testing'][0]:.2f}")
     plt.title(f'Training and Validation Loss - {history["testing"][0]:.2f}')
     plt.xlabel('Epochs')
-    plt.yscale('log')
+    #plt.yscale('log')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(filename)
@@ -135,7 +138,12 @@ if __name__ == '__main__':
 
     ### training ###
     with Pool() as pool:
-        results = pool.starmap(train, configurations)
+        try:
+            results = pool.starmap(train, configurations)
+        except KeyboardInterrupt:
+           pool.terminate()
+           print("forced termination")
+           exit()
     # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
     #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
     #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")

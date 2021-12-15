@@ -28,10 +28,10 @@
 		},
 		"hyperparameters":{
 			"eta": [1],
-			"lambda": [1e-3, 1e-4, 1e-5],
+			"lambda": [0],
 			"alpha": [0],
-			"batch_size": [-1, 1],
-			"hidden_units": [[2, 2, 1], [5, 5, 1]]
+			"batch_size": [1, 10, 32, -1],
+			"hidden_units": [[2, 2, 1]]
 		}
     }
 }
