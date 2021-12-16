@@ -29,20 +29,30 @@ def accuracy (batch, NN):
     return accuracy
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
-def train(dl, confs, layers, batch_size, eta, lam, alpha):
+def train(dl, global_confs, local_confs, output_path, graph_path):
     try:
-        print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
-        
-        #set global configurations#
-        activation = confs["activation_units"]
-        max_step   = confs["max_step"]
-        check_step = confs["check_step"]
-        epsilon    = confs["epsilon"]
+        #accessing data
         input_size = dl.get_input_size ()
         whole_TR = dl.get_partition_set('train')
         whole_VL = dl.get_partition_set('val')
         
-        ##setting history to store plots data
+        #set global configurations#
+        activation  = global_confs["activation_units"]
+        max_step    = global_confs["max_step"]
+        check_step  = global_confs["check_step"]
+        epsilon     = global_confs["epsilon"]
+
+        #set local configuration
+        layers      = local_confs["layers"]
+        batch_size  = local_confs["batch_size"]
+        eta         = local_confs["eta"]
+        lam         = local_confs["lambda"]
+        alpha       = local_confs["alpha"]
+
+        #create mlp#
+        nn = MLP (input_size, layers, activation)
+        
+        #setting history to store plots data
         history = {}
         history['training'] = []
         history['validation'] = []
@@ -50,15 +60,13 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
 
-        #create mlp#
-        nn = MLP (input_size, layers, activation)
         
-        #whatch out! if batch_size = -1, it becomes len(TR)
-        batch_size = len(whole_TR) if batch_size == -1 else batch_size
         
         #prepares variables used in epochs#
         train_err = np.inf
         val_err = np.inf
+        #whatch out! if batch_size = -1, it becomes len(TR)
+        batch_size = len(whole_TR) if batch_size == -1 else batch_size
         for i in range (max_step):
             for current_batch in dl.dataset_partition('train', batch_size):
                 for pattern in current_batch:
@@ -80,6 +88,13 @@ def train(dl, confs, layers, batch_size, eta, lam, alpha):
                     break
         history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
         print(f"accuracy - {history['name']}: {(history['testing'])}%") 
+
+        ### saving model and plotting loss ###
+        create_graph(history, os.path.join(graph_path, f"training_loss_{history['name']}.png"))
+        nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
+
+
+
         return history, nn
     except KeyboardInterrupt:
         print('Interrupted')
@@ -101,7 +116,7 @@ def create_graph (history, filename):
     plt.savefig(filename)
     plt.clf()
 
-if __name__ == '__main__':
+def main():
     ### Parsing cli arguments ###
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument('--config_path',
@@ -114,6 +129,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
+    ### setting up output directories ###
+    now = datetime.now()
+    date = str(datetime.date(now))
+    time = str(datetime.time(now))
+    time = time[:2] + time[3:5]
+    output_path = os.path.abspath(config["output_path"])
+    output_path = os.path.join(output_path, date, time)
+    print(output_path)
+    if (not os.path.exists(output_path)):
+        os.makedirs(output_path)
+    graph_path = os.path.abspath(config["graph_path"])
+    graph_path = os.path.join(graph_path, date, time)
+    print(graph_path)
+    if (not os.path.exists(graph_path)):
+        os.makedirs(graph_path)
 
     ### loading and preprocessing dataset from config ###
     train_set  = config["train_set"]
@@ -122,13 +152,24 @@ if __name__ == '__main__':
     dl = DataLoader ()
     dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
     
+
+
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]
 
     ### loding hyperparameters from config ###
     hyperparameters = config["model"]["hyperparameters"]
+    #each configuration is a triple: datas, global confs and local confs
     configurations = [
-        (dl, global_conf, layers, batch_size, eta, lam, alpha)
+        (dl, global_conf, 
+         {"layers": layers,
+          "batch_size": batch_size, 
+          "eta": eta,
+          "lambda": lam, 
+          "alpha": alpha},
+          output_path,
+          graph_path
+        )
         for layers      in hyperparameters["hidden_units"]
         for batch_size  in hyperparameters["batch_size"]
         for eta         in hyperparameters["eta"]
@@ -144,34 +185,11 @@ if __name__ == '__main__':
            pool.terminate()
            print("forced termination")
            exit()
-    # for (layers, batch_size, eta, lam, alpha) in hyperparameters:
-    #     #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon    
-    #     print(f"\neta: {eta}\nlambda: {lam}\nbatch_size={batch_size}\nalpha: {alpha}")
-    #     train_err, val_err, nn = train(layers, batch_size, eta, lam, alpha)
+    
+    ##here goes model selectiom
+    print("training complete!")
 
-    #     ### printing results ###
-    #     print(f"train_err: {np.array(train_err)}")
-    #     test_error = accuracy (dl.get_partition_set('test'), nn)
-    #     print(f"accuracy: {(test_error)*100}%") 
 
-    ### plotting loss ###
-    now = datetime.now()
-    date = str(datetime.date(now))
-    time = str(datetime.time(now))
-    time = time[:2] + time[3:5]
-    output_path = os.path.abspath(config["output_path"])
-    output_path = os.path.join(output_path, date, time)
-    print(output_path)
-    if (not os.path.exists(output_path)):
-        os.makedirs(output_path)
-    graph_path = os.path.abspath(config["graph_path"])
-    graph_path = os.path.join(graph_path, date, time)
-    print(graph_path)
-    if (not os.path.exists(graph_path)):
-        os.makedirs(graph_path)
-    for history, nn in results:
-        graph_name = f"training_loss_{history['name']}.png"
-        create_graph(history, os.path.join(graph_path, graph_name))
-        ### saving model ###
-        nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
 
+if __name__ == '__main__':
+    main()

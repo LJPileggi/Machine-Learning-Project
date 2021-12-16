@@ -21,7 +21,6 @@ class DataLoader():
 
     def __init__(self):
         self.DATA_PATH = os.path.join("..", "data")
-        self.batch_size = 32
         self.data = {}
 
     def load_data(self, data_key, filename, encoding=None):
