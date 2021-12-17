@@ -3,36 +3,37 @@
     "test_set": "monks-3.test",
     "output_path": "output/monks3/",
     "graph_path": "graphs/monks3/",
-	"input_size": 6,
-	"output_size": 1,
-	"preprocessing": {
-		"1_hot_enc": [
-			[1, 2, 3],
-			[1, 2, 3],
-			[1, 2],
-			[1, 2, 3],
-			[1, 2, 3, 4],
-			[1, 2 ]
-		]
-	},
+    "seed": 2021,
+    "input_size": 6,
+    "output_size": 1,
+    "preprocessing": {
+	"1_hot_enc": [
+	    [1, 2, 3],
+	    [1, 2, 3],
+	    [1, 2],
+	    [1, 2, 3],
+	    [1, 2, 3, 4],
+	    [1, 2 ]
+	]
+    },
     "model": {
-		"global_conf": {
-			"epsilon": 1e-2,
-			"max_step": 5000,
-			"check_step": 100,
-			"activation_units": [
-				"sigmoidal",
-				"sigmoidal",
-				"sigmoidal"
-			]
-		},
-		"hyperparameters":{
-			"eta": [1],
-			"lambda": [0],
-			"alpha": [0.8],
-			"batch_size": [-1],
-			"hidden_units": [[2, 2, 1]],
-			"patience": [2]
-		}
+	"global_conf": {
+	    "epsilon": 1e-2,
+	    "max_step": 5000,
+	    "check_step": 100,
+	    "activation_units": [
+		"sigmoidal",
+		"sigmoidal",
+		"sigmoidal"
+	    ]
+	},
+	"hyperparameters":{
+	    "eta": [1],
+	    "lambda": [0],
+	    "alpha": [0.8],
+	    "batch_size": [-1],
+	    "hidden_units": [[2, 2, 1]],
+	    "patience": [2]
+	}
     }
 }

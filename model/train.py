@@ -2,13 +2,16 @@ from dataloader import DataLoader
 from MLP import MLP
 from multiprocessing import Pool
 from datetime import datetime
+import random
 import numpy as np
 import os
 import argparse
 import json
 import matplotlib.pyplot as plt
 
-
+def set_seed (seed):
+    random.seed(seed)
+    np.random.seed(seed)
 
 def MSE_over_network(batch, NN):
     mse = 0
@@ -132,11 +135,9 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument('--config_path',
                         help='path to config file')
-    parser.add_argument('--graph_name',
-                        help='name of the loss graph you will generate')
-    parser.add_argument('--grid_search', dest='grid_search', action='store_true',
-                        help='If you are going to do a grid_search')
-    parser.set_defaults(grid_search=False)
+    parser.add_argument('--seed',
+                        help='random seed')
+    parser.set_defaults(seed=2021)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
@@ -160,9 +161,11 @@ def main():
     train_set  = config["train_set"]
     test_set   = config["test_set"]
     encoding   = config["preprocessing"]["1_hot_enc"]
+    seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
+    print(f"seed: {seed}")
     dl = DataLoader ()
     dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
-    
+    set_seed(seed)
 
 
     ### loading CONSTANT parameters from config ###

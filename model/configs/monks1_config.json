@@ -3,34 +3,35 @@
     "test_set": "monks-1.test",
     "output_path": "output/monks1/",
     "graph_path": "graphs/monks1/",
-	"input_size": 6,
-	"output_size": 1,
-	"preprocessing": {
-		"1_hot_enc": [
-			[1, 2, 3],
-			[1, 2, 3],
-			[1, 2],
-			[1, 2, 3],
-			[1, 2, 3, 4],
-			[1, 2 ]
-		]
-	},
+    "seed": 2021,
+    "input_size": 6,
+    "output_size": 1,
+    "preprocessing": {
+	"1_hot_enc": [
+	    [1, 2, 3],
+	    [1, 2, 3],
+	    [1, 2],
+	    [1, 2, 3],
+	    [1, 2, 3, 4],
+	    [1, 2 ]
+	]
+    },
     "model": {
-		"global_conf": {
-			"epsilon": 1e-4,
-			"max_step": 100000,
-			"check_step": 100,
-			"activation_units": [
-				"sigmoidal",
-				"sigmoidal"
-			]
-		},
-		"hyperparameters": {
-			"eta": [1],
-			"lambda": [0],
-			"alpha": [0],
-			"batch_size": [10],
-			"hidden_units": [[4, 1]]
-		}
+	"global_conf": {
+	    "epsilon": 1e-4,
+	    "max_step": 100000,
+	    "check_step": 100,
+	    "activation_units": [
+		"sigmoidal",
+		"sigmoidal"
+	    ]
+	},
+	"hyperparameters": {
+	    "eta": [1],
+	    "lambda": [0],
+	    "alpha": [0],
+	    "batch_size": [10],
+	    "hidden_units": [[4, 1]]
+	}
     }
 }
