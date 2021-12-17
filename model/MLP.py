@@ -41,8 +41,8 @@ class MLP:
         for layer in self.layer_set:
             layer.update_weights(eta, lam, alpha)
     
-    def get_output_grad_mean(self):
-        return self.layer_set[-1].get_grad_mean()
+    def get_max_grad_list(self):
+        return [layer.get_max_grad() for layer in self.layer_set]
 
 
     def save_model (self, filename):

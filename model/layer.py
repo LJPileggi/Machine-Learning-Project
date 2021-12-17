@@ -31,7 +31,7 @@ class layer:
         self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
         self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
         self._negGrad = 0.
-        self._last_grad_mean = 0.
+        self._last_max_grad = 0.
         self._biases_negGrad = 0.
         self._DWold = 0.
         self._biases_DWold = 0.
@@ -85,14 +85,14 @@ class layer:
         self._biases_DWold = Dbias
 
 
-        self._last_grad_mean = np.amax(np.absolute(self._negGrad))
+        self._last_max_grad = np.amax(np.absolute(self._negGrad))
         self._negGrad = 0.
         self._biases_negGrad = 0
     
-    def get_grad_mean(self):
-      out = self._last_grad_mean
-      #print(out)
-      return out
+    def get_max_grad(self):
+      return self._last_max_grad
+
+
     def get_weights(self):
       return (self._WM, self._biases)
 

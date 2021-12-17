@@ -48,6 +48,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         eta         = local_confs["eta"]
         lam         = local_confs["lambda"]
         alpha       = local_confs["alpha"]
+        patience    = local_confs["patience"]
 
         #create mlp#
         nn = MLP (input_size, layers, activation)
@@ -56,7 +57,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         history = {}
         history['training'] = []
         history['validation'] = []
-        history['gradients'] = []
+        history['gradients'] = [ [] for layer in layers]
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
 
@@ -65,6 +66,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         #prepares variables used in epochs#
         train_err = np.inf
         val_err = np.inf
+        old_val_err = np.inf
+        val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR)
         batch_size = len(whole_TR) if batch_size == -1 else batch_size
         for i in range (max_step):
@@ -78,14 +81,20 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
             #after each epoch
             train_err = MSE_over_network (whole_TR, nn)
             history['training'].append(train_err)
-            history['gradients'].append(nn.get_output_grad_mean())
+            for layer, grad in enumerate(nn.get_max_grad_list()):
+                history['gradients'][layer].append(grad)
             if(i % check_step == 0):
                 #once each check_step epoch
                 val_err = MSE_over_network (whole_VL, nn)
                 history['validation'].append(train_err)
                 print (f"{i} - {history['name']}: {train_err} - {val_err}")
-                if (np.allclose(val_err, 0, atol=epsilon)):
+                if val_err == old_val_err:
+                    val_err_plateau += 1
+                else:
+                    val_err_plateau = 1
+                if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience):
                     break
+                old_val_err = val_err
         history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
         print(f"accuracy - {history['name']}: {(history['testing'])}%") 
 
@@ -105,7 +114,9 @@ def create_graph (history, filename):
     epochs = range(len(history['training']))
     val_epochs = [x*history['val_step'] for x in range(len(history['validation']))]
     plt.plot(epochs, history['training'], 'b', label=f'Training_{history["name"]} loss')
-    plt.plot(epochs, history['gradients'], 'r', label='last layer gradients mean')
+    colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
+    for layer, gradient in enumerate(history['gradients']):
+        plt.plot(epochs, gradient, colors[layer], label=f'{layer}th layer max gradient')
     plt.plot(val_epochs, history['validation'], 'g', label=f'Validation_{history["name"]} loss')
     print(f"{history['testing'][0]:.2f}")
     plt.title(f'Training and Validation Loss - {history["testing"][0]:.2f}')
@@ -166,7 +177,8 @@ def main():
           "batch_size": batch_size, 
           "eta": eta,
           "lambda": lam, 
-          "alpha": alpha},
+          "alpha": alpha,
+          "patience": patience},
           output_path,
           graph_path
         )
@@ -175,6 +187,7 @@ def main():
         for eta         in hyperparameters["eta"]
         for lam         in hyperparameters["lambda"]
         for alpha       in hyperparameters["alpha"]
+        for patience    in hyperparameters["patience"]
     ]
 
     ### training ###

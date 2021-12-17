@@ -17,21 +17,22 @@
 	},
     "model": {
 		"global_conf": {
-			"epsilon": 1e-4,
+			"epsilon": 1e-2,
 			"max_step": 5000,
 			"check_step": 100,
 			"activation_units": [
 				"sigmoidal",
-				"sigmoidal", 
+				"sigmoidal",
 				"sigmoidal"
 			]
 		},
 		"hyperparameters":{
 			"eta": [1],
-			"lambda": [1e-4],
+			"lambda": [0],
 			"alpha": [0.8],
-			"batch_size": [-1, 1, 32],
-			"hidden_units": [[2, 2, 1]]
+			"batch_size": [-1],
+			"hidden_units": [[2, 2, 1]],
+			"patience": [2]
 		}
     }
 }
