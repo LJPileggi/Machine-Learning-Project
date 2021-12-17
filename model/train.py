@@ -7,6 +7,7 @@ import numpy as np
 import os
 import argparse
 import json
+import heapq
 import matplotlib.pyplot as plt
 
 def set_seed (seed):
@@ -63,7 +64,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         history['gradients'] = [ [] for layer in layers]
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
-
+        history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
         
         
         #prepares variables used in epochs#
@@ -137,7 +138,16 @@ def main():
                         help='path to config file')
     parser.add_argument('--seed',
                         help='random seed')
+    parser.add_argument('--nested', dest='nested', action='store_true',
+                        help='if you want to do a nested grid search')
+    parser.add_argument('--shrink',
+                        help='how much do you want to shrink during nested grid search')
+    parser.add_argument('--loop',
+                        help='how many nested loop you want to do')
     parser.set_defaults(seed=2021)
+    parser.set_defaults(nested=False)
+    parser.set_defaults(shrink=0.1)
+    parser.set_defaults(loop=3)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
@@ -163,9 +173,9 @@ def main():
     encoding   = config["preprocessing"]["1_hot_enc"]
     seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
-    dl = DataLoader ()
-    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
     set_seed(seed)
+    dl = DataLoader()
+    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
 
 
     ### loading CONSTANT parameters from config ###
@@ -194,14 +204,67 @@ def main():
     ]
 
     ### training ###
-    with Pool() as pool:
-        try:
-            results = pool.starmap(train, configurations)
-        except KeyboardInterrupt:
-           pool.terminate()
-           print("forced termination")
-           exit()
-    
+    if (not args.nested):
+        with Pool() as pool:
+            try:
+                results = pool.starmap(train, configurations)
+            except KeyboardInterrupt:
+                pool.terminate()
+                print("forced termination")
+                exit()
+    else:
+        results = []
+        shrink = args.shrink
+        loop = args.loop
+        for i in range(loop):
+            with Pool() as pool:
+                try:
+                    result_it = pool.starmap(train, configurations)
+                except KeyboardInterrupt:
+                    pool.terminate()
+                    print("forced termination")
+                    exit()
+            results.extend (result_it)
+            
+            test_vs_hyper = { i : history['testing'][0] for i, (history, nn) in enumerate(results) }
+            best3 = heapq.nlargest(3, test_vs_hyper)
+            print(best3)
+            best_hyper = [ results[best][0]['hyperparameters'] for best in best3 ]
+            eta_new = []
+            lam_new = []
+            alpha_new = []
+            for hyper in best_hyper:
+                eta_new.append(hyper[2] * (1.+shrink))
+                eta_new.append(hyper[2] * (1.-shrink))
+                if (hyper[3] is not 0):
+                    lam_new.append(10**(np.log10(hyper[3]) * (1.+shrink)))
+                    lam_new.append(10**(np.log10(hyper[3]) * (1.-shrink)))
+                alpha_new.append(hyper[4] * (1.+shrink))
+                alpha_new.append(hyper[4] * (1.-shrink))
+            if (lam_new == []):
+                lam_new.append(0)
+            configurations = [
+                (dl, global_conf, 
+                 {"layers": layers,
+                  "batch_size": batch_size, 
+                  "eta": eta,
+                  "lambda": lam, 
+                  "alpha": alpha,
+                  "patience": patience},
+                 output_path,
+                 graph_path
+                )
+                for layers      in hyperparameters["hidden_units"]
+                for batch_size  in hyperparameters["batch_size"]
+                for eta         in eta_new
+                for lam         in lam_new
+                for alpha       in alpha_new
+                for patience    in hyperparameters["patience"]
+            ]
+            shrink *= shrink
+            print("a cycle of nest has ended")
+
+        
     ##here goes model selectiom
     print("training complete!")
 

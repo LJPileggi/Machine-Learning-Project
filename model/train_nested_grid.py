@@ -153,10 +153,11 @@ if __name__ == '__main__':
                 lam_new = []
                 alpha_new = []
                 for hyper in best_hyper:
+                    print(hyper[3])
                     eta_new.append(hyper[2]*(1.+shrink))
                     eta_new.append(hyper[2]*(1.-shrink))
-                    lam_new.append(10**(np.log10(hyper[3])(1.+shrink)))
-                    lam_new.append(10**(np.log10(hyper[3])(1.-shrink)))
+                    lam_new.append(10**(np.log10(hyper[3])*(1.+shrink)))
+                    lam_new.append(10**(np.log10(hyper[3])*(1.-shrink)))
                     alpha_new.append(hyper[4]*(1.+shrink))
                     alpha_new.append(hyper[4]*(1.-shrink))
                 configurations = [
