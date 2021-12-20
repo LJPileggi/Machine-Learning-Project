@@ -10,10 +10,6 @@ import json
 import heapq
 import matplotlib.pyplot as plt
 
-def set_seed (seed):
-    random.seed(seed)
-    np.random.seed(seed)
-
 def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
@@ -33,7 +29,7 @@ def accuracy (batch, NN):
     return accuracy
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
-def train(dl, global_confs, local_confs, output_path, graph_path):
+def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     try:
         #accessing data
         input_size = dl.get_input_size ()
@@ -55,7 +51,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         patience    = local_confs["patience"]
 
         #create mlp#
-        nn = MLP (input_size, layers, activation)
+        nn = MLP (input_size, layers, activation, seed)
         
         #setting history to store plots data
         history = {}
@@ -74,6 +70,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
         val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR)
         batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        
         for i in range (max_step):
             for current_batch in dl.dataset_partition('train', batch_size):
                 for pattern in current_batch:
@@ -99,6 +96,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path):
                 if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience):
                     break
                 old_val_err = val_err
+        
         history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
         print(f"accuracy - {history['name']}: {(history['testing'])}%") 
 
@@ -173,7 +171,7 @@ def main():
     encoding   = config["preprocessing"]["1_hot_enc"]
     seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
-    set_seed(seed)
+    
     dl = DataLoader()
     dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
 
@@ -192,8 +190,9 @@ def main():
           "lambda": lam, 
           "alpha": alpha,
           "patience": patience},
-          output_path,
-          graph_path
+         output_path,
+         graph_path,
+         seed
         )
         for layers      in hyperparameters["hidden_units"]
         for batch_size  in hyperparameters["batch_size"]
@@ -252,7 +251,8 @@ def main():
                   "alpha": alpha,
                   "patience": patience},
                  output_path,
-                 graph_path
+                 graph_path,
+                 seed
                 )
                 for layers      in hyperparameters["hidden_units"]
                 for batch_size  in hyperparameters["batch_size"]

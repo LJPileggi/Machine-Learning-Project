@@ -1,7 +1,12 @@
 import numpy as np
+import random
 import h5py
 
 from layer import layer
+
+def set_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
 
 class MLP:
     """
@@ -18,7 +23,8 @@ class MLP:
      . backwards: 
      - update_weights: update weights of the whole network; returns None
     """
-    def __init__(self, input_dim, layer_struct, activation_set):
+    def __init__(self, input_dim, layer_struct, activation_set, seed=4444):
+        set_seed(seed)
         self.layer_struct = layer_struct
         self.layer_set = []
         prec_dim = input_dim
