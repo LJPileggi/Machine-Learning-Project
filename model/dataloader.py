@@ -18,7 +18,7 @@ def _1_hot_enc(inputs, domains):
     return encoded
 
 class DataLoader():
-
+ 
     def __init__(self):
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
@@ -37,7 +37,7 @@ class DataLoader():
             pattern = (np.array(inputs), np.array(output))
             self.data[data_key].append(pattern)
 
-    def load_data_from_dataset (self, filename, encoding=None, train_slice=1):
+    def load_data_from_dataset (self, filename, encoding=None, train_slice=1): #implementare il kfold
         full_fn = os.path.join(self.DATA_PATH, filename)
         f = open (full_fn, "r")
         dataset = []
@@ -58,7 +58,7 @@ class DataLoader():
         self.data['val'] = dataset[train_separator:train_separator+val_separator]
         self.data['test'] = dataset[train_separator+val_separator:]
 
-    def dataset_partition (self, datakey, batch_size):
+    def dataset_partition (self, datakey, batch_size): #aggiungere un parametro che indica che kfold volere
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
@@ -74,6 +74,6 @@ class DataLoader():
     def get_input_size(self):
         return len(self.data['train'][0][0])
             
-    def get_partition_set(self, datakey):
+    def get_partition_set(self, datakey): #aggiungere parametro per il kfold
         return self.data[datakey]
 

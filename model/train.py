@@ -70,6 +70,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR)
         batch_size = len(whole_TR) if batch_size == -1 else batch_size
+
+        #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_
         
         for i in range (max_step):
             for current_batch in dl.dataset_partition('train', batch_size):
