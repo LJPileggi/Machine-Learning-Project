@@ -97,7 +97,7 @@ class DataLoader():
         batch_size = tr_size if batch_size == -1 else batch_size
         curr_data = self.data["full"][indices]
         idxs = np.arange(tr_size)
-        batchs_sizes = np.full(batch_size, tr_size // batch_size, dtype=int)
+        batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
         batchs_sizes[: tr_size % batch_size] += 1
         current = 0
         random.shuffle(curr_data)

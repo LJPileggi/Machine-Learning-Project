@@ -8,6 +8,7 @@ import os
 import argparse
 import json
 import heapq
+import time
 import matplotlib.pyplot as plt
 
 def set_seed(seed):
@@ -72,7 +73,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         old_val_err = np.inf
         val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR) #moved to the dataloader file
-        batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        #batch_size = len(whole_TR) if batch_size == -1 else batch_size
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
@@ -185,7 +186,7 @@ def main():
                         help='how much do you want to shrink during nested grid search')
     parser.add_argument('--loop',
                         help='how many nested loop you want to do')
-    parser.set_defaults(seed=2021)
+    parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
     parser.set_defaults(nested=False)
     parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=3)
@@ -194,16 +195,16 @@ def main():
 
     ### setting up output directories ###
     now = datetime.now()
-    date = str(datetime.date(now))
-    time = str(datetime.time(now))
-    time = time[:2] + time[3:5]
+    now_date = str(datetime.date(now))
+    now_time = str(datetime.time(now))
+    now_time = now_time[:2] + now_time[3:5]
     output_path = os.path.abspath(config["output_path"])
-    output_path = os.path.join(output_path, date, time)
+    output_path = os.path.join(output_path, now_date, now_time)
     print(output_path)
     if (not os.path.exists(output_path)):
         os.makedirs(output_path)
     graph_path = os.path.abspath(config["graph_path"])
-    graph_path = os.path.join(graph_path, date, time)
+    graph_path = os.path.join(graph_path, now_date, now_time)
     print(graph_path)
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
@@ -279,7 +280,7 @@ def main():
             for hyper in best_hyper:
                 eta_new.append(hyper[2] * (1.+shrink))
                 eta_new.append(hyper[2] * (1.-shrink))
-                if (hyper[3] is not 0):
+                if (hyper[3] != 0):
                     lam_new.append(10**(np.log10(hyper[3]) * (1.+shrink)))
                     lam_new.append(10**(np.log10(hyper[3]) * (1.-shrink)))
                 alpha_new.append(hyper[4] * (1.+shrink))
