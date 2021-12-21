@@ -37,7 +37,12 @@ class DataLoader():
             pattern = (np.array(inputs), np.array(output))
             self.data[data_key].append(pattern)
 
-    def load_data_from_dataset (self, filename, encoding=None, train_slice=1): #implementare il kfold
+    def load_data_from_dataset (self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
+        """
+        set the data into the internal dictionary.
+        train_slice define how much of this dataset it's going to be training
+
+        """
         full_fn = os.path.join(self.DATA_PATH, filename)
         f = open (full_fn, "r")
         dataset = []
@@ -51,14 +56,36 @@ class DataLoader():
             pattern = (np.array(inputs), np.array(output))
             dataset.append(pattern)
         random.shuffle(dataset)
+
+        self.data["full"] = dataset #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+
+        """
         tot_len = len(dataset)
         train_separator = int(tot_len*train_slice)
         val_separator = int(train_separator/2)
         self.data['train'] = dataset[:train_separator]
         self.data['val'] = dataset[train_separator:train_separator+val_separator]
         self.data['test'] = dataset[train_separator+val_separator:]
+        """
 
-    def dataset_partition (self, datakey, batch_size): #aggiungere un parametro che indica che kfold volere
+    def get_slices (self, k_fold=5):
+        n_samples = len(self.data["full"])
+        indices = range(n_samples)
+
+        fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
+        fold_sizes[: n_samples % k_fold] += 1
+        current = 0
+        
+        for fold_size in fold_sizes:
+            start, stop = current, current + fold_size
+            test_mask = np.zeros(n_samples, dtype=bool)
+            test_mask[indices[start:stop]] = True
+            train_index = indices[np.logical_not(test_index)]
+            test_index = indices[test_index]
+            yield train_index, test_index
+            current = stop
+        
+    def dataset_partition (self, datakey, batch_size): #
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
