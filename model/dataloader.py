@@ -69,7 +69,7 @@ class DataLoader():
         self.data['test'] = dataset[train_separator+val_separator:]
         """
 
-    def get_slices (self, k_fold=5):
+    def get_slices (self, k_fold=5): 
         n_samples = len(self.data["full"])
         indices = np.arange(n_samples)
 

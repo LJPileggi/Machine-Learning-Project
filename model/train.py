@@ -57,9 +57,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         
         #setting history to store plots data
         history = {}
-        history['training'] = []
-        history['validation'] = []
-        history['gradients'] = [ [] for layer in layers]
+        history['training'] = [ [] for n in range(max_fold)]
+        history['validation'] = [ [] for n in range(max_fold)]
+        history['testing'] = [ 0. for n in range(max_fold)]
+        history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
@@ -75,6 +76,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
+
+            #accessing the data of the k_fold
             whole_TR = dl.get_partition_set (train_idx)
             whole_VL = dl.get_partition_set (test_idx)
 
@@ -93,50 +96,80 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     nn.update_weights(eta/len(whole_TR), lam, alpha)
                         #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
-                history['training'].append(train_err)
+                history['training'][n_fold].append(train_err)
                 for layer, grad in enumerate(nn.get_max_grad_list()):
-                    history['gradients'][layer].append(grad)
+                    history['gradients'][n_fold][layer].append(grad)
                 if(i % check_step == 0):
                     #once each check_step epoch
                     val_err = MSE_over_network (whole_VL, nn)
-                    history['validation'].append(train_err)
-                    print (f"{i} - {history['name']}: {train_err} - {val_err}")
+                    history['validation'][n_fold].append(train_err)
+                    print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                     if val_err == old_val_err:
                         val_err_plateau += 1
                     else:
                         val_err_plateau = 1
-                    if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience):
+                    if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience): #perché non or?
                         break
                     old_val_err = val_err
         
-            history['testing'] = accuracy (whole_VL, nn) * 100
-            print(f"accuracy - {history['name']}: {(history['testing'])}%") 
+            history['testing'][n_fold] = accuracy (whole_VL, nn) * 100
+            print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
 
             ### saving model and plotting loss ###
-            create_graph(history, os.path.join(graph_path, f"training_loss_{history['name']}.png"))
-            nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
+            nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
 
+        ### plotting loss ###
+        create_graph(history, graph_path, f"training_loss_{history['name']}.png")
         return history, nn
     except KeyboardInterrupt:
         print('Interrupted')
         return None
     
 
-def create_graph (history, filename):
-    epochs = range(len(history['training']))
-    val_epochs = [x*history['val_step'] for x in range(len(history['validation']))]
-    plt.plot(epochs, history['training'], 'b', label=f'Training_{history["name"]} loss')
-    colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
-    for layer, gradient in enumerate(history['gradients']):
-        plt.plot(epochs, gradient, colors[layer], label=f'{layer}th layer max gradient')
-    plt.plot(val_epochs, history['validation'], 'g', label=f'Validation_{history["name"]} loss')
-    print(f"{history['testing'][0]:.2f}")
-    plt.title(f'Training and Validation Loss - {history["testing"][0]:.2f}')
+def create_graph (history, graph_path, filename):
+    plt.title(f'Training Loss - AVG +- VAR')
     plt.xlabel('Epochs')
     #plt.yscale('log')
     plt.ylabel('Loss')
+    for i, train in enumerate(history['training']):
+        epochs = range(len(train))
+        plt.plot(epochs, train, linestyle='-', label=f'Training_{i}_fold loss')
+    train_path = os.path.join(graph_path, 'training')
+    if (not os.path.exists(train_path)):
+        os.makedirs(train_path)
     plt.legend()
-    plt.savefig(filename)
+    plt.savefig(os.path.join(train_path, filename))
+    plt.clf()
+
+    plt.title(f'Maximum of Gradients - AVG +- VAR')
+    plt.xlabel('Epochs')
+    #plt.yscale('log')
+    plt.ylabel('Values')
+    colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
+    lines = ['-', '-.', '--', ':']
+    for i, gradients in enumerate (history['gradients']):
+        for layer, gradient in enumerate(gradients):
+            epochs = range(len(gradient))
+            plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
+    grad_path = os.path.join(graph_path, 'gradients')
+    if (not os.path.exists(grad_path)):
+        os.makedirs(grad_path)
+    plt.legend()
+    plt.savefig(os.path.join(grad_path, filename))
+    plt.clf()
+
+    plt.title(f'Validation Loss - AVG +- VAR')
+    plt.xlabel('Epochs')
+    #plt.yscale('log')
+    plt.ylabel('Loss')
+    for i, val in enumerate(history['validation']):
+        epochs = [x*history['val_step'] for x in range(len(val))]
+        plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
+    val_path = os.path.join(graph_path, 'validation')
+    if (not os.path.exists(val_path)):
+        os.makedirs(val_path)
+    plt.legend()
+    plt.savefig(os.path.join(val_path, filename))
     plt.clf()
 
 def main():
