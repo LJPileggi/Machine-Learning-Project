@@ -57,7 +57,8 @@ class DataLoader():
             dataset.append(pattern)
         random.shuffle(dataset)
 
-        self.data["full"] = dataset #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+        # forse visto che è one hot ha senso salvarsi in bool? na
+        self.data["full"] = np.array(dataset, dtype=int) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
         """
         tot_len = len(dataset)
@@ -85,18 +86,25 @@ class DataLoader():
             yield train_index, test_index
             current = stop
         
-    def dataset_partition (self, datakey, batch_size): #
+    def dataset_partition (self, indices, batch_size): #
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
         if batch_size=1, returns 1 pattern at a time (techincally, a list conteining just one pattern)
         after traversing the whole TS, the TS is shuffled
         """
-        tr_size = len(self.data[datakey])
-        batch_num = math.ceil(tr_size / batch_size) 
-        random.shuffle(self.data[datakey])
-        for i in range(batch_num):
-            yield self.data[datakey][i*batch_size:(i+1)*batch_size]
+        tr_size = len(indices)
+        curr_data = self.data["full"][indices]
+        idxs = np.arange(tr_size)
+        batchs_sizes = np.full(batch_size, tr_size // batch_size, dtype=int)
+        batchs_sizes[: tr_size % batch_size] += 1
+        current = 0
+        random.shuffle(curr_data)
+        
+        for batch in batchs_sizes:
+            start, stop = current + fold_size
+            yield curr_data[start:stop]
+            current = stop
 
     def get_input_size(self):
         return len(self.data['train'][0][0])
