@@ -58,7 +58,7 @@ class DataLoader():
         random.shuffle(dataset)
 
         # forse visto che è one hot ha senso salvarsi in bool? na
-        self.data["full"] = np.array(dataset, dtype=int) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+        self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
         """
         tot_len = len(dataset)
@@ -71,7 +71,7 @@ class DataLoader():
 
     def get_slices (self, k_fold=5):
         n_samples = len(self.data["full"])
-        indices = range(n_samples)
+        indices = np.arange(n_samples)
 
         fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
         fold_sizes[: n_samples % k_fold] += 1
@@ -81,8 +81,8 @@ class DataLoader():
             start, stop = current, current + fold_size
             test_mask = np.zeros(n_samples, dtype=bool)
             test_mask[indices[start:stop]] = True
-            train_index = indices[np.logical_not(test_index)]
-            test_index = indices[test_index]
+            train_index = indices[np.logical_not(test_mask)]
+            test_index = indices[test_mask]
             yield train_index, test_index
             current = stop
         
@@ -94,6 +94,7 @@ class DataLoader():
         after traversing the whole TS, the TS is shuffled
         """
         tr_size = len(indices)
+        batch_size = tr_size if batch_size == -1 else batch_size
         curr_data = self.data["full"][indices]
         idxs = np.arange(tr_size)
         batchs_sizes = np.full(batch_size, tr_size // batch_size, dtype=int)
@@ -102,13 +103,13 @@ class DataLoader():
         random.shuffle(curr_data)
         
         for batch in batchs_sizes:
-            start, stop = current + fold_size
+            start, stop = current, current + batch
             yield curr_data[start:stop]
             current = stop
 
     def get_input_size(self):
-        return len(self.data['train'][0][0])
+        return self.data['full'][0][0].size
             
-    def get_partition_set(self, datakey): #aggiungere parametro per il kfold
-        return self.data[datakey]
+    def get_partition_set(self, indices): #aggiungere parametro per il kfold
+        return self.data["full"][indices]
 

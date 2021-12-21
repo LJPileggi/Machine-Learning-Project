@@ -25,7 +25,8 @@
 		"sigmoidal",
 		"sigmoidal",
 		"sigmoidal"
-	    ]
+	    ],
+	    "max_fold": 5
 	},
 	"hyperparameters":{
 	    "eta": [1],
