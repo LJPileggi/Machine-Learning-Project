@@ -10,6 +10,10 @@ import json
 import heapq
 import matplotlib.pyplot as plt
 
+def set_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+
 def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
@@ -33,14 +37,15 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     try:
         #accessing data
         input_size = dl.get_input_size ()
-        whole_TR = dl.get_partition_set('train')
-        whole_VL = dl.get_partition_set('val')
+#        whole_TR = dl.get_partition_set('train')
+#        whole_VL = dl.get_partition_set('val')
         
         #set global configurations#
         activation  = global_confs["activation_units"]
         max_step    = global_confs["max_step"]
         check_step  = global_confs["check_step"]
         epsilon     = global_confs["epsilon"]
+        max_fold    = global_confs["max_fold"]
 
         #set local configuration
         layers      = local_confs["layers"]
@@ -69,44 +74,47 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         old_val_err = np.inf
         val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR)
-        batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        #batch_size = len(whole_TR) if batch_size == -1 else batch_size
 
-        #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_
+        #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
+        for train_idx, test_idx in dl.get_slices(max_fold):
+            whole_TR = dl.get_partition_set (train_idx)
+            whole_VL = dl.get_partition_set (test_idx)
+
+            print(f"partito un ciclo di cross val")
+            
+            for i in range (max_step):
+                for current_batch in dl.dataset_partition(train_idx, batch_size):
+                    for pattern in current_batch:
+                        out = nn.forward(pattern[0])
+                        error = pattern[1] - out
+                        nn.backwards(error)
+                        #we are updating with eta/TS_size in order to compute LMS, not simply LS
+                    nn.update_weights(eta/len(whole_TR), lam, alpha)
+                        #after each epoch
+                train_err = MSE_over_network (whole_TR, nn)
+                history['training'].append(train_err)
+                for layer, grad in enumerate(nn.get_max_grad_list()):
+                    history['gradients'][layer].append(grad)
+                if(i % check_step == 0):
+                    #once each check_step epoch
+                    val_err = MSE_over_network (whole_VL, nn)
+                    history['validation'].append(train_err)
+                    print (f"{i} - {history['name']}: {train_err} - {val_err}")
+                    if val_err == old_val_err:
+                        val_err_plateau += 1
+                    else:
+                        val_err_plateau = 1
+                    if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience):
+                        break
+                    old_val_err = val_err
         
-        for i in range (max_step):
-            for current_batch in dl.dataset_partition('train', batch_size):
-                for pattern in current_batch:
-                    out = nn.forward(pattern[0])
-                    error = pattern[1] - out
-                    nn.backwards(error)
-                #we are updating with eta/TS_size in order to compute LMS, not simply LS
-                nn.update_weights(eta/len(whole_TR), lam, alpha)
-            #after each epoch
-            train_err = MSE_over_network (whole_TR, nn)
-            history['training'].append(train_err)
-            for layer, grad in enumerate(nn.get_max_grad_list()):
-                history['gradients'][layer].append(grad)
-            if(i % check_step == 0):
-                #once each check_step epoch
-                val_err = MSE_over_network (whole_VL, nn)
-                history['validation'].append(train_err)
-                print (f"{i} - {history['name']}: {train_err} - {val_err}")
-                if val_err == old_val_err:
-                    val_err_plateau += 1
-                else:
-                    val_err_plateau = 1
-                if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience):
-                    break
-                old_val_err = val_err
-        
-        history['testing'] = accuracy (dl.get_partition_set('test'), nn) * 100
-        print(f"accuracy - {history['name']}: {(history['testing'])}%") 
+            history['testing'] = accuracy (whole_VL, nn) * 100
+            print(f"accuracy - {history['name']}: {(history['testing'])}%") 
 
-        ### saving model and plotting loss ###
-        create_graph(history, os.path.join(graph_path, f"training_loss_{history['name']}.png"))
-        nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
-
-
+            ### saving model and plotting loss ###
+            create_graph(history, os.path.join(graph_path, f"training_loss_{history['name']}.png"))
+            nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
 
         return history, nn
     except KeyboardInterrupt:
@@ -173,9 +181,10 @@ def main():
     encoding   = config["preprocessing"]["1_hot_enc"]
     seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
+    set_seed(seed)
     
     dl = DataLoader()
-    dl.load_data_from_dataset(test_set, encoding, train_slice=0.5)
+    dl.load_data_from_dataset(test_set, encoding)
 
 
     ### loading CONSTANT parameters from config ###
