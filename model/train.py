@@ -72,7 +72,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         old_val_err = np.inf
         val_err_plateau = 1 #a "size 1 plateau" is just one point
         #whatch out! if batch_size = -1, it becomes len(TR) #moved to the dataloader file
-        #batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        batch_size = len(whole_TR) if batch_size == -1 else batch_size
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
