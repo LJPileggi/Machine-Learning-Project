@@ -54,9 +54,6 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         lam         = local_confs["lambda"]
         alpha       = local_confs["alpha"]
         patience    = local_confs["patience"]
-
-        #create mlp#
-        nn = MLP (input_size, layers, activation, seed)
         
         #setting history to store plots data
         history = {}
@@ -73,15 +70,18 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         val_err = np.inf
         old_val_err = np.inf
         val_err_plateau = 1 #a "size 1 plateau" is just one point
-        #whatch out! if batch_size = -1, it becomes len(TR)
+        #whatch out! if batch_size = -1, it becomes len(TR) #moved to the dataloader file
         #batch_size = len(whole_TR) if batch_size == -1 else batch_size
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
-        for train_idx, test_idx in dl.get_slices(max_fold):
+        for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
             whole_TR = dl.get_partition_set (train_idx)
             whole_VL = dl.get_partition_set (test_idx)
 
-            print(f"partito un ciclo di cross val")
+            #create mlp#
+            nn = MLP (input_size, layers, activation, seed)
+            
+            print(f"partito un ciclo di cross val - {n_fold}")
             
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
