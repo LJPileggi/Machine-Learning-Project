@@ -114,11 +114,14 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     old_val_err = val_err
         
             history['testing'][n_fold] = accuracy (whole_VL, nn) * 100
+            history['mean'] += history['testing'][n_fold]/n_fold
+            history['variance'] += history['testing'][n_fold]**2 / n_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
 
             ### saving model and plotting loss ###
             nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
 
+        history ['var'] -= history['mean']
         ### plotting loss ###
         create_graph(history, graph_path, f"training_loss_{history['name']}.png")
         return history, nn
@@ -189,7 +192,7 @@ def main():
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
     parser.set_defaults(nested=False)
     parser.set_defaults(shrink=0.1)
-    parser.set_defaults(loop=3)
+    parser.set_defaults(loop=2)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
@@ -270,7 +273,7 @@ def main():
                     exit()
             results.extend (result_it)
             
-            test_vs_hyper = { i : history['testing'][0] for i, (history, nn) in enumerate(results) }
+            test_vs_hyper = { i : history['mean'][0] for i, (history, nn) in enumerate(results) }
             best3 = heapq.nlargest(3, test_vs_hyper)
             print(best3)
             best_hyper = [ results[best][0]['hyperparameters'] for best in best3 ]
