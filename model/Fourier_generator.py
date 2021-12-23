@@ -1,12 +1,14 @@
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 import pylab as pl
+import csv
 
 N = 10
 M = 100
 
 def Fourier_basis(x, k, N):
-    a =  [1.]
+    a = [1.]
     i = 1
     while i <= N:
         a.append(np.sin(i*k*x/np.pi))
@@ -32,5 +34,25 @@ if __name__ == '__main__':
     xx.sort()
     y = [Fourier_series(x, coeff, 1.) for x in xx]
 
+    xx = np.array(xx)
+    y = np.array(y)
+
+    indices = np.arange(M)
+    
+    test_mask = np.zeros(M, dtype=bool)
+    test_mask[np.random.choice(indices, 20)] = True
+    train_index = indices[np.logical_not(test_mask)]
+    test_index = indices[test_mask]
+
+    with open(os.path.loader('..', 'data', 'fourier.train'), 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        for x, f_x in zip(xx[train_index], y[train_index]):
+            writer.writerow([ x, f_x ])
+    with open(os.path.loader('..', 'data', 'fourier.test'), 'w') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        for x, f_x in zip(xx[test_index], y[test_index]):
+            writer.writerow([ x, f_x ])
+
     plt.errorbar(xx, y+error, marker='.', linestyle='', color='black')
+    plt.plot(xx, y, marker='', linestyle='-', color='red')
     plt.show()
