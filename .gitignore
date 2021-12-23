@@ -133,4 +133,4 @@ dmypy.json
 #output
 model/graphs/
 model/output/
-
+data/
