@@ -4,26 +4,36 @@ import os
 import csv
 import random
 
-def _1_hot_enc(inputs, domains):
-    """
-    inputs: list of scalars, of length n
-    domains: list of domains, i.e. a list of lists such that 
-        for each i, domains[i] = domain of inputs[i]
-    """
-    encoded = []
-    for input, dom in zip(inputs, domains):
-        if not (input in dom):
-            raise Exception("Incorrect encoding!")
-        vector = [(1 if input == val else 0) for val in dom]
-        encoded.extend(vector)
-    return encoded
 
-class AbstractDataLoader():
+class DataLoader():
  
     def __init__(self):
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 
+    def load_data (self, filename, input_size, output_size):
+        """
+        set the data into the internal dictionary.
+        train_slice define how much of this dataset it's going to be training
+
+        """
+        full_fn = os.path.join(self.DATA_PATH, filename)
+        with open(full_fn) as f:
+            reader = csv.reader(f, delimiter=',')
+            dataset = []
+            for row in reader:
+                if len(row) == 1 + input_size + output_size:
+                    data = list(map(float, row[1:]))
+                    inputs = data[:-output_size]
+                    output = data[-output_size:]
+                    pattern = (np.array(inputs), np.array(output))
+                    dataset.append(pattern)
+                else:
+                    raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
+            random.shuffle(dataset)
+
+            
+            self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
 
     def get_slices (self, k_fold=5):
@@ -77,73 +87,69 @@ class AbstractDataLoader():
     def get_partition_set(self, indices): #aggiungere parametro per il kfold
         return self.data["full"][indices]
 
-    def load_data(self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
-        raise NotImplementedError("Can't call this method in an abstract class")
-
-
-class MonkDataLoader(AbstractDataLoader):
-    def __init__(self):
-        super().__init__()
+# class MonkDataLoader(AbstractDataLoader):
+#     def __init__(self):
+#         super().__init__()
     
-    def load_data (self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
-        """
-        set the data into the internal dictionary.
-        train_slice define how much of this dataset it's going to be training
+#     def load_data (self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
+#         """
+#         set the data into the internal dictionary.
+#         train_slice define how much of this dataset it's going to be training
 
-        """
-        full_fn = os.path.join(self.DATA_PATH, filename)
-        f = open (full_fn, "r")
-        dataset = []
-        for line in f.readlines():
-            data = list(map(int, line.split()[:-1]))
-            if encoding != None:
-                inputs = _1_hot_enc(data[1:], encoding)
-            else:
-                inputs = data[1:]
-            output = data[0]
-            pattern = (np.array(inputs), np.array(output))
-            dataset.append(pattern)
-        random.shuffle(dataset)
+#         """
+#         full_fn = os.path.join(self.DATA_PATH, filename)
+#         f = open (full_fn, "r")
+#         dataset = []
+#         for line in f.readlines():
+#             data = list(map(int, line.split()[:-1]))
+#             if encoding != None:
+#                 inputs = _1_hot_enc(data[1:], encoding)
+#             else:
+#                 inputs = data[1:]
+#             output = data[0]
+#             pattern = (np.array(inputs), np.array(output))
+#             dataset.append(pattern)
+#         random.shuffle(dataset)
 
-        # forse visto che è one hot ha senso salvarsi in bool? na
-        self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+#         # forse visto che è one hot ha senso salvarsi in bool? na
+#         self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
-    # def load_data(self, data_key, filename, encoding=None):
-    #     self.data[data_key] = []
-    #     full_fn = os.path.join(self.DATA_PATH, filename)
-    #     f = open (full_fn, "r")
-    #     for line in f.readlines():
-    #         data = list(map(int, line.split()[:-1]))
-    #         if encoding != None:
-    #             inputs = _1_hot_enc(data[1:], encoding)
-    #         else:
-    #             inputs = data[1:]
-    #         output = data[0]
-    #         pattern = (np.array(inputs), np.array(output))
-    #         self.data[data_key].append(pattern)
+#     # def load_data(self, data_key, filename, encoding=None):
+#     #     self.data[data_key] = []
+#     #     full_fn = os.path.join(self.DATA_PATH, filename)
+#     #     f = open (full_fn, "r")
+#     #     for line in f.readlines():
+#     #         data = list(map(int, line.split()[:-1]))
+#     #         if encoding != None:
+#     #             inputs = _1_hot_enc(data[1:], encoding)
+#     #         else:
+#     #             inputs = data[1:]
+#     #         output = data[0]
+#     #         pattern = (np.array(inputs), np.array(output))
+#     #         self.data[data_key].append(pattern)
 
 
-class MLCupDataLoader(AbstractDataLoader):
-    def __init__(self):
-        super().__init__()
+# class MLCupDataLoader(AbstractDataLoader):
+#     def __init__(self):
+#         super().__init__()
     
-    def load_data (self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
-        """
-        set the data into the internal dictionary.
-        train_slice define how much of this dataset it's going to be training
+#     def load_data (self, filename, encoding=None, train_slice=1, k_fold=5): #implementare il kfold
+#         """
+#         set the data into the internal dictionary.
+#         train_slice define how much of this dataset it's going to be training
 
-        """
-        full_fn = os.path.join(self.DATA_PATH, filename)
-        with open(full_fn) as f:
-            reader = csv.reader(f, delimiter=',')
-            dataset = []
-            for row in reader:
-                data = list(map(float, row[1:]))
-                inputs = data[:-2]
-                output = data[-2:]
-                pattern = (np.array(inputs), np.array(output))
-                dataset.append(pattern)
-            random.shuffle(dataset)
+#         """
+#         full_fn = os.path.join(self.DATA_PATH, filename)
+#         with open(full_fn) as f:
+#             reader = csv.reader(f, delimiter=',')
+#             dataset = []
+#             for row in reader:
+#                 data = list(map(float, row[1:]))
+#                 inputs = data[:-2]
+#                 output = data[-2:]
+#                 pattern = (np.array(inputs), np.array(output))
+#                 dataset.append(pattern)
+#             random.shuffle(dataset)
 
-            # forse visto che è one hot ha senso salvarsi in bool? na
-            self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+            
+#             self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva

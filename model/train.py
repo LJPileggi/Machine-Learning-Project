@@ -1,4 +1,4 @@
-from dataloader import *
+from dataloader import DataLoader
 from MLP import MLP
 from multiprocessing import Pool
 from datetime import datetime
@@ -221,16 +221,13 @@ def main():
         os.makedirs(graph_path)
 
     ### loading and preprocessing dataset from config ###
-    train_set  = config["train_set"]
-    test_set   = config["test_set"]
-    encoding   = config.get("preprocessing", None)
-    seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
-    print(f"seed: {seed}")
-    set_seed(seed)
-    
-    dl = MLCupDataLoader()
-    dl.load_data(train_set, encoding)
+    dl = DataLoader()
+    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
 
+    ### loading or generating seed ###
+    seed = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
+    print(f"seed: {seed}")
+    set_seed(seed) 
 
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]

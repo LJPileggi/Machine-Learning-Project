@@ -1,10 +1,11 @@
 {
-    "train_set": "ML-CUP21-TR.CSV",
-    "test_set": "ML-CUP21-TR.CSV",
+    "train_set": "ML-CUP21-TR.csv",
+    "test_set": "ML-CUP21-TR.csv",
     "output_path": "output/mlcup/",
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
     "output_size": 2,
+
     "model": {
 	"global_conf": {
 	    "epsilon": 1e-2,
@@ -18,10 +19,10 @@
 	    "max_fold": 1
 	},
 	"hyperparameters":{
-	    "eta": [0.5, 1],
-	    "lambda": [0, 1e-2, 1e-3],
-	    "alpha": [0.8, 0],
-	    "batch_size": [1, -1, 32],
+	    "eta": [1],
+	    "lambda": [0],
+	    "alpha": [0],
+	    "batch_size": [1],
 	    "hidden_units": [[4, 4, 2]],
 	    "patience": [1]
 	}

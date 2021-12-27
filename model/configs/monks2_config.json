@@ -1,21 +1,11 @@
 {
-    "train_set": "monks-2.train",
-    "test_set": "monks-2.test",
+    "train_set": "monks-2.test.csv",
     "output_path": "output/monks2/",
     "graph_path": "graphs/monks2/",
     "seed": 2021,
-    "input_size": 6,
+    "input_size": 17,
     "output_size": 1,
-    "preprocessing": {
-	"1_hot_enc": [
-	    [1, 2, 3],
-	    [1, 2, 3],
-	    [1, 2],
-	    [1, 2, 3],
-	    [1, 2, 3, 4],
-	    [1, 2 ]
-	]
-    },
+	
     "model": {
 	"global_conf": {
 	    "epsilon": 1e-3,
