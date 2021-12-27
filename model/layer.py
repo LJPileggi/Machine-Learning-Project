@@ -37,10 +37,14 @@ class layer:
         self._biases_DWold = 0.
         self.inputs = None
         self.output_prime = None
-        if activation != "sigmoidal":
+        if activation == "sigmoidal":
+          self._activation = activation_functions.sigmoidal
+          self._act_prime = activation_functions.d_sigmoidal
+        elif activation == "linear":
+          self._activation = activation_functions.linear
+          self._act_prime = activation_functions.d_linear
+        else:
           raise Exception("activation function Not implemented yet")
-        self._activation = activation_functions.sigmoidal
-        self._act_prime = activation_functions.d_sigmoidal
         self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def forward (self, inputs):

@@ -1,12 +1,11 @@
 {
-    "train_set": "monks-3.train",
+    "train_set": "monks-3.test",
     "test_set": "monks-3.test",
     "output_path": "output/monks3/",
     "graph_path": "graphs/monks3/",
     "input_size": 6,
     "output_size": 1,
-    "preprocessing": {
-	"1_hot_enc": [
+    "preprocessing":  [
 	    [1, 2, 3],
 	    [1, 2, 3],
 	    [1, 2],
@@ -14,7 +13,7 @@
 	    [1, 2, 3, 4],
 	    [1, 2 ]
 	]
-    },
+    ,
     "model": {
 	"global_conf": {
 	    "epsilon": 1e-2,

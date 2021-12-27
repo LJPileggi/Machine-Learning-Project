@@ -1,4 +1,4 @@
-from dataloader import DataLoader
+from dataloader import *
 from MLP import MLP
 from multiprocessing import Pool
 from datetime import datetime
@@ -19,8 +19,9 @@ def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
         out = NN.forward(pattern[0])
-        out = out > 0.5
-        mse += ((out - pattern[1])**2)
+        #out = out > 0.5
+        # \sum_i x_i^2, which is the square of the 2-norm
+        mse += ((out - pattern[1])**2).sum() 
     mse = mse/len(batch)
     return mse
 
@@ -28,8 +29,8 @@ def accuracy (batch, NN):
     errors = 0
     for pattern in batch:
         out = NN.forward(pattern[0])
-        out = out > 0.5
-        errors += (abs(out - pattern[1]))
+        #out = out > 0.5
+        errors += ((out - pattern[1])**2).sum()**1/2
     accuracy = 1 - errors/len(batch)
     return accuracy
 
@@ -79,7 +80,6 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
-
             #accessing the data of the k_fold
             whole_TR = dl.get_partition_set (train_idx)
             whole_VL = dl.get_partition_set (test_idx)
@@ -116,8 +116,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     old_val_err = val_err
         
             history['testing'][n_fold] = accuracy (whole_VL, nn) * 100
-            history['mean'] += history['testing'][n_fold]/n_fold
-            history['variance'] += history['testing'][n_fold]**2 / n_fold
+            history['mean'] += history['testing'][n_fold]/max_fold
+            history['variance'] += history['testing'][n_fold]**2 / max_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
 
             ### saving model and plotting loss ###
@@ -135,11 +135,15 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 def create_graph (history, graph_path, filename):
     plt.title(f'Training Loss - AVG +- VAR')
     plt.xlabel('Epochs')
-    #plt.yscale('log')
+    plt.yscale('log')
     plt.ylabel('Loss')
     for i, train in enumerate(history['training']):
         epochs = range(len(train))
         plt.plot(epochs, train, linestyle='-', label=f'Training_{i}_fold loss')
+    for i, val in enumerate(history['validation']):
+        epochs = [x*history['val_step'] for x in range(len(val))]
+        plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
+    #val_path = os.path.join(graph_path, 'validation')
     train_path = os.path.join(graph_path, 'training')
     if (not os.path.exists(train_path)):
         os.makedirs(train_path)
@@ -157,6 +161,7 @@ def create_graph (history, graph_path, filename):
         for layer, gradient in enumerate(gradients):
             epochs = range(len(gradient))
             plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
+
     grad_path = os.path.join(graph_path, 'gradients')
     if (not os.path.exists(grad_path)):
         os.makedirs(grad_path)
@@ -164,19 +169,16 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(grad_path, filename))
     plt.clf()
 
-    plt.title(f'Validation Loss - AVG +- VAR')
-    plt.xlabel('Epochs')
-    #plt.yscale('log')
-    plt.ylabel('Loss')
-    for i, val in enumerate(history['validation']):
-        epochs = [x*history['val_step'] for x in range(len(val))]
-        plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
-    val_path = os.path.join(graph_path, 'validation')
-    if (not os.path.exists(val_path)):
-        os.makedirs(val_path)
-    plt.legend()
-    plt.savefig(os.path.join(val_path, filename))
-    plt.clf()
+    # plt.title(f'Validation Loss - AVG +- VAR')
+    # plt.xlabel('Epochs')
+    # plt.yscale('log')
+    # plt.ylabel('Loss')
+    
+    # if (not os.path.exists(val_path)):
+    #     os.makedirs(val_path)
+    # plt.legend()
+    # plt.savefig(os.path.join(val_path, filename))
+    # plt.clf()
 
 def main():
     ### Parsing cli arguments ###
@@ -217,13 +219,13 @@ def main():
     ### loading and preprocessing dataset from config ###
     train_set  = config["train_set"]
     test_set   = config["test_set"]
-    encoding   = config["preprocessing"]["1_hot_enc"]
+    encoding   = config.get("preprocessing", None)
     seed       = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
     set_seed(seed)
     
-    dl = DataLoader()
-    dl.load_data_from_dataset(test_set, encoding)
+    dl = MLCupDataLoader()
+    dl.load_data(train_set, encoding)
 
 
     ### loading CONSTANT parameters from config ###
