@@ -92,7 +92,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             train_err = MSE_over_network (whole_TR, nn)
             history['training'][n_fold].append(train_err)
             val_err = MSE_over_network (whole_VL, nn)
-                history['validation'][n_fold].append(train_err)
+            history['validation'][n_fold].append(train_err)
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
                     for pattern in current_batch:
