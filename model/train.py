@@ -31,7 +31,7 @@ def accuracy (batch, NN):
         out = NN.forward(pattern[0])
         #out = out > 0.5
         errors += ((out - pattern[1])**2).sum()**1/2
-    accuracy = 1 - errors/len(batch)
+    accuracy = errors/len(batch)
     return accuracy
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
@@ -89,6 +89,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
+            train_err = MSE_over_network (whole_TR, nn)
+            history['training'][n_fold].append(train_err)
+            val_err = MSE_over_network (whole_VL, nn)
+                history['validation'][n_fold].append(train_err)
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
                     for pattern in current_batch:
@@ -97,7 +101,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         nn.backwards(error)
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
                     nn.update_weights(eta/len(whole_TR), lam, alpha)
-                        #after each epoch
+                #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
                 for layer, grad in enumerate(nn.get_max_grad_list()):
@@ -318,7 +322,7 @@ def main():
 
         
     ##here goes model selectiom
-    print("training complete!")
+    print("grid search complete!")
 
 
 
