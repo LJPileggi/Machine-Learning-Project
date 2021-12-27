@@ -69,22 +69,30 @@ class DataLoader():
         self.data['test'] = dataset[train_separator+val_separator:]
         """
 
-    def get_slices (self, k_fold=5): 
-        n_samples = len(self.data["full"])
-        indices = np.arange(n_samples)
+    def get_slices (self, k_fold=5):
+        if k_fold > 1: 
+            n_samples = len(self.data["full"])
+            indices = np.arange(n_samples)
 
-        fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
-        fold_sizes[: n_samples % k_fold] += 1
-        current = 0
-        
-        for fold_size in fold_sizes:
-            start, stop = current, current + fold_size
-            test_mask = np.zeros(n_samples, dtype=bool)
-            test_mask[indices[start:stop]] = True
-            train_index = indices[np.logical_not(test_mask)]
-            test_index = indices[test_mask]
-            yield train_index, test_index
-            current = stop
+            fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
+            fold_sizes[: n_samples % k_fold] += 1
+            current = 0
+            
+            for fold_size in fold_sizes:
+                start, stop = current, current + fold_size
+                test_mask = np.zeros(n_samples, dtype=bool)
+                test_mask[indices[start:stop]] = True
+                train_index = indices[np.logical_not(test_mask)]
+                test_index = indices[test_mask]
+                yield train_index, test_index
+                current = stop
+        else:
+            n_samples = len(self.data["full"])
+            indices = np.arange(n_samples)
+            train_start = n_samples // 5
+            return indices[train_start:], indices[:train_start]
+
+
         
     def dataset_partition (self, indices, batch_size): #
         """

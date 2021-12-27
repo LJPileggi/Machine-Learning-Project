@@ -65,6 +65,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
+        history['mean']      = 0
+        history['variance']  = 0
         
         
         #prepares variables used in epochs#
@@ -121,10 +123,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             ### saving model and plotting loss ###
             nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
 
-        history ['var'] -= history['mean']
+        history ['variance'] -= history['mean']
         ### plotting loss ###
         create_graph(history, graph_path, f"training_loss_{history['name']}.png")
-        return history, nn
+        return history
     except KeyboardInterrupt:
         print('Interrupted')
         return None
