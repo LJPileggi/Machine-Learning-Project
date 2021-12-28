@@ -111,7 +111,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     val_err = MSE_over_network (whole_VL, nn)
                     history['validation'][n_fold].append(train_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
-                    if val_err == old_val_err:
+                    if np.allclose(val_err, old_val_err, atol=epsilon):
                         val_err_plateau += 1
                     else:
                         val_err_plateau = 1
@@ -119,7 +119,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         break
                     old_val_err = val_err
         
-            history['testing'][n_fold] = accuracy (whole_VL, nn) * 100
+            history['testing'][n_fold] = accuracy (whole_VL, nn)
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
@@ -137,7 +137,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     
 
 def create_graph (history, graph_path, filename):
-    plt.title(f'Training Loss - AVG +- VAR')
+    plt.title(f'Training Loss - {history["mean"]:.2f} +- {history["variance"]:.2f}')
     plt.xlabel('Epochs')
     plt.yscale('log')
     plt.ylabel('Loss')
@@ -155,7 +155,7 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    plt.title(f'Maximum of Gradients - AVG +- VAR')
+    plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]:.2f}')
     plt.xlabel('Epochs')
     #plt.yscale('log')
     plt.ylabel('Values')
@@ -164,7 +164,7 @@ def create_graph (history, graph_path, filename):
     for i, gradients in enumerate (history['gradients']):
         for layer, gradient in enumerate(gradients):
             epochs = range(len(gradient))
-            plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
+            plt.plot(epochs, gradient, colors[layer], linestyle=lines[i], label=f'{layer}th layer max gradient of {i}_fold')
 
     grad_path = os.path.join(graph_path, 'gradients')
     if (not os.path.exists(grad_path)):
