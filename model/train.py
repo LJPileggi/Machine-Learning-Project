@@ -109,7 +109,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                 if(i % check_step == 0):
                     #once each check_step epoch
                     val_err = MSE_over_network (whole_VL, nn)
-                    history['validation'][n_fold].append(train_err)
+                    history['validation'][n_fold].append(val_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                     if np.allclose(val_err, old_val_err, atol=epsilon):
                         val_err_plateau += 1
