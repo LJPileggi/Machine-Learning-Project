@@ -23,12 +23,11 @@ class MLP:
      . backwards: 
      - update_weights: update weights of the whole network; returns None
     """
-    def __init__(self, input_dim, layer_struct, activation_set, seed=4444):
+    def __init__(self, input_dim, architecture, seed=4444):
         set_seed(seed)
-        self.layer_struct = layer_struct
         self.layer_set = []
         prec_dim = input_dim
-        for layer_dim, activation in zip(layer_struct, activation_set):
+        for layer_dim, activation in architecture:
             self.layer_set.append(layer(prec_dim, layer_dim, activation))
             prec_dim = layer_dim
 

@@ -23,21 +23,18 @@ def MSE_over_network(batch, NN, task):
             out = out > 0.5
         # \sum_i x_i^2, which is the square of the 2-norm
         mse += ((out - pattern[1])**2).sum() 
-    mse = mse/len(batch)
-    return mse
+    return mse/len(batch)
 
-def accuracy (batch, NN, task):
-    errors = 0
+def MEE_over_network(batch, NN, task):
+    mee = 0
     for pattern in batch:
         out = NN.forward(pattern[0])
         if task == "classification":
             out = out > 0.5
-        errors += ((out - pattern[1])**2).sum()**1/2
-    if task == "regression":
-        accuracy = errors/len(batch)
-    else:
-        accuracy = 1.-errors/len(batch)
-    return accuracy
+        # \root of sum_i x_i^2, which is the euclidian norm
+        mee += ((out - pattern[1])**2).sum()**1/2
+    return mee/len(batch)
+
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
 def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
@@ -55,8 +52,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         max_fold    = global_confs["max_fold"]
 
         #set local configuration
-        layers,
-        activation  = zip(local_confs["layers"])
+        layers      = local_confs["layers"]
         batch_size  = local_confs["batch_size"]
         eta         = local_confs["eta"]
         lam         = local_confs["lambda"]
@@ -91,7 +87,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             whole_VL = dl.get_partition_set (test_idx)
 
             #create mlp#
-            nn = MLP (input_size, layers, activation, seed)
+            nn = MLP (input_size, layers, seed)
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
@@ -125,7 +121,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         break
                     old_val_err = val_err
         
-            history['testing'][n_fold] = accuracy (whole_VL, nn, task)
+            history['testing'][n_fold] = MEE_over_network (whole_VL, nn, task)
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
