@@ -157,7 +157,7 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    plt.title(f'history["name"]}\nMaximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'{history["name"]}\nMaximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     #plt.yscale('log')
     plt.ylabel('Values')
