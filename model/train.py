@@ -139,7 +139,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     
 
 def create_graph (history, graph_path, filename):
-    plt.title(f'Training Loss - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'{history["name"]}\nTraining Loss - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     plt.yscale('log')
     plt.ylabel('Loss')
@@ -157,7 +157,7 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'history["name"]}\nMaximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     #plt.yscale('log')
     plt.ylabel('Values')
@@ -166,7 +166,7 @@ def create_graph (history, graph_path, filename):
     for i, gradients in enumerate (history['gradients']):
         for layer, gradient in enumerate(gradients):
             epochs = range(len(gradient))
-            plt.plot(epochs, gradient, colors[layer], linestyle=lines[i], label=f'{layer}th layer max gradient of {i}_fold')
+            plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
 
     grad_path = os.path.join(graph_path, 'gradients')
     if (not os.path.exists(grad_path)):
