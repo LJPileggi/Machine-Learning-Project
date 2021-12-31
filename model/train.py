@@ -139,7 +139,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     
 
 def create_graph (history, graph_path, filename):
-    plt.title(f'{history["name"]}\nTraining Loss - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'Training Loss - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     plt.yscale('log')
     plt.ylabel('Loss')
@@ -157,7 +157,7 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    plt.title(f'{history["name"]}\nMaximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     #plt.yscale('log')
     plt.ylabel('Values')
@@ -227,9 +227,9 @@ def main():
     dl.load_data(config["train_set"], config["input_size"], config["output_size"])
 
     ### loading or generating seed ###
-    seed = config.get("seed", args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
+    seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
-    set_seed(seed) 
+    set_seed(seed)
 
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]
