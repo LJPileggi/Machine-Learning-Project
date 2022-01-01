@@ -26,7 +26,7 @@ class layer:
      - backward
      - update_weights
     """
-    def __init__(self, input_dim, layer_dim, activation = "sigmoidal", dropout=None):
+    def __init__(self, input_dim, layer_dim, activation, dropout=None):
         print(f"{layer_dim}; {activation}")
         self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
         self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )

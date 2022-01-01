@@ -15,22 +15,18 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-def MSE_over_network(batch, NN, task):
+def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
-        out = NN.forward(pattern[0])
-        if task == "classification":
-            out = out > 0.5
+        out = NN.h(pattern[0])
         # \sum_i x_i^2, which is the square of the 2-norm
         mse += ((out - pattern[1])**2).sum() 
     return mse/len(batch)
 
-def MEE_over_network(batch, NN, task):
+def MEE_over_network(batch, NN):
     mee = 0
     for pattern in batch:
-        out = NN.forward(pattern[0])
-        if task == "classification":
-            out = out > 0.5
+        out = NN.h(pattern[0])
         # \root of sum_i x_i^2, which is the euclidian norm
         mee += ((out - pattern[1])**2).sum()**1/2
     return mee/len(batch)
@@ -64,7 +60,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         history['training'] = [ [] for n in range(max_fold)]
         history['validation'] = [ [] for n in range(max_fold)]
         history['testing'] = [ 0. for n in range(max_fold)]
-        history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
+        #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
@@ -87,13 +83,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             whole_VL = dl.get_partition_set (test_idx)
 
             #create mlp#
-            nn = MLP (input_size, layers, seed)
+            nn = MLP (task, input_size, layers, seed)
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
-            train_err = MSE_over_network (whole_TR, nn, task)
+            train_err = MSE_over_network (whole_TR, nn)
             history['training'][n_fold].append(train_err)
-            val_err = MSE_over_network (whole_VL, nn, task)
+            val_err = MSE_over_network (whole_VL, nn)
             history['validation'][n_fold].append(train_err)
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
@@ -104,13 +100,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
                     nn.update_weights(eta/len(whole_TR), lam, alpha)
                 #after each epoch
-                train_err = MSE_over_network (whole_TR, nn, task)
+                train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
-                for layer, grad in enumerate(nn.get_max_grad_list()):
-                    history['gradients'][n_fold][layer].append(grad)
+                #for layer, grad in enumerate(nn.get_max_grad_list()):
+                #    history['gradients'][n_fold][layer].append(grad)
                 if(i % check_step == 0):
                     #once each check_step epoch
-                    val_err = MSE_over_network (whole_VL, nn, task)
+                    val_err = MSE_over_network (whole_VL, nn)
                     history['validation'][n_fold].append(val_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                     if np.allclose(val_err, old_val_err, atol=epsilon):
@@ -121,7 +117,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         break
                     old_val_err = val_err
         
-            history['testing'][n_fold] = MEE_over_network (whole_VL, nn, task)
+            history['testing'][n_fold] = MEE_over_network (whole_VL, nn)
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
@@ -157,23 +153,22 @@ def create_graph (history, graph_path, filename):
     plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
-    plt.xlabel('Epochs')
-    #plt.yscale('log')
-    plt.ylabel('Values')
-    colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
-    lines = ['-', '-.', '--', ':']
-    for i, gradients in enumerate (history['gradients']):
-        for layer, gradient in enumerate(gradients):
-            epochs = range(len(gradient))
-            plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
-
-    grad_path = os.path.join(graph_path, 'gradients')
-    if (not os.path.exists(grad_path)):
-        os.makedirs(grad_path)
-    plt.legend()
-    plt.savefig(os.path.join(grad_path, filename))
-    plt.clf()
+    # plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    # plt.xlabel('Epochs')
+    # #plt.yscale('log')
+    # plt.ylabel('Values')
+    # colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
+    # lines = ['-', '-.', '--', ':']
+    # for i, gradients in enumerate (history['gradients']):
+    #     for layer, gradient in enumerate(gradients):
+    #         epochs = range(len(gradient))
+    #         plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
+    # grad_path = os.path.join(graph_path, 'gradients')
+    # if (not os.path.exists(grad_path)):
+    #     os.makedirs(grad_path)
+    # plt.legend()
+    # plt.savefig(os.path.join(grad_path, filename))
+    # plt.clf()
 
     # plt.title(f'Validation Loss - AVG +- VAR')
     # plt.xlabel('Epochs')

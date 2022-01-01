@@ -23,13 +23,23 @@ class MLP:
      . backwards: 
      - update_weights: update weights of the whole network; returns None
     """
-    def __init__(self, input_dim, architecture, seed=4444):
+    def __init__(self, task, input_dim, architecture, seed=4444):
         set_seed(seed)
         self.layer_set = []
         prec_dim = input_dim
         for layer_dim, activation in architecture:
             self.layer_set.append(layer(prec_dim, layer_dim, activation))
             prec_dim = layer_dim
+        last_layer_fun = architecture[-1][1]
+        self.threshold = None
+        if last_layer_fun == "sigmoidal" and task == "classification":
+            self.threshold = 0.5
+        elif last_layer_fun == "tanh" and task == "classification":
+            self.threshold = 0.
+        elif last_layer_fun == "linear" and task == "regression":
+            self.threshold == None
+        else:
+            raise NotImplementedError("unsupported activation function in output layer")
 
 
     def forward(self, input):
@@ -37,6 +47,12 @@ class MLP:
             output = layer.forward(input)
             input = output
         return output
+
+    def h(self, input):
+        if self.threshold == None:
+            return self.forward(input)
+        else:
+            return self.forward > self.threshold
 
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):
