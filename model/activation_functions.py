@@ -42,36 +42,21 @@ def threshold(network_value, boolean=True):
     else:
         return 1 if network_value >= 0. else -1
 
-def tanh(network_value, thr=0., a=1.):
-    """
-    Sigmoidal activation function for NN unit output.
-    Smooth and differentiable approximation to the threshold function.
-
-    params:
-     - network_value: the scalar obtained once calculated value of the network with their current weights. class type = float
-     - a: exponent parameter; set by default to 1.; class type: float;
-     - thr: sets the rejection zone of the model;
-     must be between 0 and 1; set by default to 0.; class type: float;
-     - hyperbol: sets the interval of output values either to [0., 1.] (False)
-       or to [-1., 1.] (True); set by default to False; class type: bool.
-
-    returns:
-     - 1/0 (hyperbol=False); 1/-1 (hyperbol=True).
-    """
-    if (thr > 1.) | (thr < 0.):
-        raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
-    out = np.tanh(-a*network_value/2.)
-    if thr!= 0.:
+def tanh(network_value, thr=0.):
+    out = np.tanh(network_value)
+    if thr == 0.: 
+        return out
+    else:
+        if (thr > 1.) | (thr < 0.):
+            raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
         if ((out > -thr) and (out <  thr)):
             raise ValueError('ValueError: unit output falls within rejection zone') #mmm
         else:
             return 1 if out >= 0. else -1
-    else:
-        return out
 
-def d_tanh(network_value, a=1.):
-    out = 2.*a*np.exp(-a*network_value)/(1. + np.exp(-a*network_value))**2
-    return out
+
+def d_tanh(network_value):
+    return 1-(tanh(network_value)**2)
 
 def sigmoidal(network_value, a=1., thr=0.):
     """

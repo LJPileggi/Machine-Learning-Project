@@ -40,6 +40,9 @@ class layer:
         if activation == "sigmoidal":
           self._activation = activation_functions.sigmoidal
           self._act_prime = activation_functions.d_sigmoidal
+        elif activation == "tanh":
+          self._activation = activation_functions.tanh
+          self._act_prime = activation_functions.d_tanh
         elif activation == "linear":
           self._activation = activation_functions.linear
           self._act_prime = activation_functions.d_linear
