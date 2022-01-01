@@ -52,7 +52,7 @@ class MLP:
         if self.threshold == None:
             return self.forward(input)
         else:
-            return self.forward > self.threshold
+            return self.forward(input) > self.threshold
 
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):
