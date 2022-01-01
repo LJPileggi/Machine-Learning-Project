@@ -18,7 +18,7 @@ def set_seed(seed):
 def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
-        out = NN.h(pattern[0])
+        out = NN.forward(pattern[0])
         # \sum_i x_i^2, which is the square of the 2-norm
         mse += ((out - pattern[1])**2).sum() 
     return mse/len(batch)
