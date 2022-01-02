@@ -11,17 +11,20 @@
 	    "epsilon": 1e-4,
 	    "max_step": 3000,
 	    "check_step": 100,
+		"validation_metric": "missclass",
+		"patience": [2],
 	    "max_fold": 1
 	},
 	"hyperparameters":{
+		"eta_decay": [-1, 25],
 	    "eta": [1],
 	    "lambda": [0],
-	    "alpha": [0],
+	    "alpha": [0.8],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[[2, "sigmoidal"], [2, "sigmoidal"], [1, "sigmoidal"]]
-		],
-	    "patience": [2]
+			[[2, "sigmoidal"], [2, "sigmoidal"], [1, "sigmoidal"]],
+			[[2, "tanh"], [2, "tanh"], [1, "tanh"]]
+		]
 	}
     }
 }

@@ -15,6 +15,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+# used in training: computes NN.forward
 def MSE_over_network(batch, NN):
     mse = 0
     for pattern in batch:
@@ -23,13 +24,37 @@ def MSE_over_network(batch, NN):
         mse += ((out - pattern[1])**2).sum() 
     return mse/len(batch)
 
-def MEE_over_network(batch, NN):
-    mee = 0
-    for pattern in batch:
-        out = NN.h(pattern[0])
-        # \root of sum_i x_i^2, which is the euclidian norm
-        mee += ((out - pattern[1])**2).sum()**1/2
-    return mee/len(batch)
+# used in validation: computes NN.h (i.e. NN.forward > NN.threshold)
+def empirical_error(batch, NN, metric):
+    error = 0
+    if metric == "missclass":
+        for pattern in batch:
+            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
+    elif metric == "mse":
+        for pattern in batch:
+            error += ((NN.h(pattern[0]) - pattern[1])**2).sum() 
+    elif metric == "mee":
+        for pattern in batch:
+            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()**1/2
+    else:
+        raise NotImplementedError("unknown metric")
+    return error/len(batch)
+
+# def MEE_over_network(batch, NN):
+#     mee = 0
+#     for pattern in batch:
+#         out = NN.h(pattern[0])
+#         # \root of sum_i x_i^2, which is the euclidian norm
+#         mee += ((out - pattern[1])**2).sum()**1/2
+#     return mee/len(batch)
+
+# def Missclassified_patter_rateo(batch, NN):
+#     rateo = 0
+#     for pattern in batch:
+#         out = NN.h(pattern[0])
+#         # \root of sum_i x_i^2, which is the euclidian norm
+#         rateo += (out - pattern[1])
+#     return rateo/len(batch)
 
 
 #it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
@@ -44,8 +69,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         task        = global_confs["task"]#either "regression" or "classification"
         max_step    = global_confs["max_step"]
         check_step  = global_confs["check_step"]
+        metric      = global_confs["validation_metric"]
         epsilon     = global_confs["epsilon"]
         max_fold    = global_confs["max_fold"]
+        patience    = global_confs["patience"]
 
         #set local configuration
         layers      = local_confs["layers"]
@@ -54,20 +81,19 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         eta         = local_confs["eta"]
         lam         = local_confs["lambda"]
         alpha       = local_confs["alpha"]
-        #patience    = local_confs["patience"]
         
         #setting history to store plots data
         history = {}
         history['training'] = [ [] for n in range(max_fold)]
         history['validation'] = [ [] for n in range(max_fold)]
-        history['testing'] = [ 0. for n in range(max_fold)]
-        #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['weight_changes'] = [ []  for n in range(max_fold)]
+        #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
+        history['testing'] = [ 0. for n in range(max_fold)]
         history['val_step'] = check_step
         if eta_decay == -1:
             history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
         else:
-            history['name'] = f"{layers}_{batch_size}_{eta}_var_{lam}_{alpha}"
+            history['name'] = f"{layers}_{batch_size}_{eta}_{eta_decay}_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
         history['mean']      = 0
         history['variance']  = 0
@@ -115,7 +141,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                 if(i % check_step == 0):
                     #once each check_step epoch
                     #compute store and print validation error
-                    val_err = MSE_over_network (whole_VL, nn)
+                    val_err = empirical_error(whole_VL, nn, metric)
                     history['validation'][n_fold].append(val_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                     #compute store and print weights change
@@ -138,7 +164,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     #     break
                     # old_val_err = val_err
         
-            history['testing'][n_fold] = MEE_over_network (whole_VL, nn)
+            history['testing'][n_fold] = empirical_error (whole_VL, nn, metric)
+            print(history['testing'][n_fold])
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
@@ -263,7 +290,6 @@ def main():
           "eta": eta,
           "lambda": lam, 
           "alpha": alpha,
-          "patience": patience,
           "eta_decay": eta_decay},
          output_path,
          graph_path,
@@ -274,7 +300,6 @@ def main():
         for eta         in hyperparameters["eta"]
         for lam         in hyperparameters["lambda"]
         for alpha       in hyperparameters["alpha"]
-        for patience    in hyperparameters["patience"]
         for eta_decay   in hyperparameters["eta_decay"]
     ]
 

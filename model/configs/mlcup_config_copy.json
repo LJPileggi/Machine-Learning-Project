@@ -12,18 +12,20 @@
 	    "epsilon": 1e-1,
 	    "max_step": 1000,
 	    "check_step": 50,
+		"validation_metric": "mee",
+		"patience": [2],
 	    "max_fold": 1
 	},
 	"hyperparameters":{
-	    "eta": [30],
-	    "eta_decay": [25],
-	    "lambda": [1e-4],
+	    "eta": [1],
+	    "eta_decay": [-1],
+	    "lambda": [1],
 	    "alpha": [0],
-	    "batch_size": [32],
+	    "batch_size": [1],
 	    "hidden_units": [
-			[[3, "relu"], [5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]]
-		],
-	    "patience": [2]
+			[[5, "tanh"], [5, "tanh"], [5, "tanh"], [2, "linear"]]
+		]
+	    
 	}
     }
 }
