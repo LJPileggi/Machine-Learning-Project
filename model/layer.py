@@ -35,6 +35,7 @@ class layer:
         self._biases_DWold = 0.
         self.inputs = None
         self.output_prime = None
+        self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
         if activation == "sigmoidal":
           self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
           self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
@@ -50,14 +51,13 @@ class layer:
           self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
           self._activation = activation_functions.linear
           self._act_prime = activation_functions.d_linear
-        if activation == "relu":
-          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+        elif activation == "relu":
+          self._WM = np.random.uniform(low=-7.0, high=7.0, size=(input_dim, layer_dim) )
           self._biases = np.full(shape=layer_dim, fill_value=0.1)
           self._activation = activation_functions.ReLu
           self._act_prime = activation_functions.d_ReLU
         else:
           raise Exception("activation function Not implemented yet")
-        self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def forward (self, inputs):
       net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one

@@ -113,7 +113,7 @@ def ReLu(network_value):
 
 
 def d_ReLU(network_value):
-    return 1 if network_value >0. else 0.
+    return np.where(network_value > 0., 1., 0.)
 
 
 def softplus(network_value, a=1.):
