@@ -10,7 +10,7 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 1000,
+	    "max_step": 400,
 	    "check_step": 50,
 		"validation_metric": "mee",
 		"patience": [2],
