@@ -109,7 +109,7 @@ def ReLu(network_value):
     ReLu activation function. Its derivative is simply the boolean threshold function.
     Returns the identity if network_value > 0, 0 otherwise.
     """
-    return network_value if network_value >= 0. else 0.
+    return np.maximum(0, network_value)
 
 
 def d_ReLU(network_value):
