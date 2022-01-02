@@ -4,10 +4,14 @@ import os
 import csv
 import random
 
+def set_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
 
 class DataLoader():
  
-    def __init__(self):
+    def __init__(self, seed=4444):
+        set_seed(seed)
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 

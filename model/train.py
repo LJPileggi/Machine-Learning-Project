@@ -64,10 +64,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['weight_changes'] = [ []  for n in range(max_fold)]
         history['val_step'] = check_step
-        if var_eta:
-            history['name'] = f"{layers}_{batch_size}_{eta}_var_{lam}_{alpha}"
-        else:
+        if eta_decay == -1:
             history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
+        else:
+            history['name'] = f"{layers}_{batch_size}_{eta}_var_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
         history['mean']      = 0
         history['variance']  = 0
@@ -81,13 +81,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
-            #accessing the data of the k_fold
-            whole_TR = dl.get_partition_set (train_idx)
-            whole_VL = dl.get_partition_set (test_idx)
-
             #create mlp#
             nn = MLP (task, input_size, layers, seed)
             oldWeights = nn.get_weights()
+
+            #accessing the data of the k_fold
+            whole_TR = dl.get_partition_set (train_idx)
+            whole_VL = dl.get_partition_set (test_idx)
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
@@ -103,10 +103,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         error = pattern[1] - out
                         nn.backwards(error)
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
-                    if eta_decay == .1:
+                    if eta_decay == -1:
                         nn.update_weights(eta/len(whole_TR), lam, alpha)
                     else:
-                        nn.update_weights((0.99*np.exp(-i/eta_decay)+0.01)*eta/len(whole_TR), lam, alpha)
+                        nn.update_weights((0.9*np.exp(-i/eta_decay)+0.1)*eta/len(whole_TR), lam, alpha)
                 #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
@@ -119,13 +119,14 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     history['validation'][n_fold].append(val_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                     #compute store and print weights change
-                    total_change = 0
+                    wc = 0
                     newWeights = nn.get_weights()
-                    for oldW, newW in zip(oldWeights, newWeights):
-                        total_change += np.mean(np.abs((oldW-newW)/oldW))
+                    wc = np.mean(
+                        np.abs((oldWeights-newWeights)/oldWeights)
+                        )
                     oldWeights = newWeights
-                    history['weight_changes'][n_fold].append(total_change)
-                    print(f"total change: {total_change}")
+                    history['weight_changes'][n_fold].append(wc)
+                    print(f"total change: {wc}")
                     #stopping criteria
                     if (np.allclose(val_err, 0, atol=epsilon)):
                         break
@@ -140,12 +141,12 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             history['testing'][n_fold] = MEE_over_network (whole_VL, nn)
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
-            print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
+            print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
 
             ### saving model and plotting loss ###
             nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
 
-        history ['variance'] -= history['mean']
+        history ['variance'] -= history['mean']**2
         ### plotting loss ###
         create_graph(history, graph_path, f"training_loss_{history['name']}.png")
         return history
@@ -167,7 +168,7 @@ def create_graph (history, graph_path, filename):
         plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
     for i, wc in enumerate(history['weight_changes']):
         epochs = [x*history['val_step'] for x in range(len(val))]
-        plt.plot(epochs, wc, linestyle='--', label=f'WC_{i}_fold loss')
+        plt.plot(epochs, wc, linestyle='-.', label=f'WC_{i}_fold loss')
     #val_path = os.path.join(graph_path, 'validation')
     train_path = os.path.join(graph_path, 'training')
     if (not os.path.exists(train_path)):
@@ -240,14 +241,14 @@ def main():
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
 
-    ### loading and preprocessing dataset from config ###
-    dl = DataLoader()
-    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
-
     ### loading or generating seed ###
     seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
     set_seed(seed)
+
+    ### loading and preprocessing dataset from config ###
+    dl = DataLoader(seed)
+    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
 
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]

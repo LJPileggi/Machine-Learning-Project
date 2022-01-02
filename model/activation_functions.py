@@ -43,16 +43,17 @@ def threshold(network_value, boolean=True):
         return 1 if network_value >= 0. else -1
 
 def tanh(network_value, thr=0.):
-    out = np.tanh(network_value)
-    if thr == 0.: 
-        return out
-    else:
-        if (thr > 1.) | (thr < 0.):
-            raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
-        if ((out > -thr) and (out <  thr)):
-            raise ValueError('ValueError: unit output falls within rejection zone') #mmm
-        else:
-            return 1 if out >= 0. else -1
+    return np.tanh(network_value)
+    # out =  np.tanh(network_value)
+    # if thr == 0.: 
+    #     return out
+    # else:
+    #     if (thr > 1.) | (thr < 0.):
+    #         raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
+    #     if ((out > -thr) and (out <  thr)):
+    #         raise ValueError('ValueError: unit output falls within rejection zone') #mmm
+    #     else:
+    #         return 1 if out >= 0. else -1
 
 
 def d_tanh(network_value):
@@ -74,16 +75,17 @@ def sigmoidal(network_value, a=1., thr=0.):
     returns:
      - 1/0 (hyperbol=False); 1/-1 (hyperbol=True).
     """
-    out = 1./(1. + np.exp(-a*network_value))
-    if thr == 0.: 
-        return out
-    else:
-        if (thr > 1.) | (thr < 0.):
-            raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
-        if ((out > 0.5*(1. - thr)) and (out < 0.5*(1. + thr))): 
-            raise ValueError('ValueError: unit output falls within rejection zone') #perché ritornare un errore?
-        else:
-            return 1 if out >= 0.5*(1. + thr) else 0
+    return 1./(1. + np.exp(-a*network_value))
+    # out = 1./(1. + np.exp(-a*network_value))
+    # if thr == 0.: 
+    #     return out
+    # else:
+    #     if (thr > 1.) | (thr < 0.):
+    #         raise ValueError('ValueError: invalid value for argument thr. Accepted values between 0. and 1. only')
+    #     if ((out > 0.5*(1. - thr)) and (out < 0.5*(1. + thr))): 
+    #         raise ValueError('ValueError: unit output falls within rejection zone') #perché ritornare un errore?
+    #     else:
+    #         return 1 if out >= 0.5*(1. + thr) else 0
 
 
 
@@ -107,12 +109,12 @@ def ReLu(network_value):
     ReLu activation function. Its derivative is simply the boolean threshold function.
     Returns the identity if network_value > 0, 0 otherwise.
     """
-    if network_value >= 0.:
-        return network_value
-    else:
-        return 0.
+    return np.maximum(0, network_value)
 
-# uReLu = np.frompyfunc(ReLu, 1, 1)
+
+def d_ReLU(network_value):
+    return np.where(network_value > 0., 1., 0.)
+
 
 def softplus(network_value, a=1.):
     """

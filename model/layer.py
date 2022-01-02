@@ -28,8 +28,6 @@ class layer:
     """
     def __init__(self, input_dim, layer_dim, activation, dropout=None):
         print(f"{layer_dim}; {activation}")
-        self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
-        self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
         self._negGrad = 0.
         self._last_max_grad = 0.
         self._biases_negGrad = 0.
@@ -37,18 +35,29 @@ class layer:
         self._biases_DWold = 0.
         self.inputs = None
         self.output_prime = None
+        self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
         if activation == "sigmoidal":
+          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
           self._activation = activation_functions.sigmoidal
           self._act_prime = activation_functions.d_sigmoidal
         elif activation == "tanh":
+          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
           self._activation = activation_functions.tanh
           self._act_prime = activation_functions.d_tanh
         elif activation == "linear":
+          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
           self._activation = activation_functions.linear
           self._act_prime = activation_functions.d_linear
+        elif activation == "relu":
+          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+          self._biases = np.full(shape=layer_dim, fill_value=0.01)
+          self._activation = activation_functions.ReLu
+          self._act_prime = activation_functions.d_ReLU
         else:
           raise Exception("activation function Not implemented yet")
-        self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
 
     def forward (self, inputs):
       net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
@@ -104,7 +113,7 @@ class layer:
       return (self._WM, self._biases)
 
     def get_weights2(self):
-      return np.vstack((self._WM, self._biases))
+      return np.vstack((self._WM, self._biases)).flatten()
 
 
     def load_weights(self, weights, biases):
