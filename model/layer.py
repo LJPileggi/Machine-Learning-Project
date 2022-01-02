@@ -53,8 +53,8 @@ class layer:
         if activation == "relu":
           self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
           self._biases = np.full(shape=layer_dim, fill_value=0.1)
-          self._activation = activation_functions.linear
-          self._act_prime = activation_functions.d_linear
+          self._activation = activation_functions.ReLu
+          self._act_prime = activation_functions.d_ReLU
         else:
           raise Exception("activation function Not implemented yet")
         self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
