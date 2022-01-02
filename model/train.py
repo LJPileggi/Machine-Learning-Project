@@ -81,13 +81,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
-            #accessing the data of the k_fold
-            whole_TR = dl.get_partition_set (train_idx)
-            whole_VL = dl.get_partition_set (test_idx)
-
             #create mlp#
             nn = MLP (task, input_size, layers, seed)
             oldWeights = nn.get_weights()
+
+            #accessing the data of the k_fold
+            whole_TR = dl.get_partition_set (train_idx)
+            whole_VL = dl.get_partition_set (test_idx)
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
@@ -122,7 +122,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     wc = 0
                     newWeights = nn.get_weights()
                     wc = np.mean(
-                        [np.abs((oldW-newW)/oldW).flatten() for oldW, newW in zip(oldWeights, newWeights)] 
+                        np.abs((oldWeights-newWeights)/oldWeights)
                         )
                     oldWeights = newWeights
                     history['weight_changes'][n_fold].append(wc)
@@ -241,14 +241,14 @@ def main():
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
 
-    ### loading and preprocessing dataset from config ###
-    dl = DataLoader()
-    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
-
     ### loading or generating seed ###
     seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
     print(f"seed: {seed}")
     set_seed(seed)
+
+    ### loading and preprocessing dataset from config ###
+    dl = DataLoader(seed)
+    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
 
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]
