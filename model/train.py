@@ -122,7 +122,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     wc = 0
                     newWeights = nn.get_weights()
                     wc = np.mean(
-                        [np.abs((oldW-newW)/oldW) for oldW, newW in zip(oldWeights, newWeights)] 
+                        [np.abs((oldW-newW)/oldW).flatten() for oldW, newW in zip(oldWeights, newWeights)] 
                         )
                     oldWeights = newWeights
                     history['weight_changes'][n_fold].append(wc)
@@ -141,7 +141,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             history['testing'][n_fold] = MEE_over_network (whole_VL, nn)
             history['mean'] += history['testing'][n_fold]/max_fold
             history['variance'] += history['testing'][n_fold]**2 / max_fold
-            print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}%")
+            print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
 
             ### saving model and plotting loss ###
             nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
@@ -168,7 +168,7 @@ def create_graph (history, graph_path, filename):
         plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
     for i, wc in enumerate(history['weight_changes']):
         epochs = [x*history['val_step'] for x in range(len(val))]
-        plt.plot(epochs, wc, linestyle='--', label=f'WC_{i}_fold loss')
+        plt.plot(epochs, wc, linestyle='-.', label=f'WC_{i}_fold loss')
     #val_path = os.path.join(graph_path, 'validation')
     train_path = os.path.join(graph_path, 'training')
     if (not os.path.exists(train_path)):
