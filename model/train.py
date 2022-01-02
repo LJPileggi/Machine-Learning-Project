@@ -106,7 +106,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     if eta_decay == -1:
                         nn.update_weights(eta/len(whole_TR), lam, alpha)
                     else:
-                        nn.update_weights((0.99*np.exp(-i/eta_decay)+0.01)*eta/len(whole_TR), lam, alpha)
+                        nn.update_weights((0.9*np.exp(-i/eta_decay)+0.1)*eta/len(whole_TR), lam, alpha)
                 #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
