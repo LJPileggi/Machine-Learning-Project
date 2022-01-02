@@ -15,9 +15,9 @@
 	    "max_fold": 1
 	},
 	"hyperparameters":{
-	    "eta": [1],
+	    "eta": [1, 0.5],
 	    "eta_decay": [25],
-	    "lambda": [0],
+	    "lambda": [0, 1e-6],
 	    "alpha": [0],
 	    "batch_size": [1],
 	    "hidden_units": [
