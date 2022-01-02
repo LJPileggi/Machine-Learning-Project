@@ -50,6 +50,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         #set local configuration
         layers      = local_confs["layers"]
         batch_size  = local_confs["batch_size"]
+        var_eta     = bool(local_confs["variable_eta"])
         eta         = local_confs["eta"]
         lam         = local_confs["lambda"]
         alpha       = local_confs["alpha"]
@@ -63,7 +64,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['weight_changes'] = [ []  for n in range(max_fold)]
         history['val_step'] = check_step
-        history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
+        if var_eta:
+            history['name'] = f"{layers}_{batch_size}_{eta}_var_{lam}_{alpha}"
+        else:
+            history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
         history['mean']      = 0
         history['variance']  = 0
@@ -92,6 +96,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             val_err = MSE_over_network (whole_VL, nn)
             history['validation'][n_fold].append(train_err)
             history['weight_changes'][n_fold].append(0.)
+            var_thresh = 100
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
                     for pattern in current_batch:
@@ -99,7 +104,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         error = pattern[1] - out
                         nn.backwards(error)
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
-                    nn.update_weights(eta/len(whole_TR), lam, alpha)
+                    if var_eta:
+                        if i < var_thresh:
+                            nn.update_weights(((1.-i/var_thresh)+i/var_thresh*0.01)*eta/len(whole_TR), lam, alpha)
+                        else:
+                            nn.update_weights(eta*0.01/len(whole_TR), lam, alpha)
+                    else:
+                        nn.update_weights(eta/len(whole_TR), lam, alpha)
                 #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
