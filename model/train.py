@@ -64,7 +64,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
         history['weight_changes'] = [ []  for n in range(max_fold)]
         history['val_step'] = check_step
-        if var_eta:
+        if eta_decay == -1:
             history['name'] = f"{layers}_{batch_size}_{eta}_var_{lam}_{alpha}"
         else:
             history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
@@ -103,7 +103,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         error = pattern[1] - out
                         nn.backwards(error)
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
-                    if eta_decay == .1:
+                    if eta_decay == -1:
                         nn.update_weights(eta/len(whole_TR), lam, alpha)
                     else:
                         nn.update_weights((0.99*np.exp(-i/eta_decay)+0.01)*eta/len(whole_TR), lam, alpha)

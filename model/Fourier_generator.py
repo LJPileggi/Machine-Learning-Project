@@ -1,11 +1,12 @@
 import numpy as np
 import random
+import os
 import matplotlib.pyplot as plt
 import pylab as pl
 import csv
 
 N = 10
-M = 100
+M = 400
 
 def Fourier_basis(x, k, N):
     a = [1.]
@@ -44,14 +45,14 @@ if __name__ == '__main__':
     train_index = indices[np.logical_not(test_mask)]
     test_index = indices[test_mask]
 
-    with open(os.path.loader('..', 'data', 'fourier.train'), 'w') as csvfile:
+    with open(os.path.join('..', 'data', 'fourier.train'), 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        for x, f_x in zip(xx[train_index], y[train_index]):
-            writer.writerow([ x, f_x ])
-    with open(os.path.loader('..', 'data', 'fourier.test'), 'w') as csvfile:
+        for i, (x, f_x) in enumerate(zip(xx[train_index], y[train_index])):
+            writer.writerow([ i, x, f_x ])
+    with open(os.path.join('..', 'data', 'fourier.test'), 'w') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        for x, f_x in zip(xx[test_index], y[test_index]):
-            writer.writerow([ x, f_x ])
+        for i, (x, f_x) in enumerate(zip(xx[test_index], y[test_index])):
+            writer.writerow([ i, x, f_x ])
 
     plt.errorbar(xx, y+error, marker='.', linestyle='', color='black')
     plt.plot(xx, y, marker='', linestyle='-', color='red')
