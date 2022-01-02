@@ -10,18 +10,18 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 1000,
+	    "max_step": 400,
 	    "check_step": 50,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
 	    "eta": [30],
 	    "eta_decay": [25],
-	    "lambda": [1e-4],
+	    "lambda": [0],
 	    "alpha": [0],
-	    "batch_size": [32],
+	    "batch_size": [1],
 	    "hidden_units": [
-			[[3, "relu"], [5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]]
+			[[5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]]
 		],
 	    "patience": [2]
 	}

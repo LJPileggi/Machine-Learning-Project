@@ -10,7 +10,7 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-2,
-	    "max_step": 500,
+	    "max_step": 400,
 	    "check_step": 50,
 	    "max_fold": 1
 	},
@@ -24,7 +24,7 @@
 			[[3, "relu"], [3, "relu"], [3, "relu"], [2, "linear"]],
 			[[3, "tanh"], [3, "tanh"], [3, "tanh"], [2, "linear"]],
 			[[5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]],
-			[[5, "relu"], [5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]],
+			[[5, "relu"], [5, "relu"], [5, "relu"], [5, "relu"], [2, "linear"]]
 		],
 	    "patience": [2]
 	}

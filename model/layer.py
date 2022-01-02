@@ -52,8 +52,8 @@ class layer:
           self._activation = activation_functions.linear
           self._act_prime = activation_functions.d_linear
         elif activation == "relu":
-          self._WM = np.random.uniform(low=-7.0, high=7.0, size=(input_dim, layer_dim) )
-          self._biases = np.full(shape=layer_dim, fill_value=0.1)
+          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
+          self._biases = np.full(shape=layer_dim, fill_value=0.01)
           self._activation = activation_functions.ReLu
           self._act_prime = activation_functions.d_ReLU
         else:
