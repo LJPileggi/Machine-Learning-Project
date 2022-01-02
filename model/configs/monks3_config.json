@@ -8,18 +8,20 @@
     "model": {
 	"global_conf": {
 		"task": "classification",
-	    "epsilon": 1e-2,
-	    "max_step": 5000,
+	    "epsilon": 1e-4,
+	    "max_step": 3000,
 	    "check_step": 100,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
 	    "eta": [1],
 	    "lambda": [0],
-	    "alpha": [0.8],
+	    "alpha": [0],
 	    "batch_size": [-1],
-	    "hidden_units": [[2, 2, 1]],
-	    "patience": [1]
+	    "hidden_units": [
+			[[2, "sigmoidal"], [2, "sigmoidal"], [1, "sigmoidal"]]
+		],
+	    "patience": [2]
 	}
     }
 }

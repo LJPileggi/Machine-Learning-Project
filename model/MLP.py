@@ -65,6 +65,9 @@ class MLP:
     def get_max_grad_list(self):
         return [layer.get_max_grad() for layer in self.layer_set]
 
+    def get_weights(self):
+        return [layer.get_weights2() for layer in self.layer_set]
+
 
     def save_model (self, filename):
         hf = h5py.File(filename, "w")

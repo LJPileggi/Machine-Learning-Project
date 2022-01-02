@@ -53,7 +53,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         eta         = local_confs["eta"]
         lam         = local_confs["lambda"]
         alpha       = local_confs["alpha"]
-        patience    = local_confs["patience"]
+        #patience    = local_confs["patience"]
         
         #setting history to store plots data
         history = {}
@@ -61,6 +61,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         history['validation'] = [ [] for n in range(max_fold)]
         history['testing'] = [ 0. for n in range(max_fold)]
         #history['gradients'] = [ [ [] for layer in layers ]  for n in range(max_fold)]
+        history['weight_changes'] = [ []  for n in range(max_fold)]
         history['val_step'] = check_step
         history['name'] = f"{layers}_{batch_size}_{eta}_{lam}_{alpha}"
         history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
@@ -71,10 +72,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         #prepares variables used in epochs#
         train_err = np.inf
         val_err = np.inf
-        old_val_err = np.inf
-        val_err_plateau = 1 #a "size 1 plateau" is just one point
-        #whatch out! if batch_size = -1, it becomes len(TR) #moved to the dataloader file
-        #batch_size = len(whole_TR) if batch_size == -1 else batch_size
+        # old_val_err = np.inf
+        # val_err_plateau = 1 #a "size 1 plateau" is just one point
 
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         for n_fold, (train_idx, test_idx) in enumerate (dl.get_slices(max_fold)):
@@ -84,6 +83,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
             #create mlp#
             nn = MLP (task, input_size, layers, seed)
+            oldWeights = nn.get_weights()
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
@@ -91,6 +91,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             history['training'][n_fold].append(train_err)
             val_err = MSE_over_network (whole_VL, nn)
             history['validation'][n_fold].append(train_err)
+            history['weight_changes'][n_fold].append(0.)
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
                     for pattern in current_batch:
@@ -106,16 +107,28 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                 #    history['gradients'][n_fold][layer].append(grad)
                 if(i % check_step == 0):
                     #once each check_step epoch
+                    #compute store and print validation error
                     val_err = MSE_over_network (whole_VL, nn)
                     history['validation'][n_fold].append(val_err)
                     print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
-                    if np.allclose(val_err, old_val_err, atol=epsilon):
-                        val_err_plateau += 1
-                    else:
-                        val_err_plateau = 1
-                    if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience): #perché non or?
+                    #compute store and print weights change
+                    total_change = 0
+                    newWeights = nn.get_weights()
+                    for oldW, newW in zip(oldWeights, newWeights):
+                        total_change += np.mean(np.abs((oldW-newW)/oldW))
+                    oldWeights = newWeights
+                    history['weight_changes'][n_fold].append(total_change)
+                    print(f"total change: {total_change}")
+                    #stopping criteria
+                    if (np.allclose(val_err, 0, atol=epsilon)):
                         break
-                    old_val_err = val_err
+                    # if np.allclose(val_err, old_val_err, atol=1e-4):
+                    #     val_err_plateau += 1
+                    # else:
+                    #     val_err_plateau = 1
+                    # if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience): #perché non or?
+                    #     break
+                    # old_val_err = val_err
         
             history['testing'][n_fold] = MEE_over_network (whole_VL, nn)
             history['mean'] += history['testing'][n_fold]/max_fold
@@ -145,6 +158,9 @@ def create_graph (history, graph_path, filename):
     for i, val in enumerate(history['validation']):
         epochs = [x*history['val_step'] for x in range(len(val))]
         plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
+    for i, wc in enumerate(history['weight_changes']):
+        epochs = [x*history['val_step'] for x in range(len(val))]
+        plt.plot(epochs, wc, linestyle='--', label=f'WC_{i}_fold loss')
     #val_path = os.path.join(graph_path, 'validation')
     train_path = os.path.join(graph_path, 'training')
     if (not os.path.exists(train_path)):

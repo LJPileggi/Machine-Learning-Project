@@ -103,6 +103,10 @@ class layer:
     def get_weights(self):
       return (self._WM, self._biases)
 
+    def get_weights2(self):
+      return np.vstack((self._WM, self._biases))
+
+
     def load_weights(self, weights, biases):
         self._WM = weights
         self._biases = biases
