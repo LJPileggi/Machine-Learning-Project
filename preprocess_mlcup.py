@@ -3,29 +3,30 @@ import csv
 
 import numpy as np
 
-def mean_and_variance(vec_set):
-    mean = np.zeros(len(vec_set))
+def mean_variance_dev(vec_set):
+    """
+    Returns mean, variance and std deviation of a set
+    of vectors, component wise. Returns 3 vectors
+    """
+    mean = 0.
     var = 0.
     for vec in vec_set:
         mean += vec
-        var += vec**2.sum()
+        var += vec**2
     mean /= len(vec_set)
-    var -= mean**2.sum()
-    return mean, var
+    var -= mean**2
+    return mean, var, var**0.5
 
-def data_normaliser(outputs):
-    mean, dev = mean_and_variance(outputs)
-    dev = dev**0.5
-    Z_vec_set = []
-    for output in outputs:
-        Z_vec_set.append((output-mean)/dev)
-    return Z_vec_set
+def data_normaliser(data):
+    mean, _, dev = mean_variance_dev(data)
+    return [value-mean/dev for value in data]
 
-if __name__ = '__main__':
+
+if __name__ == '__main__':
     folder = "./data/"
     title = "ML-CUP21-"
     dataset = ["TR.csv", "TS.csv"]
-    filenames = [folder+title+dataset for data in dataset]
+    filenames = [folder+title+data for data in dataset]
     for filename, data in zip(filenames, dataset):
         f_in = open(filename, 'r', newline='')
         f_out = open(folder+"processed-"+title+data, 'w', newline='')
