@@ -245,8 +245,8 @@ def main():
                         help='how many nested loop you want to do')
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
     parser.set_defaults(nested=False)
-    parser.set_defaults(shrink=0.1)
-    parser.set_defaults(loop=2)
+    parser.set_defaults(shrink=0.4)
+    parser.set_defaults(loop=3)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
@@ -324,10 +324,10 @@ def main():
                     exit()
             results.extend (result_it)
             
-            test_vs_hyper = { i : history['mean'][0] for i, (history, nn) in enumerate(results) }
-            best3 = heapq.nlargest(3, test_vs_hyper)
+            test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
+            best3 = heapq.nsmallest(3, test_vs_hyper)
             print(best3)
-            best_hyper = [ results[best][0]['hyperparameters'] for best in best3 ]
+            best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
             eta_new = []
             lam_new = []
             alpha_new = []
@@ -348,7 +348,7 @@ def main():
                   "eta": eta,
                   "lambda": lam, 
                   "alpha": alpha,
-                  "patience": patience},
+                  "eta_decay": eta_decay},
                  output_path,
                  graph_path,
                  seed
@@ -358,7 +358,7 @@ def main():
                 for eta         in eta_new
                 for lam         in lam_new
                 for alpha       in alpha_new
-                for patience    in hyperparameters["patience"]
+                for eta_decay    in hyperparameters["eta_decay"]
             ]
             shrink *= shrink
             print("a cycle of nest has ended")
