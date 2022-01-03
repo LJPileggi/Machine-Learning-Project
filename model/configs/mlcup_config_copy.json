@@ -9,10 +9,11 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 400,
+	    "max_step": 1500,
 	    "check_step": 50,
-	    "validation_metric": "mee",
-	    "patience": [2],
+		"validation_metric": "mse",
+		"patience": 4,
+		"wc_threshold": 0,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
