@@ -154,10 +154,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     oldWeights = newWeights
                     history['weight_changes'][n_fold].append(wc)
                     #stopping criteria
-                    # if wc <= threshold:
-                    #     low_wc +=1
-                    # else:
-                    #     low_wc = 0 
+                    if wc <= threshold:
+                        low_wc +=1
+                    else:
+                        low_wc = 0 
                     if (np.allclose(val_err, 0, atol=epsilon) or low_wc >= patience):
                         break
         
