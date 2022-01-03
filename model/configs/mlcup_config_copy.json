@@ -18,11 +18,11 @@
 	"hyperparameters":{
 	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [1e-5],
+	    "lambda": [0],
 	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-		[[32, "sigmoidal", 1.0], [32, "sigmoidal", 0.5], [32, "sigmoidal", 0.5], [2, "linear", 1]]
+			[[32, "relu", 1.0], [32, "relu", 0.5], [2, "linear", 1]]
 		]
 	}
     }
