@@ -132,10 +132,11 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                         error = pattern[1] - out
                         nn.backwards(error)
                         #we are updating with eta/TS_size in order to compute LMS, not simply LS
+                    len_batch = len(whole_TR) #if batch_size != 1 else len(whole_TR)
                     if eta_decay == -1:
-                        nn.update_weights(eta/len(whole_TR), lam, alpha)
+                        nn.update_weights(eta/len_batch, lam, alpha)
                     else:
-                        nn.update_weights((0.9*np.exp(-(i)/eta_decay)+0.1)*eta/len(whole_TR), lam, alpha)
+                        nn.update_weights((0.9*np.exp(-(i)/eta_decay)+0.1)*eta/len_batch, lam, alpha)
                 #after each epoch
                 train_err = MSE_over_network (whole_TR, nn)
                 history['training'][n_fold].append(train_err)
