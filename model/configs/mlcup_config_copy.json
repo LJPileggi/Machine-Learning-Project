@@ -5,7 +5,6 @@
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
     "output_size": 2,
-
     "model": {
 	"global_conf": {
 	    "task": "regression",
@@ -18,13 +17,13 @@
 	    "max_fold": 1
 	},
 	"hyperparameters":{
-	    "eta": [1],
+	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [0],
+	    "lambda": [1e-5],
 	    "alpha": [0.5],
-	    "batch_size": [1],
+	    "batch_size": [64],
 	    "hidden_units": [
-			[[10, "sigmoidal"], [10, "sigmoidal"], [10, "sigmoidal"], [2, "linear"]]
+		[[32, "sigmoidal", 1.0], [32, "sigmoidal", 0.5], [32, "sigmoidal", 0.5], [2, "linear", 1]]
 		]
 	}
     }

@@ -35,7 +35,7 @@ class layer:
         self._biases_DWold = 0.
         self.inputs = None
         self.output_prime = None
-        self._dropout = dropout if dropout is not None else np.ones((layer_dim,))
+        self._dropout = dropout if dropout is not None else 1 #must be a number between 0 and 1
         if activation == "sigmoidal":
           self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
           self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
@@ -60,12 +60,15 @@ class layer:
           raise Exception("activation function Not implemented yet")
 
     def forward (self, inputs):
-      net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
-      output = self._activation(net)     #computes the out of all units at one
+        self._activated_inputs = np.random.choice([1., 0.], size=inputs.size, p=[self._dropout, 1-self._dropout])
+        self._activated_units = np.random.choice([1., 0.], size=self._biases.size, p=[self._dropout, 1-self._dropout])
+        net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
+        net = net * self._activated_units  #compute only the activated units, and the other have 0
+        output = self._activation(net)     #computes the out of all units at one
 
-      self.inputs = inputs                      #stores inputs, for backprop calculation
-      self.output_prime = self._act_prime(net)  #stores out_pr, for backprop calculation
-      return output
+        self.inputs = inputs * self._activated_inputs                      #stores inputs, for backprop calculation
+        self.output_prime = self._act_prime(net) * self._activated_units  #stores out_pr, for backprop calculation
+        return output
     
     def backwards(self, error_signal):
         #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
@@ -74,7 +77,7 @@ class layer:
         #here we compute the negative gradient for the current layer, but we don't apply it yet
         #   we add to the total neg gradient the current contribution, ie the neg grad calculated from this pattern
         #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
-        self._negGrad += np.outer(self.inputs, deltas) 
+        self._negGrad += np.outer(self.inputs, deltas)
         self._biases_negGrad += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
 
         #here we compute the error signal for the previous layer
