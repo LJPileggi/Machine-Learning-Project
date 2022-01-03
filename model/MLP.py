@@ -27,8 +27,8 @@ class MLP:
         set_seed(seed)
         self.layer_set = []
         prec_dim = input_dim
-        for layer_dim, activation in architecture:
-            self.layer_set.append(layer(prec_dim, layer_dim, activation))
+        for layer_dim, activation, dropout in architecture:
+            self.layer_set.append(layer(prec_dim, layer_dim, activation, dropout))
             prec_dim = layer_dim
         last_layer_fun = architecture[-1][1]
         self.threshold = None

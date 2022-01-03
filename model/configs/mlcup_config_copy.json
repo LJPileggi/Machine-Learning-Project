@@ -5,26 +5,24 @@
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
     "output_size": 2,
-	"preprocessing": "both_stand",
-
     "model": {
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
 	    "max_step": 400,
 	    "check_step": 50,
-		"validation_metric": "mee",
-		"patience": [2],
+	    "validation_metric": "mee",
+	    "patience": [2],
 	    "max_fold": 1
 	},
 	"hyperparameters":{
-	    "eta": [1],
+	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [1],
-	    "alpha": [0],
-	    "batch_size": [1],
+	    "lambda": [1e-5],
+	    "alpha": [0.5],
+	    "batch_size": [64],
 	    "hidden_units": [
-			[[32, "relu"], [32, "relu"], [32, "relu"], [32, "relu"], [2, "linear"]]
+		[[32, "sigmoidal", 1.0], [32, "sigmoidal", 0.5], [32, "sigmoidal", 0.5], [2, "linear", 1]]
 		]
 	}
     }
