@@ -18,8 +18,8 @@
 	    "eta_decay": [25],
 	    "eta": [1, 0.5, 0.3],
 	    "lambda": [0, 1e-6],
-	    "alpha": [0, 0.5, 0.8],
-	    "batch_size": [1, 32],
+	    "alpha": [0, 0.5],
+	    "batch_size": [-1, 1, 32],
 	    "hidden_units": [
 			[[3, "tanh"], [3, "tanh"], [3, "tanh"], [2, "linear"]],
 			[[5, "tanh"], [5, "tanh"], [5, "tanh"], [2, "linear"]]
