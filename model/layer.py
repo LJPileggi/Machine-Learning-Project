@@ -61,13 +61,12 @@ class layer:
 
     def forward (self, inputs):
         self._activated_inputs = np.random.choice([1., 0.], size=inputs.size, p=[self._dropout, 1-self._dropout])
-        self._activated_units = np.random.choice([1., 0.], size=self._biases.size, p=[self._dropout, 1-self._dropout])
+        self.inputs = inputs * self._activated_inputs                      #stores inputs, for backprop calculation
+        #self._activated_units = np.random.choice([1., 0.], size=self._biases.size, p=[self._dropout, 1-self._dropout])
         net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
-        net = net * self._activated_units  #compute only the activated units, and the other have 0
         output = self._activation(net)     #computes the out of all units at one
 
-        self.inputs = inputs * self._activated_inputs                      #stores inputs, for backprop calculation
-        self.output_prime = self._act_prime(net) * self._activated_units  #stores out_pr, for backprop calculation
+        self.output_prime = self._act_prime(net)  #stores out_pr, for backprop calculation
         return output
     
     def backwards(self, error_signal):
