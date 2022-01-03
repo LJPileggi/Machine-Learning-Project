@@ -275,7 +275,7 @@ def main():
 
     ### loading and preprocessing dataset from config ###
     dl = DataLoader(seed)
-    dl.load_data(config["train_set"], config["input_size"], config["output_size"])
+    dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
 
     ### loading CONSTANT parameters from config ###
     global_conf = config["model"]["global_conf"]

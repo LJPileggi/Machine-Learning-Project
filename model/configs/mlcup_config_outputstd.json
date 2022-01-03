@@ -5,7 +5,7 @@
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
     "output_size": 2,
-	"preprocessing": "both_stand",
+	"preprocessing": "output_stand",
 
     "model": {
 	"global_conf": {
@@ -20,12 +20,13 @@
 	"hyperparameters":{
 	    "eta": [1],
 	    "eta_decay": [25],
-	    "lambda": [1],
+	    "lambda": [0],
 	    "alpha": [0],
-	    "batch_size": [1],
+	    "batch_size": [32],
 	    "hidden_units": [
-			[[32, "relu"], [32, "relu"], [32, "relu"], [32, "relu"], [2, "linear"]]
+			[[5, "tanh"], [5, "tanh"], [5, "tanh"], [2, "linear"]]
 		]
+	    
 	}
     }
 }

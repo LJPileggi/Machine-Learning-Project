@@ -8,6 +8,24 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+def mean_variance_dev(vec_set):
+    """
+    Returns mean, variance and std deviation of a set
+    of vectors, component wise. Returns 3 vectors
+    """
+    mean = 0.
+    var = 0.
+    for vec in vec_set:
+        mean += vec
+        var += vec**2
+    mean /= len(vec_set)
+    var -= mean**2
+    return mean, var, var**0.5
+
+def data_standardizer(data):
+    mean, _, dev = mean_variance_dev(data)
+    return [value-mean/dev for value in data]
+
 class DataLoader():
  
     def __init__(self, seed=4444):
@@ -15,7 +33,7 @@ class DataLoader():
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 
-    def load_data (self, filename, input_size, output_size):
+    def load_data (self, filename, input_size, output_size, preprocessing):
         """
         set the data into the internal dictionary.
         train_slice define how much of this dataset it's going to be training
@@ -24,19 +42,35 @@ class DataLoader():
         full_fn = os.path.join(self.DATA_PATH, filename)
         with open(full_fn) as f:
             reader = csv.reader(f, delimiter=',')
-            dataset = []
+            inputs = []
+            outputs = []
+            #reads file
             for row in reader:
                 if len(row) == 1 + input_size + output_size:
                     data = list(map(float, row[1:]))
-                    inputs = data[:-output_size]
+                    input = data[:-output_size]
                     output = data[-output_size:]
-                    pattern = (np.array(inputs), np.array(output))
-                    dataset.append(pattern)
+                    inputs.append(np.array(input))
+                    outputs.append(np.array(output))
                 else:
                     raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
-            random.shuffle(dataset)
-
             
+            #preprocesses data, if needed
+            if(preprocessing == None):
+                pass
+            elif(preprocessing == "output_stand"):
+                outputs = data_standardizer(outputs)
+            elif(preprocessing == "input_stand"):
+                inputs = data_standardizer(inputs)
+            elif(preprocessing == "both_stand"):
+                inputs = data_standardizer(inputs)
+                outputs = data_standardizer(outputs)
+            else:
+                raise NotImplementedError("unknown preprocessing")
+
+            #save data
+            dataset = list(zip(inputs, outputs))
+            random.shuffle(dataset)
             self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
 

@@ -157,6 +157,3 @@ def d_SiLu(network_value, a=1.):
     """
     out = np.exp(a*network_value)*(a*network_value + np.exp(a*network_value) + 1.)/(np.exp(a*network_value) + 1.)**2
     return out
-
-usoftplus = np.frompyfunc(lambda x: softplus(x, 0.5), 1, 1)
-
