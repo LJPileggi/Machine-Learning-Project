@@ -245,7 +245,7 @@ def main():
                         help='how many nested loop you want to do')
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
     parser.set_defaults(nested=False)
-    parser.set_defaults(shrink=0.4)
+    parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=3)
     args = parser.parse_args()
     config = json.load(open(args.config_path))
@@ -331,16 +331,17 @@ def main():
             eta_new = []
             lam_new = []
             alpha_new = []
-            for hyper in best_hyper:
-                eta_new.append(hyper[2] * (1.+shrink))
-                eta_new.append(hyper[2] * (1.-shrink))
-                if (hyper[3] != 0):
-                    lam_new.append(10**(np.log10(hyper[3]) * (1.+shrink)))
-                    lam_new.append(10**(np.log10(hyper[3]) * (1.-shrink)))
-                alpha_new.append(hyper[4] * (1.+shrink))
-                alpha_new.append(hyper[4] * (1.-shrink))
-            if (lam_new == []):
-                lam_new.append(0)
+            for _, _, eta, lam, alpha in best_hyper:
+                eta_new.append(eta)
+                eta_new.append(eta + (shrink))
+                eta_new.append(eta - (shrink))
+                lam_new.append(lam)
+                if (lam != 0):
+                    lam_new.append(10**(np.log10(lam) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
+                    lam_new.append(10**(np.log10(lam) - 3*(shrink)))
+                alpha_new.append(alpha)
+                alpha_new.append(alpha + (shrink))
+                alpha_new.append(alpha - (shrink))
             configurations = [
                 (dl, global_conf, 
                  {"layers": layers,
