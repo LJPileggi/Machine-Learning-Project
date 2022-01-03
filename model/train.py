@@ -73,6 +73,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         epsilon     = global_confs["epsilon"]
         max_fold    = global_confs["max_fold"]
         patience    = global_confs["patience"]
+        threshold   = global_confs["wc_threshold"]
 
         #set local configuration
         layers      = local_confs["layers"]
@@ -122,6 +123,8 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             val_err = MSE_over_network (whole_VL, nn)
             history['validation'][n_fold].append(train_err)
             history['weight_changes'][n_fold].append(0.)
+
+            low_wc = 0
             for i in range (max_step):
                 for current_batch in dl.dataset_partition(train_idx, batch_size):
                     for pattern in current_batch:
@@ -147,22 +150,16 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     #compute store and print weights change
                     wc = 0
                     newWeights = nn.get_weights()
-                    wc = np.mean(
-                        np.abs((oldWeights-newWeights)/oldWeights)
-                        )
+                    wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
                     oldWeights = newWeights
                     history['weight_changes'][n_fold].append(wc)
-                    print(f"total change: {wc}")
                     #stopping criteria
-                    if (np.allclose(val_err, 0, atol=epsilon)):
-                        break
-                    # if np.allclose(val_err, old_val_err, atol=1e-4):
-                    #     val_err_plateau += 1
+                    # if wc <= threshold:
+                    #     low_wc +=1
                     # else:
-                    #     val_err_plateau = 1
-                    # if (np.allclose(val_err, 0, atol=epsilon) and val_err_plateau >= patience): #perché non or?
-                    #     break
-                    # old_val_err = val_err
+                    #     low_wc = 0 
+                    if (np.allclose(val_err, 0, atol=epsilon) or low_wc >= patience):
+                        break
         
             history['testing'][n_fold] = empirical_error (whole_VL, nn, metric)
             print(history['testing'][n_fold])
