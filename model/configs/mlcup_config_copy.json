@@ -9,11 +9,11 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 1500,
+	    "max_step": 100,
 	    "check_step": 50,
-		"validation_metric": "mse",
+		"validation_metric": "mee",
 		"patience": 4,
-		"wc_threshold": 0,
+		"wc_threshold": 1.5,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
@@ -23,7 +23,7 @@
 	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[[32, "relu", 1.0], [32, "relu", 0.5], [2, "linear", 1]]
+			[[2, "sigmoidal", 1.0], [2, "sigmoidal", 1], [2, "linear", 1]]
 		]
 	}
     }
