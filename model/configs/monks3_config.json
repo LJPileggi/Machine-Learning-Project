@@ -12,7 +12,8 @@
 	    "max_step": 3000,
 	    "check_step": 100,
 		"validation_metric": "missclass",
-		"patience": [2],
+		"patience": 2,
+		"wc_threshold": 0,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
@@ -22,8 +23,8 @@
 	    "alpha": [0.8],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[[2, "sigmoidal"], [2, "sigmoidal"], [1, "sigmoidal"]],
-			[[2, "tanh"], [2, "tanh"], [1, "tanh"]]
+			[[2, "sigmoidal", 1], [2, "sigmoidal", 1], [1, "sigmoidal", 1]],
+			[[2, "tanh", 1], [2, "tanh", 1], [1, "tanh", 1]]
 		]
 	}
     }
