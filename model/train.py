@@ -320,8 +320,8 @@ def main():
                 exit()
     else:
         results = []
-        shrink = args.shrink
-        loop = args.loop
+        shrink = float(args.shrink)
+        loop = int(args.loop)
         for i in range(loop):
             with Pool() as pool:
                 try:
@@ -335,8 +335,8 @@ def main():
             
             test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
             best3 = heapq.nsmallest(3, test_vs_hyper)
-            print(best3)
             best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
+            print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
             configurations = []
             for layers, batch_size, eta, lam, alpha, eta_decay in best_hyper:
                 eta_new = []
@@ -365,12 +365,17 @@ def main():
                     graph_path,
                     seed
                     )
-                    for eta         in list(set(eta_new))
-                    for lam         in list(set(lam_new))
-                    for alpha       in list(set(alpha_new))
+                    for eta         in eta_new
+                    for lam         in lam_new
+                    for alpha       in alpha_new
                 ])
             shrink *= shrink
             print("a cycle of nest has ended")
+        
+        test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
+        best3 = heapq.nsmallest(1, test_vs_hyper)
+        best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
+        print(f"il migliore modello di sta nested è: {best_hyper}")
 
         
     ##here goes model selectiom

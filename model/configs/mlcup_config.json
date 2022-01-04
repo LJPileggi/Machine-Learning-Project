@@ -13,18 +13,19 @@
 	    "check_step": 50,
 		"validation_metric": "mee",
 		"patience": 4,
-		"wc_threshold": 1.5,
+		"wc_threshold": 0,
 	    "max_fold": 4
 	},
 	"hyperparameters":{
 	    "eta": [1, 0.7, 0.5],
 	    "eta_decay": [25],
-	    "lambda": [1e-6, 1e-5],
+	    "lambda": [1e-6, 1e-5, 1e-4],
 	    "alpha": [0.3, 0.5, 0.7],
-	    "batch_size": [64, -1],
+	    "batch_size": [64],
 	    "hidden_units": [
 			[[15, "sigmoidal", 1], [15, "sigmoidal", 1], [15, "sigmoidal", 1], [2, "linear", 1]],
-			[[15, "tanh", 1], [15, "tanh", 1], [15, "tanh", 1], [2, "linear", 1]]
+			[[15, "tanh", 1], [15, "tanh", 1], [15, "tanh", 1], [2, "linear", 1]],
+			[[20, "tanh", 1], [20, "tanh", 1], [20, "tanh", 1], [2, "linear", 1]]
 		]
 	}
     }
