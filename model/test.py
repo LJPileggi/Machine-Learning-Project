@@ -10,6 +10,7 @@ import argparse
 import json
 import time
 import ast
+import csv
 
 import numpy as np
 
@@ -162,7 +163,7 @@ def main():
         config = json.load(open(args.config_path))
     
         dl = DataLoader (seed)
-        dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"), 'test')
+        dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"), 'test', shuffle=False)
 
         if (args.retraining):
             output_path = os.path.abspath(config["output_path"])
@@ -194,9 +195,21 @@ def main():
             layers = ast.literal_eval(params[1])
             nn = MLP(task, input_size, layers, seed)
             nn.load_model(filename)
-            TS = dl.get_tag_set('test')
-            ts_err = empirical_error(TS, nn, 'mee')
-            print(ts_err)
+            if (args.publish):
+                dl.load_data(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), 'blind', shuffle=False) 
+                BS = dl.get_tag_set('blind')
+                with open (os.path.join(config['output_path'], 'FINAL_MODEL', 'results.csv'), 'w') as csv_file:
+                    writer = csv.writer(csv_file, delimiter=',')
+                    for i, (inp, _) in enumerate(BS):
+                        output = nn.h(inp)
+                        result = [i]
+                        result.extend(inp)
+                        result.extend(output)
+                        writer.writerow(result)
+            else:
+                TS = dl.get_tag_set('test')
+                ts_err = empirical_error(TS, nn, 'mee')
+                print(ts_err)
 
             
 if __name__ == '__main__':

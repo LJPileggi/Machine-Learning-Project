@@ -33,7 +33,7 @@ class DataLoader():
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 
-    def load_data (self, filename, input_size, output_size, preprocessing, tag="full"): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
+    def load_data (self, filename, input_size, output_size, preprocessing, tag="full", shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
         """
         set the data into the internal dictionary.
         train_slice define how much of this dataset it's going to be training
@@ -70,7 +70,8 @@ class DataLoader():
 
             #save data
             dataset = list(zip(inputs, outputs))
-            random.shuffle(dataset)
+            if (shuffle):
+                random.shuffle(dataset)
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
 
