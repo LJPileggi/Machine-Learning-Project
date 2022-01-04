@@ -230,6 +230,18 @@ def create_graph (history, graph_path, filename):
     # plt.savefig(os.path.join(val_path, filename))
     # plt.clf()
 
+def count(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
+    history = {}
+    history['mean'] = 1.
+    layers      = local_confs["layers"]
+    batch_size  = local_confs["batch_size"]
+    eta_decay   = local_confs["eta_decay"]#if == -1 no eta decay; 25 should be fine
+    eta         = local_confs["eta"]
+    lam         = local_confs["lambda"]
+    alpha       = local_confs["alpha"] 
+    history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
+    return history
+
 def main():
     ### Parsing cli arguments ###
     parser = argparse.ArgumentParser(description="Train a model.")
@@ -306,6 +318,7 @@ def main():
         with Pool() as pool:
             try:
                 results = pool.starmap(train, configurations)
+                print(f"numero iterazioni: {len(results)}")
             except KeyboardInterrupt:
                 pool.terminate()
                 print("forced termination")
@@ -323,15 +336,17 @@ def main():
                     print("forced termination")
                     exit()
             results.extend (result_it)
+            print(f"numero iterazioni: {len(result_it)}")
             
             test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
             best3 = heapq.nsmallest(3, test_vs_hyper)
             print(best3)
             best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
-            eta_new = []
-            lam_new = []
-            alpha_new = []
-            for _, _, eta, lam, alpha, _ in best_hyper:
+            configurations = []
+            for layers, batch_size, eta, lam, alpha, eta_decay in best_hyper:
+                eta_new = []
+                lam_new = []
+                alpha_new = []
                 eta_new.append(eta)
                 eta_new.append(eta + (shrink))
                 eta_new.append(eta - (shrink))
@@ -342,25 +357,23 @@ def main():
                 alpha_new.append(alpha)
                 alpha_new.append(alpha + (shrink))
                 alpha_new.append(alpha - (shrink))
-            configurations = [
-                (dl, global_conf, 
-                 {"layers": layers,
-                  "batch_size": batch_size, 
-                  "eta": eta,
-                  "lambda": lam, 
-                  "alpha": alpha,
-                  "eta_decay": eta_decay},
-                 output_path,
-                 graph_path,
-                 seed
-                )
-                for layers      in hyperparameters["hidden_units"]
-                for batch_size  in hyperparameters["batch_size"]
-                for eta         in eta_new
-                for lam         in lam_new
-                for alpha       in alpha_new
-                for eta_decay   in hyperparameters["eta_decay"]
-            ]
+
+                configurations.extend( [
+                    (dl, global_conf, 
+                    {"layers": layers,
+                    "batch_size": batch_size, 
+                    "eta": eta,
+                    "lambda": lam, 
+                    "alpha": alpha,
+                    "eta_decay": eta_decay},
+                    output_path,
+                    graph_path,
+                    seed
+                    )
+                    for eta         in list(set(eta_new))
+                    for lam         in list(set(lam_new))
+                    for alpha       in list(set(alpha_new))
+                ])
             shrink *= shrink
             print("a cycle of nest has ended")
 
