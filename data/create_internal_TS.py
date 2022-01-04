@@ -35,4 +35,4 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--filename',
                     help='filename to divide into a train and internal test set')
 args = parser.parse_args()
-divide_et_impera(args.filename, "mlcup_internaltrain.csv", "mlcup_internaltest.csv")
+divide_et_impera(args.filename, "mlcup_internaltrain.csv", "mlcup_internaltest.csv", 0.75)
