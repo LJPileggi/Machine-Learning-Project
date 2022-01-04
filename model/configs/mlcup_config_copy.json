@@ -1,6 +1,6 @@
 {
-    "train_set": "ML-CUP21-TR.csv",
-    "test_set": "ML-CUP21-TR.csv",
+    "train_set": "mlcup_internaltrain.csv",
+    "test_set": "mlcup_internaltest.csv",
     "output_path": "output/mlcup/",
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
@@ -9,21 +9,21 @@
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 100,
+	    "max_step": 700,
 	    "check_step": 50,
 		"validation_metric": "mee",
 		"patience": 4,
-		"wc_threshold": 1.5,
+		"wc_threshold": 0,
 	    "max_fold": 1
 	},
 	"hyperparameters":{
 	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [0],
+	    "lambda": [1e-4, 1e-5, 1e-6, 0],
 	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[[2, "sigmoidal", 1.0], [2, "sigmoidal", 1], [2, "linear", 1]]
+			[[15, "tanh", 1.0], [15, "tanh", 1], [15, "tanh", 1], [2, "linear", 1]]
 		]
 	}
     }
