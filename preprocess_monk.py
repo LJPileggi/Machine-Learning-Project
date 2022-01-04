@@ -22,7 +22,7 @@ def one_hot_enc(inputs):
 
 
 if __name__ == "__main__":
-    filenames = ["data/monks-1.test", "data/monks-2.test", "data/monks-3.test", ]
+    filenames = ["data/monks-1.train", "data/monks-2.train", "data/monks-3.train", ]
     for filename in filenames:
         f_in  = open (filename, "r", newline='')
         f_out = open (filename+".csv", "w", newline='')
@@ -34,4 +34,5 @@ if __name__ == "__main__":
                 inputs = one_hot_enc(inputs)
                 outputs = [data[0]]
                 writer.writerow(id+inputs+outputs)
+        print("done")
                 
