@@ -95,7 +95,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
         else:
             history['name'] = f"{layers}_{batch_size}_{eta}_{eta_decay}_{lam}_{alpha}"
-        history['hyperparameters'] = (layers, batch_size, eta, lam, alpha)
+        history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
         history['mean']      = 0
         history['variance']  = 0
         
@@ -331,7 +331,7 @@ def main():
             eta_new = []
             lam_new = []
             alpha_new = []
-            for _, _, eta, lam, alpha in best_hyper:
+            for _, _, eta, lam, alpha, _ in best_hyper:
                 eta_new.append(eta)
                 eta_new.append(eta + (shrink))
                 eta_new.append(eta - (shrink))
@@ -359,7 +359,7 @@ def main():
                 for eta         in eta_new
                 for lam         in lam_new
                 for alpha       in alpha_new
-                for eta_decay    in hyperparameters["eta_decay"]
+                for eta_decay   in hyperparameters["eta_decay"]
             ]
             shrink *= shrink
             print("a cycle of nest has ended")
