@@ -9,6 +9,7 @@ import os
 import argparse
 import json
 import time
+import ast
 
 import numpy as np
 
@@ -149,16 +150,16 @@ def main():
     parser.set_defaults(model_path=None)
     args = parser.parse_args()
 
+    seed = int(args.seed) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
+    print(f"seed: {seed}")
+    set_seed(seed)
+
     choice = input ("ATTENZIONE! Se stai avviando questo programma stai facendo model assesment, questo significa che non potrai tornare ad allenare i dati dopo questo momento. Sei sicuro di voler avviare questo programma? - ")
     if (choice == 'n'):
         exit()
     
     if (args.config_path != None):
         config = json.load(open(args.config_path))
-
-        seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
-        print(f"seed: {seed}")
-        set_seed(seed)
     
         dl = DataLoader (seed)
         dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"), 'test')
@@ -184,5 +185,19 @@ def main():
             #each configuration is a triple: datas, global confs and local confs
             retrain(dl, global_conf, hyperparameters, output_path, graph_path, seed)
 
+        elif (args.model_path != None):
+            task = config['model']['global_conf']['task']
+            input_size = config['input_size']
+            filename = args.model_path
+            name, _ = os.path.splitext(os.path.basename(filename))
+            params = name.split ('_')
+            layers = ast.literal_eval(params[1])
+            nn = MLP(task, input_size, layers, seed)
+            nn.load_model(filename)
+            TS = dl.get_tag_set('test')
+            ts_err = empirical_error(TS, nn, 'mee')
+            print(ts_err)
+
+            
 if __name__ == '__main__':
     main()
