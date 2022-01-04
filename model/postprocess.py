@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 # used in training: computes NN.forward
 def MSE_over_network(batch, NN):
