@@ -33,7 +33,7 @@ class DataLoader():
         self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 
-    def load_data (self, filename, input_size, output_size, preprocessing):
+    def load_data (self, filename, input_size, output_size, preprocessing, tag="full"): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
         """
         set the data into the internal dictionary.
         train_slice define how much of this dataset it's going to be training
@@ -71,7 +71,7 @@ class DataLoader():
             #save data
             dataset = list(zip(inputs, outputs))
             random.shuffle(dataset)
-            self.data["full"] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+            self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
 
     def get_slices (self, k_fold=5):
@@ -124,6 +124,9 @@ class DataLoader():
             
     def get_partition_set(self, indices): #aggiungere parametro per il kfold
         return self.data["full"][indices]
+    
+    def get_tag_set(self, tag): #aggiungere parametro per il kfold
+        return self.data[tag]
 
 # class MonkDataLoader(AbstractDataLoader):
 #     def __init__(self):

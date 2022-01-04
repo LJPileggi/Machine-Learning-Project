@@ -63,13 +63,13 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
         #accessing the data of the k_fold
         whole_TR = dl.get_partition_set (train_idx)
-        whole_VL = dl.get_partition_set (test_idx)
+        whole_TS = dl.get_partition_set (test_idx)
             
         print(f"partito un ciclo di cross val - {n_fold}")
             
         train_err = MSE_over_network (whole_TR, nn)
         history['training'].append(train_err)
-        val_err = MSE_over_network (whole_VL, nn)
+        val_err = MSE_over_network (whole_TS, nn)
         history['validation'].append(train_err)
         history['weight_changes'].append(0.)
 
@@ -87,14 +87,14 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                 else:
                     nn.update_weights((0.9*np.exp(-(i)/eta_decay)+0.1)*eta/len_batch, lam, alpha)
             #after each epoch
-            train_err = MSE_over_network (whole_TR, nn)
+            train_err = empirical_error (whole_TR, nn, "mee")
             history['training'].append(train_err)
             #for layer, grad in enumerate(nn.get_max_grad_list()):
             #    history['gradients'][n_fold][layer].append(grad)
             if(i % check_step == 0):
                 #once each check_step epoch
                 #compute store and print validation error
-                val_err = empirical_error(whole_VL, nn, metric)
+                val_err = empirical_error(whole_TS, nn, metric)
                 history['validation'].append(val_err)
                 print (f"{n_fold}_fold - {i} - {history['name']}: {train_err} - {val_err}")
                 #compute store and print weights change
@@ -115,7 +115,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
         print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
 
         ### saving model and plotting loss ###
-        nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
+        nn.save_model(os.path.join(output_path, f"model_{history['name']}.h5"))
 
         ### plotting loss ###
         create_graph(history, graph_path, f"training_loss_{history['name']}.png")
@@ -171,7 +171,7 @@ def main():
             ### loding hyperparameters from config ###
             hyperparameters = config["model"]["hyperparameters"]
             #each configuration is a triple: datas, global confs and local confs
-            retrain(dl, global_conf, hyperparameters, output_path, graph_path, seed)
+            h = retrain(dl, global_conf, hyperparameters, output_path, graph_path, seed)
             
 
         dl.load_data(config_["test_set"], config_["input_size"], config["output_size"], config.get("preprocessing"))
