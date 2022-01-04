@@ -74,9 +74,9 @@ class DataLoader():
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
 
 
-    def get_slices (self, k_fold=5):
+    def get_slices (self, k_fold=5, tag='full'):
         if k_fold > 1: 
-            n_samples = len(self.data["full"])
+            n_samples = len(self.data[tag])
             indices = np.arange(n_samples)
 
             fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
@@ -92,13 +92,13 @@ class DataLoader():
                 yield train_index, test_index
                 current = stop
         else:
-            n_samples = len(self.data["full"])
+            n_samples = len(self.data[tag])
             indices = np.arange(n_samples)
             train_start = n_samples // 5
             yield indices[train_start:], indices[:train_start]
 
      
-    def dataset_partition (self, indices, batch_size): #
+    def dataset_partition (self, indices, batch_size, tag='full'): #
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
@@ -107,7 +107,7 @@ class DataLoader():
         """
         tr_size = len(indices)
         batch_size = tr_size if batch_size == -1 else batch_size
-        curr_data = self.data["full"][indices]
+        curr_data = self.data[tag][indices]
         idxs = np.arange(tr_size)
         batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
         batchs_sizes[: tr_size % batch_size] += 1
@@ -119,11 +119,11 @@ class DataLoader():
             yield curr_data[start:stop]
             current = stop
 
-    def get_input_size(self):
-        return self.data['full'][0][0].size
+    def get_input_size(self, tag='full'):
+        return self.data[tag][0][0].size
             
-    def get_partition_set(self, indices): #aggiungere parametro per il kfold
-        return self.data["full"][indices]
+    def get_partition_set(self, indices, tag='full'):
+        return self.data[tag][indices]
     
     def get_tag_set(self, tag): #aggiungere parametro per il kfold
         return self.data[tag]
