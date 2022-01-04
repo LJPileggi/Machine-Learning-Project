@@ -1,6 +1,6 @@
 {
-    "train_set": "ML-CUP21-TR.csv",
-    "test_set": "ML-CUP21-TR.csv",
+    "train_set": "mlcup_internaltrain.csv",
+    "test_set": "mlcup_internaltest.csv",
     "output_path": "output/mlcup/",
     "graph_path": "graphs/mlcup/",
     "input_size": 10,
