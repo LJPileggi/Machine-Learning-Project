@@ -181,7 +181,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     
 
 def create_graph (history, graph_path, filename):
-    plt.title(f'Training Loss - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
+    plt.title(f'Train and Validation error - Mean: {history["mean"]:.2f} +- Var: {history["variance"]**0.5:.2f}')
     plt.xlabel('Epochs')
     plt.yscale('log')
     plt.ylabel('Loss')
@@ -191,33 +191,28 @@ def create_graph (history, graph_path, filename):
     for i, val in enumerate(history['validation']):
         epochs = [x*history['val_step'] for x in range(len(val))]
         plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
-    # for i, wc in enumerate(history['weight_changes']):
-    #     epochs = [x*history['val_step'] for x in range(len(val))]
-    #     plt.plot(epochs, wc, linestyle='-.', label=f'WC_{i}_fold loss')
+
     # #val_path = os.path.join(graph_path, 'validation')
-    # train_path = os.path.join(graph_path, 'training')
-    # if (not os.path.exists(train_path)):
-    #     os.makedirs(train_path)
+    train_path = os.path.join(graph_path, 'training')
+    if (not os.path.exists(train_path)):
+        os.makedirs(train_path)
     plt.legend()
-    plt.savefig(os.path.join(graph_path, filename))
+    plt.savefig(os.path.join(train_path, filename))
     plt.clf()
 
-    # plt.title(f'Maximum of Gradients - {history["mean"]:.2f} +- {history["variance"]**0.5:.2f}')
-    # plt.xlabel('Epochs')
-    # #plt.yscale('log')
-    # plt.ylabel('Values')
-    # colors = ['c', 'm', 'y', 'k', 'c', 'm', 'y', 'k']
-    # lines = ['-', '-.', '--', ':']
-    # for i, gradients in enumerate (history['gradients']):
-    #     for layer, gradient in enumerate(gradients):
-    #         epochs = range(len(gradient))
-    #         plt.plot(epochs, gradient, colors[i], linestyle=lines[layer], label=f'{layer}th layer max gradient of {i}_fold')
-    # grad_path = os.path.join(graph_path, 'gradients')
-    # if (not os.path.exists(grad_path)):
-    #     os.makedirs(grad_path)
-    # plt.legend()
-    # plt.savefig(os.path.join(grad_path, filename))
-    # plt.clf()
+    plt.title(f'Average Weights change')
+    plt.xlabel('Epochs')
+    plt.yscale('log')
+    plt.ylabel('Values')
+    for i, wc in enumerate(history['weight_changes']):
+        epochs = [x*history['val_step'] for x in range(len(val))]
+        plt.plot(epochs, wc, linestyle='-.', label=f'WC_{i}_fold loss')
+    grad_path = os.path.join(graph_path, 'gradients')
+    if (not os.path.exists(grad_path)):
+        os.makedirs(grad_path)
+    plt.legend()
+    plt.savefig(os.path.join(grad_path, filename))
+    plt.clf()
 
     # plt.title(f'Validation Loss - AVG +- VAR')
     # plt.xlabel('Epochs')
