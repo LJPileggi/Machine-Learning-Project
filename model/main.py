@@ -31,16 +31,13 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument('--config_path',
                         help='path to config file')
-    parser.add_argument('--seed',
+    parser.add_argument('--seed', type=int
                         help='random seed')
-    parser.add_argument('--nested', dest='nested', action='store_true',
-                        help='if you want to do a nested grid search')
-    parser.add_argument('--shrink',
-                        help='how much do you want to shrink during nested grid search')
-    parser.add_argument('--loop',
+    parser.add_argument('--loop', type=int,
                         help='how many nested loop you want to do')
+    parser.add_argument('--shrink', type=float,
+                        help='how much do you want to shrink during nested grid search')
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
-    parser.set_defaults(nested=False)
     parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=3)
     args = parser.parse_args()
@@ -66,7 +63,7 @@ def main():
     hyperparameters = config["hyperparameters"]
     
     #executing training and model selection
-    grid_search(seed, dl, ds, global_conf, hyperparameters, int(args.loop), float(args.shrink))
+    grid_search(seed, dl, ds, global_conf, hyperparameters, args.loop, args.shrink)
     
     ##here goes testing
     print("grid search complete!")
