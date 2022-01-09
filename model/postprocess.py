@@ -2,30 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# used in training: computes NN.forward
-def MSE_over_network(batch, NN):
-    mse = 0
-    for pattern in batch:
-        out = NN.forward(pattern[0])
-        # \sum_i x_i^2, which is the square of the 2-norm
-        mse += ((out - pattern[1])**2).sum() 
-    return mse/len(batch)
 
-# used in validation: computes NN.h (i.e. NN.forward > NN.threshold)
-def empirical_error(batch, NN, metric):
-    error = 0
-    if metric == "missclass":
-        for pattern in batch:
-            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
-    elif metric == "mse":
-        for pattern in batch:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum() 
-    elif metric == "mee":
-        for pattern in batch:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()**1/2
-    else:
-        raise NotImplementedError("unknown metric")
-    return error/len(batch)
+
+# miscclass and accuracy compute nn.h, with a threshold
+# mse and mee comute nn.forward, the direct output of the output layer
 
 def create_graph (history, graph_path, filename):
     plt.title(f'Train and Validation error - Mean: {history["mean"]:.2f} +- Var: {history["variance"]**0.5:.2f}')

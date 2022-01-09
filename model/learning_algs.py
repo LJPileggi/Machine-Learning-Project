@@ -1,39 +1,32 @@
-from dataloader import DataLoader
-from MLP import MLP
-from postprocess import MSE_over_network, empirical_error, create_graph
-from multiprocessing import Pool
-from datetime import datetime
-import random
-import numpy as np
-import os
-import argparse
-import json
 import heapq
-import time
-import matplotlib.pyplot as plt
+from multiprocessing import Pool
+from matplotlib.pyplot import hist
+import numpy as np
 
-def set_seed(seed):
-    np.random.seed(seed)
-    random.seed(seed)
+def empirical_error(batch, NN, metric):
+    error = 0
+    if metric == "missclass":
+        for pattern in batch:
+            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
+        return error/len(batch)
+    if metric == "accuracy":
+        for pattern in batch:
+            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
+        return 1-error/len(batch)
+    if metric == "mse":
+        for pattern in batch:
+            error += ((NN.forward(pattern[0]) - pattern[1])**2).sum() 
+        return error/len(batch)
+    elif metric == "mee":
+        for pattern in batch:
+            error += ((NN.forward(pattern[0]) - pattern[1])**2).sum()**1/2
+        return error/len(batch)
+    else:
+        raise NotImplementedError("unknown metric")
 
-# def MEE_over_network(batch, NN):
-#     mee = 0
-#     for pattern in batch:
-#         out = NN.h(pattern[0])
-#         # \root of sum_i x_i^2, which is the euclidian norm
-#         mee += ((out - pattern[1])**2).sum()**1/2
-#     return mee/len(batch)
-
-# def Missclassified_patter_rateo(batch, NN):
-#     rateo = 0
-#     for pattern in batch:
-#         out = NN.h(pattern[0])
-#         # \root of sum_i x_i^2, which is the euclidian norm
-#         rateo += (out - pattern[1])
-#     return rateo/len(batch)
 
 
-#it reads as nonlocal variables: dl, activation, checkstep, maxstep, epsilon
+
 def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     try:
         #accessing data
@@ -71,7 +64,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             history['name'] = f"{layers}_{batch_size}_{eta}_nonvar_{lam}_{alpha}"
         else:
             history['name'] = f"{layers}_{batch_size}_{eta}_{eta_decay}_{lam}_{alpha}"
-        history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
+        history["hyperparameters"] = local_confs   
         history['mean']      = 0
         history['variance']  = 0
         
@@ -154,72 +147,10 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
     except KeyboardInterrupt:
         print('Interrupted')
         return None
-    
 
 
-def count(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
-    history = {}
-    history['mean'] = 1.
-    layers      = local_confs["layers"]
-    batch_size  = local_confs["batch_size"]
-    eta_decay   = local_confs["eta_decay"]#if == -1 no eta decay; 25 should be fine
-    eta         = local_confs["eta"]
-    lam         = local_confs["lambda"]
-    alpha       = local_confs["alpha"] 
-    history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
-    return history
 
-def main():
-    ### Parsing cli arguments ###
-    parser = argparse.ArgumentParser(description="Train a model.")
-    parser.add_argument('--config_path',
-                        help='path to config file')
-    parser.add_argument('--seed',
-                        help='random seed')
-    parser.add_argument('--nested', dest='nested', action='store_true',
-                        help='if you want to do a nested grid search')
-    parser.add_argument('--shrink',
-                        help='how much do you want to shrink during nested grid search')
-    parser.add_argument('--loop',
-                        help='how many nested loop you want to do')
-    parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
-    parser.set_defaults(nested=False)
-    parser.set_defaults(shrink=0.1)
-    parser.set_defaults(loop=3)
-    args = parser.parse_args()
-    config = json.load(open(args.config_path))
-
-    ### setting up output directories ###
-    now = datetime.now()
-    now_date = str(datetime.date(now))
-    now_time = str(datetime.time(now))
-    now_time = now_time[:2] + now_time[3:5]
-    output_path = os.path.abspath(config["output_path"])
-    output_path = os.path.join(output_path, now_date, now_time)
-    print(output_path)
-    if (not os.path.exists(output_path)):
-        os.makedirs(output_path)
-    graph_path = os.path.abspath(config["graph_path"])
-    graph_path = os.path.join(graph_path, now_date, now_time)
-    print(graph_path)
-    if (not os.path.exists(graph_path)):
-        os.makedirs(graph_path)
-
-    ### loading or generating seed ###
-    seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è 2021
-    print(f"seed: {seed}")
-    set_seed(seed)
-
-    ### loading and preprocessing dataset from config ###
-    dl = DataLoader(seed)
-    dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
-
-    ### loading CONSTANT parameters from config ###
-    global_conf = config["model"]["global_conf"]
-
-    ### loding hyperparameters from config ###
-    hyperparameters = config["model"]["hyperparameters"]
-    #each configuration is a triple: datas, global confs and local confs
+def grid_search(seed, dl, global_conf, hyperparameters, loop=1, shrink=0.1):
     configurations = [
         (dl, global_conf, 
          {"layers": layers,
@@ -240,80 +171,63 @@ def main():
         for eta_decay   in hyperparameters["eta_decay"]
     ]
 
+
     ### training ###
-    if (not args.nested):
+    results = []
+    for i in range(loop): #possibly just one iteration
         with Pool() as pool:
             try:
-                results = pool.starmap(train, configurations)
-                print(f"numero iterazioni: {len(results)}")
+                result_it = pool.starmap(train, configurations)
             except KeyboardInterrupt:
                 pool.terminate()
                 print("forced termination")
                 exit()
-    else:
-        results = []
-        shrink = float(args.shrink)
-        loop = int(args.loop)
-        for i in range(loop):
-            with Pool() as pool:
-                try:
-                    result_it = pool.starmap(train, configurations)
-                except KeyboardInterrupt:
-                    pool.terminate()
-                    print("forced termination")
-                    exit()
-            results.extend (result_it)
-            print(f"numero iterazioni: {len(result_it)}")
-            
-            test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
-            best3 = heapq.nsmallest(3, test_vs_hyper)
-            best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
-            print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
-            configurations = []
-            for layers, batch_size, eta, lam, alpha, eta_decay in best_hyper:
-                eta_new = []
-                lam_new = []
-                alpha_new = []
-                eta_new.append(eta)
-                eta_new.append(eta + (shrink))
-                eta_new.append(eta - (shrink))
-                lam_new.append(lam)
-                if (lam != 0):
-                    lam_new.append(10**(np.log10(lam) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
-                    lam_new.append(10**(np.log10(lam) - 3*(shrink)))
-                alpha_new.append(alpha)
-                alpha_new.append(alpha + (shrink))
-                alpha_new.append(alpha - (shrink))
-
-                configurations.extend( [
-                    (dl, global_conf, 
-                    {"layers": layers,
-                    "batch_size": batch_size, 
-                    "eta": eta,
-                    "lambda": lam, 
-                    "alpha": alpha,
-                    "eta_decay": eta_decay},
-                    output_path,
-                    graph_path,
-                    seed
-                    )
-                    for eta         in eta_new
-                    for lam         in lam_new
-                    for alpha       in alpha_new
-                ])
-            shrink *= shrink
-            print("a cycle of nest has ended")
+        results.extend (result_it)
+        print(f"models trained: {len(result_it)}")
         
         test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
-        best3 = heapq.nsmallest(1, test_vs_hyper)
+        best3 = heapq.nsmallest(3, test_vs_hyper)
         best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
-        print(f"il migliore modello di sta nested è: {best_hyper}")
+        print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
+        configurations = []
+        for layers, batch_size, eta, lam, alpha, eta_decay in best_hyper:
+            eta_new = []
+            lam_new = []
+            alpha_new = []
+            eta_new.append(eta)
+            eta_new.append(eta + (shrink))
+            eta_new.append(eta - (shrink))
+            lam_new.append(lam)
+            if (lam != 0):
+                lam_new.append(10**(np.log10(lam) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
+                lam_new.append(10**(np.log10(lam) - 3*(shrink)))
+            alpha_new.append(alpha)
+            alpha_new.append(alpha + (shrink))
+            alpha_new.append(alpha - (shrink))
 
-        
-    ##here goes model selectiom
-    print("grid search complete!")
+            configurations.extend( [
+                (dl, global_conf, 
+                {"layers": layers,
+                "batch_size": batch_size, 
+                "eta": eta,
+                "lambda": lam, 
+                "alpha": alpha,
+                "eta_decay": eta_decay},
+                output_path,
+                graph_path,
+                seed
+                )
+                for eta         in eta_new
+                for lam         in lam_new
+                for alpha       in alpha_new
+            ])
+        shrink *= shrink
+        print("a cycle of nest has ended")
+    
+    test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
+    best3 = heapq.nsmallest(1, test_vs_hyper)
+    best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
+    print(f"il migliore modello di sta nested è: {best_hyper}")
 
-
-
-if __name__ == '__main__':
-    main()
+def cross_val():
+    pass
