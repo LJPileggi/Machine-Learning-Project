@@ -1,4 +1,5 @@
 import heapq
+import itertools
 from multiprocessing import Pool
 import numpy as np
 from numpy.core.numeric import empty_like
@@ -154,16 +155,85 @@ def train(seed, dl, ds, global_confs, local_confs):
 
 
 
+
+def get_children_paremetrs(hyper, shrink, parameters):    
+    eta_new = [
+        hyper['eta'], hyper['eta']+(shrink), hyper['eta']-(shrink)
+        ]
+
+    lam_new = [hyper['lam']]
+    if (hyper['lam'] != 0):
+        lam_new.append(10**(np.log10(hyper['lam']) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
+        lam_new.append(10**(np.log10(hyper['lam']) - 3*(shrink)))
+    
+    alpha_new = [
+        hyper['alpha'], hyper['alpha']+(shrink), hyper['alpha']-(shrink)
+        ]
+
+    configs = {k: f(v) for parameter in hyper.items()}
+    configs = itertools.product()
+
+    return [
+            {"layers": hyper['layers'],
+             "batch_size": hyper['batch_size'], 
+             "eta_decay": hyper['eta_decay'],
+             "eta": eta,
+             "lambda": lam, 
+             "alpha": alpha
+            }
+        for eta, lam, alpha, layers, batchsize, etadecay, in configs
+    ]
+
+
+def get_children(hyper, shrink):    
+    eta_new = [
+        hyper['eta'], hyper['eta']+(shrink), hyper['eta']-(shrink)
+        ]
+
+    lam_new = [hyper['lam']]
+    if (hyper['lam'] != 0):
+        lam_new.append(10**(np.log10(hyper['lam']) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
+        lam_new.append(10**(np.log10(hyper['lam']) - 3*(shrink)))
+    
+    alpha_new = [
+        hyper['alpha'], hyper['alpha']+(shrink), hyper['alpha']-(shrink)
+        ]
+    
+    return [
+            {"layers": hyper['layers'],
+             "batch_size": hyper['batch_size'], 
+             "eta_decay": hyper['eta_decay'],
+             "eta": eta,
+             "lambda": lam, 
+             "alpha": alpha
+            }
+        for eta         in eta_new
+        for lam         in lam_new
+        for alpha       in alpha_new
+    ]
+
+
+
+
 def grid_search(seed, dl, ds, global_conf, hyperparameters, loop=1, shrink=0.1):
-    configurations = [
-        (seed, dl, ds, global_conf, 
+    results = []
+    
+    # configurations = generate configurations
+    # train a model for each configuration
+    # new configurations = flatten(get_children(model) for model in best model)
+    # train a model for each configuration
+
+
+    #configuration used for the first grid search
+    configurations = [ 
          {"layers": layers,
           "batch_size": batch_size, 
+          "eta_decay": eta_decay,
           "eta": eta,
           "lambda": lam, 
-          "alpha": alpha,
-          "eta_decay": eta_decay}
-        )
+          "alpha": alpha
+        }
+        
         for layers      in hyperparameters["hidden_units"]
         for batch_size  in hyperparameters["batch_size"]
         for eta         in hyperparameters["eta"]
@@ -172,10 +242,34 @@ def grid_search(seed, dl, ds, global_conf, hyperparameters, loop=1, shrink=0.1):
         for eta_decay   in hyperparameters["eta_decay"]
     ]
 
+    with Pool() as pool:
+            try:
+                results = [
+                    pool.apply_async(train, seed, ds, dl, global_conf, config)
+                    for config in configs
+                ]
+                pool.close
+                pool.join()
+                # result_it = pool.starmap(train, configurations)
+                result_it = map(lambda result: result.get(), results)
+            except KeyboardInterrupt:
+                pool.terminate()
+                print("forced termination")
+                exit()
+    results.extend (result_it)
+    print(f"models trained: {len(result_it)}")
+    
+
 
     ### training ###
-    results = []
     for i in range(loop): #possibly just one iteration
+        configurations = []
+        results.sort(key=lambda history: history['mean'])
+        best_hyper = [ best['hyperparameters'] for best in results[:3] ]
+        print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
+        configurations = get_children()
+        shrink *= shrink
+
         with Pool() as pool:
             try:
                 result_it = pool.starmap(train, configurations)
@@ -185,42 +279,9 @@ def grid_search(seed, dl, ds, global_conf, hyperparameters, loop=1, shrink=0.1):
                 exit()
         results.extend (result_it)
         print(f"models trained: {len(result_it)}")
-        
-        test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
-        best3 = heapq.nsmallest(3, test_vs_hyper)
-        best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
-        print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
-        configurations = []
-        for layers, batch_size, eta, lam, alpha, eta_decay in best_hyper:
-            eta_new = []
-            lam_new = []
-            alpha_new = []
-            eta_new.append(eta)
-            eta_new.append(eta + (shrink))
-            eta_new.append(eta - (shrink))
-            lam_new.append(lam)
-            if (lam != 0):
-                lam_new.append(10**(np.log10(lam) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
-                lam_new.append(10**(np.log10(lam) - 3*(shrink)))
-            alpha_new.append(alpha)
-            alpha_new.append(alpha + (shrink))
-            alpha_new.append(alpha - (shrink))
-
-            configurations.extend( [
-                (seed, dl, ds, global_conf, 
-                {"layers": layers,
-                "batch_size": batch_size, 
-                "eta": eta,
-                "lambda": lam, 
-                "alpha": alpha,
-                "eta_decay": eta_decay},
-                )
-                for eta         in eta_new
-                for lam         in lam_new
-                for alpha       in alpha_new
-            ])
-        shrink *= shrink
         print("a cycle of nest has ended")
+        
+        
     
     test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
     best3 = heapq.nsmallest(1, test_vs_hyper)
