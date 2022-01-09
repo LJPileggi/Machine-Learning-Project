@@ -1,8 +1,11 @@
 import heapq
 from multiprocessing import Pool
-from matplotlib.pyplot import hist
 import numpy as np
+from numpy.core.numeric import empty_like
+from MLP import MLP
 
+# miscclass and accuracy compute nn.h, with a threshold
+# mse and mee compute nn.forward, the direct output of the output layer
 def empirical_error(batch, NN, metric):
     error = 0
     if metric == "missclass":
@@ -27,7 +30,7 @@ def empirical_error(batch, NN, metric):
 
 
 
-def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
+def train(seed, dl, ds, global_confs, local_confs):
     try:
         #accessing data
         input_size = dl.get_input_size ()
@@ -87,9 +90,9 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             
             print(f"partito un ciclo di cross val - {n_fold}")
             
-            train_err = MSE_over_network (whole_TR, nn)
+            train_err = empirical_error(whole_TR, nn, metric)
             history['training'][n_fold].append(train_err)
-            val_err = MSE_over_network (whole_VL, nn)
+            val_err = empirical_error (whole_VL, nn, metric)
             history['validation'][n_fold].append(train_err)
             history['weight_changes'][n_fold].append(0.)
 
@@ -107,7 +110,7 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
                     else:
                         nn.update_weights((0.9*np.exp(-(i)/eta_decay)+0.1)*eta/len_batch, lam, alpha)
                 #after each epoch
-                train_err = MSE_over_network (whole_TR, nn)
+                train_err = empirical_error(whole_TR, nn, metric)
                 history['training'][n_fold].append(train_err)
                 #for layer, grad in enumerate(nn.get_max_grad_list()):
                 #    history['gradients'][n_fold][layer].append(grad)
@@ -138,11 +141,12 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
 
             ### saving model and plotting loss ###
-            nn.save_model(os.path.join(output_path, f"model_{history['name']}_{n_fold}fold.h5"))
+            ds.save_model(nn, f"model_{history['name']}_{n_fold}fold.h5")
+            nn.save_model(f"model_{history['name']}_{n_fold}fold.h5"))
 
         history ['variance'] -= history['mean']**2
         ### plotting loss ###
-        create_graph(history, graph_path, f"training_loss_{history['name']}.png")
+        ds.create_graph(history, f"training_loss_{history['name']}.png")
         return history
     except KeyboardInterrupt:
         print('Interrupted')
@@ -150,18 +154,15 @@ def train(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
 
 
 
-def grid_search(seed, dl, global_conf, hyperparameters, loop=1, shrink=0.1):
+def grid_search(seed, dl, ds, global_conf, hyperparameters, loop=1, shrink=0.1):
     configurations = [
-        (dl, global_conf, 
+        (seed, dl, ds, global_conf, 
          {"layers": layers,
           "batch_size": batch_size, 
           "eta": eta,
           "lambda": lam, 
           "alpha": alpha,
-          "eta_decay": eta_decay},
-         output_path,
-         graph_path,
-         seed
+          "eta_decay": eta_decay}
         )
         for layers      in hyperparameters["hidden_units"]
         for batch_size  in hyperparameters["batch_size"]
@@ -206,16 +207,13 @@ def grid_search(seed, dl, global_conf, hyperparameters, loop=1, shrink=0.1):
             alpha_new.append(alpha - (shrink))
 
             configurations.extend( [
-                (dl, global_conf, 
+                (seed, dl, ds, global_conf, 
                 {"layers": layers,
                 "batch_size": batch_size, 
                 "eta": eta,
                 "lambda": lam, 
                 "alpha": alpha,
                 "eta_decay": eta_decay},
-                output_path,
-                graph_path,
-                seed
                 )
                 for eta         in eta_new
                 for lam         in lam_new

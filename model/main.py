@@ -1,13 +1,8 @@
-from matplotlib.pyplot import grid
 from dataloader import DataLoader
-from MLP import MLP
-from postprocess import MSE_over_network, empirical_error, create_graph
+from datastorage import DataStorage
 from learning_algs import grid_search
-from multiprocessing import Pool
-from datetime import datetime
 import random
 import numpy as np
-import os
 import argparse
 import json
 import time
@@ -51,22 +46,7 @@ def main():
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
-    ### setting up output directories ###
-    now = datetime.now()
-    now_date = str(datetime.date(now))
-    now_time = str(datetime.time(now))
-    now_time = now_time[:2] + now_time[3:5]
-    output_path = os.path.abspath(config["output_path"])
-    output_path = os.path.join(output_path, now_date, now_time)
-    print(output_path)
-    if (not os.path.exists(output_path)):
-        os.makedirs(output_path)
-    graph_path = os.path.abspath(config["graph_path"])
-    graph_path = os.path.join(graph_path, now_date, now_time)
-    print(graph_path)
-    if (not os.path.exists(graph_path)):
-        os.makedirs(graph_path)
-
+    
     ### loading or generating seed ###
     seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è l'epoch time
     print(f"seed: {seed}")
@@ -76,15 +56,19 @@ def main():
     dl = DataLoader(seed)
     dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
 
+    ### setting up output directories ###
+    ds = DataStorage(config["data_cong"])
+
     ### loading CONSTANT parameters from config ###
-    global_conf = config["model"]["global_conf"]
+    global_conf = config["global_conf"]
 
     ### loding hyperparameters from config ###
-    hyperparameters = config["model"]["hyperparameters"]
+    hyperparameters = config["hyperparameters"]
     
-    grid_search(seed, dl, global_conf, hyperparameters, bool(args.nested), int(args.loop), float(args.shrink))
+    #executing training and model selection
+    grid_search(seed, dl, ds, global_conf, hyperparameters, int(args.loop), float(args.shrink))
     
-    ##here goes model selectiom
+    ##here goes testing
     print("grid search complete!")
 
 

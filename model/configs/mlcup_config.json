@@ -1,11 +1,13 @@
 {
-    "train_set": "mlcup_internaltrain.csv",
-    "test_set": "mlcup_internaltest.csv",
-    "output_path": "output/mlcup/",
-    "graph_path": "graphs/mlcup/",
-    "input_size": 10,
-    "output_size": 2,
-    "model": {
+	"data_conf":{
+		"train_set": "mlcup_internaltrain.csv",
+		"test_set": "mlcup_internaltest.csv",
+		"output_path": "output/mlcup/",
+		"graph_path": "graphs/mlcup/",
+		"input_size": 10,
+		"output_size": 2
+	},
+
 	"global_conf": {
 	    "task": "regression",
 	    "epsilon": 1e-1,
@@ -16,6 +18,7 @@
 		"wc_threshold": 0,
 	    "max_fold": 4
 	},
+
 	"hyperparameters":{
 	    "eta": [1, 0.7, 0.5],
 	    "eta_decay": [25],
