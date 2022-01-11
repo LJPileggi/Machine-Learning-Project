@@ -1,5 +1,6 @@
 import heapq
 import itertools
+import joblib
 from multiprocessing import Pool
 import numpy as np
 from numpy.core.numeric import empty_like
@@ -143,7 +144,6 @@ def train(seed, dl, ds, global_confs, local_confs):
 
             ### saving model and plotting loss ###
             ds.save_model(nn, f"model_{history['name']}_{n_fold}fold.h5")
-            nn.save_model(f"model_{history['name']}_{n_fold}fold.h5"))
 
         history ['variance'] -= history['mean']**2
         ### plotting loss ###
@@ -152,9 +152,6 @@ def train(seed, dl, ds, global_confs, local_confs):
     except KeyboardInterrupt:
         print('Interrupted')
         return None
-
-
-
 
 def get_children_paremetrs(hyper, shrink, parameters):    
     eta_new = [
