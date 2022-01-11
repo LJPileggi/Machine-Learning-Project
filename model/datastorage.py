@@ -29,7 +29,7 @@ class DataStorage:
         
     def save_model(self, nn, filename):
         path = os.path.join(self.output_path, filename)
-        nn.save_model(path)
+        joblib.dump (nn, path)
 
 
     def create_graph (self, history, filename):
