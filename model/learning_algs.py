@@ -143,7 +143,7 @@ def train(seed, dl, ds, global_confs, local_confs):
             print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
 
             ### saving model and plotting loss ###
-            ds.save_model(nn, f"model_{history['name']}_{n_fold}fold.h5")
+            ds.save_model(nn, f"model_{history['name']}_{n_fold}fold.logami")
 
         history ['variance'] -= history['mean']**2
         ### plotting loss ###
