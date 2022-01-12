@@ -7,24 +7,7 @@ import os
 class DataStorage:
     
     def __init__(self, data_conf):
-        now = datetime.now()
-        date = str(datetime.date(now))
-        time = str(datetime.time(now))
-        time = time[:2] + time[3:5]
-        
-        output_path = os.path.abspath(data_conf["output_path"])
-        output_path = os.path.join(output_path, date, time)
-        self.output_path = output_path
-        print(output_path)
-        if (not os.path.exists(output_path)):
-            os.makedirs(output_path)
-        
-        graph_path = os.path.abspath(data_conf["graph_path"])
-        graph_path = os.path.join(graph_path, date, time)
-        self.graph_path = graph_path
-        print(graph_path)
-        if (not os.path.exists(graph_path)):
-            os.makedirs(graph_path)
+     
 
         
     def save_model(self, nn, filename):

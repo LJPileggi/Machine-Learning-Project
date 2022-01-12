@@ -8,15 +8,16 @@
 		"output_size": 2
 	},
 
+	
 	"global_conf": {
-	    "task": "regression",
+		"task": "regression",
 	    "epsilon": 1e-1,
 	    "max_step": 500,
-	    "check_step": 50,
-		"validation_metric": "mee",
+		"metrics": ["mse"],
+		"datasets": ["train", "test"],
+		"maxfold": 1,
 		"patience": 4,
-		"wc_threshold": 0,
-	    "max_fold": 4
+		"wc_threshold": 0
 	},
 
 	"hyperparameters":{

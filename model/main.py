@@ -5,6 +5,8 @@ import random
 import numpy as np
 import argparse
 import json
+from datetime import datetime
+import os
 import time
 
 
@@ -31,7 +33,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train a model.")
     parser.add_argument('--config_path',
                         help='path to config file')
-    parser.add_argument('--seed', type=int
+    parser.add_argument('--seed', type=int,
                         help='random seed')
     parser.add_argument('--loop', type=int,
                         help='how many nested loop you want to do')
@@ -43,27 +45,43 @@ def main():
     args = parser.parse_args()
     config = json.load(open(args.config_path))
 
+    ### loding hyperparameters from config ###
+    hyperparameters = config["hyperparameters"]
+
+    ### loading CONSTANT parameters from config ###
+    global_conf = config["global_conf"]
     
     ### loading or generating seed ###
-    seed = int(config.get("seed", args.seed)) #prendiamo dal file di config, e se non c'è prendiamo da riga di comando. il default è l'epoch time
+    seed = args.seed # prendiamo da riga di comando. il default è l'epoch time
     print(f"seed: {seed}")
     set_seed(seed)
+    global_conf["seed"] = seed
 
     ### loading and preprocessing dataset from config ###
     dl = DataLoader(seed)
     dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
 
     ### setting up output directories ###
-    ds = DataStorage(config["data_cong"])
-
-    ### loading CONSTANT parameters from config ###
-    global_conf = config["global_conf"]
-
-    ### loding hyperparameters from config ###
-    hyperparameters = config["hyperparameters"]
+    data_conf = config["data_conf"]
+    now = datetime.now()
+    date = str(datetime.date(now))
+    time = str(datetime.time(now))
+    time = time[:2] + time[3:5]
+    
+    output_path = os.path.abspath(data_conf["output_path"])
+    output_path = os.path.join(output_path, date, time)
+    print(output_path)
+    if (not os.path.exists(output_path)):
+        os.makedirs(output_path)
+    
+    graph_path = os.path.abspath(data_conf["graph_path"])
+    graph_path = os.path.join(graph_path, date, time)
+    print(graph_path)
+    if (not os.path.exists(graph_path)):
+        os.makedirs(graph_path)
     
     #executing training and model selection
-    grid_search(seed, dl, ds, global_conf, hyperparameters, args.loop, args.shrink)
+    grid_search(dl, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
     
     ##here goes testing
     print("grid search complete!")
