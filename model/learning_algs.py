@@ -19,7 +19,7 @@ def train(seed, input_size, TR, VL, TS, global_confs, hyp):
     #initializing MLP and history
     nn = MLP (global_confs["task"], input_size, hyp.layers, seed)
     history = History(global_confs["datasets"], global_confs["metrics"], hyp)
-    history.update(nn, tr=TR, vl=VL, ts=TS)
+    history.update_plots(nn, tr=TR, vl=VL, ts=TS)
     
     #training loop
     oldWeights = nn.get_weights()
@@ -39,7 +39,7 @@ def train(seed, input_size, TR, VL, TS, global_confs, hyp):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update(nn, tr=TR, vl=VL, ts=TS)
+        history.update_plots(nn, tr=TR, vl=VL, ts=TS)
         if(epoch % global_confs["check_step"] == 0):
             #once each check_step epoch
             #print validation error
@@ -124,25 +124,24 @@ def cross_val(dl, seed, global_confs, hyp, output_path, graph_path):
 #     ]
 
 
-def get_children(hyper, shrink):    
-    eta_new = [
-        hyper.eta, hyper.eta+(shrink), hyper.eta-(shrink)
-        ]
+def get_children(hyper, searched_hyper, shrink):
+    new_hyper = {}
+    for key, value in vars(hyper).items():
+        if key in searched_hyper:
+            if key == 'lam':
+                if value != 0:
+                    new_hyper.update({key:[10**(np.log10(value) - 3*(shrink), value, 10**(np.log10(value) + 3*(shrink))]})
+                else:
+                    new_hyper.update({key:[value]})
+            else:
+                new_hyper.update({key:[value-shrink, value, value+shrink]})
+        else:
+            new_hyper.update({key:[value]})
 
-    lam_new = [hyper.lam]
-    if (hyper.lam != 0):
-        lam_new.append(10**(np.log10(hyper.lam) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
-        lam_new.append(10**(np.log10(hyper.lam) - 3*(shrink)))
-    
-    alpha_new = [
-        hyper.alpha, hyper.alpha+(shrink), hyper.alpha-(shrink)
-        ]
-    
+    new_configs = Configuration.my_product(new_hyper)
     return [
-        hyper.get_copy_with(eta, lam, alpha)
-        for eta         in eta_new
-        for lam         in lam_new
-        for alpha       in alpha_new
+        hyper.get_copy_with(new)
+        for new in new_configs
     ]
 
 
@@ -150,6 +149,11 @@ def get_children(hyper, shrink):
 
 def grid_search(seed, dl, ds, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
+    searched_hyper = []
+    for key, value in hyper.items():
+        if (key != "hidden_units") | (key != "batch_size"):
+            if len(value) > 1:
+                searched_hyper.append(key)
     
     # configurations = generate configurations
     # train a model for each configuration
@@ -197,7 +201,9 @@ def grid_search(seed, dl, ds, global_conf, hyper, output_path, graph_path, loop=
         results.sort(key=lambda result: result['mean'])
         best_hyper = [ best['hyperparameters'] for best in results[:3] ]
         print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
-        configurations = get_children()
+        configurations = []
+        for best in best_hyper:
+            configurations.append(get_children(best, searched_hyper, shrink))
         shrink *= shrink
         
         
