@@ -144,7 +144,7 @@ class DataLoader():
             current = stop
 
     @staticmethod
-    def dataset_partition (self, data, batch_size, shuffle=True): #
+    def dataset_partition_static (self, data, batch_size, shuffle=True): #
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
