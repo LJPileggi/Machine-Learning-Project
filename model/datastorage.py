@@ -7,7 +7,7 @@ import os
 class DataStorage:
     
     def __init__(self, data_conf):
-     
+        pass
 
         
     def save_model(self, nn, filename):

@@ -1,13 +1,14 @@
 from dataloader import DataLoader
-from datastorage import DataStorage
-from learning_algs import grid_search
+from learning_algs import grid_search, train
 from types import SimpleNamespace
+from history import empirical_error
 import random
 import numpy as np
 import argparse
 import json
 from datetime import datetime
 import os
+import csv
 import time
 
 
@@ -107,7 +108,7 @@ def main():
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):
-            BS = dl.load_data_static(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), shuffle=False)
+            BS = DataLoader.load_data_static(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), shuffle=False)
             with open(os.path.join(output_path, "results.csv"), 'w') as csv_file:
                 writer = csv.writer(csv_file, delimiter=',')
                 for i, (inp, _) in enumerate(BS):
@@ -118,7 +119,7 @@ def main():
                     writer.writerow(result)
         else:
             ts_err = empirical_error(TS, nn, 'mee') #questa linea ha senso rn?
-            print(ts.err)
+            print(ts_err)
     
     ##here goes testing
     print("grid search complete!")
