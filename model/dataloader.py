@@ -98,6 +98,29 @@ class DataLoader():
             train_start = n_samples // 5
             yield indices[train_start:], indices[:train_start]
 
+    @staticmethod
+    def get_slices_static (self, data, k_fold=5):
+        n_samples = len(data)
+        if k_fold > 1:
+            indices = np.arange(n_samples)
+
+            fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
+            fold_sizes[: n_samples % k_fold] += 1
+            current = 0
+            
+            for fold_size in fold_sizes:
+                start, stop = current, current + fold_size
+                test_mask = np.zeros(n_samples, dtype=bool)
+                test_mask[indices[start:stop]] = True
+                train_index = indices[np.logical_not(test_mask)]
+                test_index = indices[test_mask]
+                yield data[train_index], data[test_index]
+                current = stop
+        else:
+            indices = np.arange(n_samples)
+            train_start = n_samples // 5
+            yield data[indices[train_start:]], data[indices[:train_start]]
+
      
     def dataset_partition (self, indices, batch_size, tag='full'): #
         """
@@ -118,6 +141,28 @@ class DataLoader():
         for batch in batchs_sizes:
             start, stop = current, current + batch
             yield curr_data[start:stop]
+            current = stop
+
+    @staticmethod
+    def dataset_partition (self, data, batch_size, shuffle=True): #
+        """
+        returns an iterator on minibatches:
+        if batch_size=n, returns a list of n patterns
+        if batch_size=1, returns 1 pattern at a time (techincally, a list conteining just one pattern)
+        after traversing the whole TS, the TS is shuffled
+        """
+        tr_size = len(data)
+        batch_size = tr_size if batch_size == -1 else batch_size
+        idxs = np.arange(tr_size)
+        batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
+        batchs_sizes[: tr_size % batch_size] += 1
+        current = 0
+        if (shuffle):
+            random.shuffle(data)
+        
+        for batch in batchs_sizes:
+            start, stop = current, current + batch
+            yield data[start:stop]
             current = stop
 
     def get_input_size(self, tag='full'):
