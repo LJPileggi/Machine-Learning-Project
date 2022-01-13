@@ -27,32 +27,34 @@ def empirical_error(NN, set, metric):
         raise NotImplementedError("unknown metric")
 
 class History:
-    def __init__(self, sets, metrics, hyp) -> None:
+    def __init__(self, hyp, metrics, folds):
         self.hyperparameters = hyp
-        self.plots = {set: 
-                        {metric: 
-                             [] 
-                         for metric in metrics}
-                     for set in sets}
+        self.plots = {
+            (set, metric): [ [] for k in folds ]
+            for set in metrics.keys()
+            for metric in metrics[set]
+        }
         if hyp.eta_decay == -1:
             self.name  = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
         else:
             self.name  =f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
-        #self.fold = fold
 
 
     
-    def update_plots(self, nn, **sets):
+    def update_plots(self, nn, fold, **sets):
         """ This function accept kwargs, whose names MUST BE 
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
         value of the argument will be passed to empricial_error
         Example: history.update_plots(nn, train=TR, test=TS)
         """
-        for set_name, set_value in sets.items():
-            for metric in self.plots[set_name]:
-                error = empirical_error(nn, set_value, metric)
-                self.plots[set_name][metric].append(error)
+        for set, metric in self.plots:
+            error = empirical_error(nn, sets[set], metric)
+            self.plots[set, metric][fold].append(error)
+        # for set_name, set_value in sets.items():
+        #     for metric in self.plots[set_name]:
+        #         error = empirical_error(nn, set_value, metric)
+        #         self.plots[set_name][metric][fold].append(error)
 
         
         

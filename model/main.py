@@ -1,6 +1,7 @@
 from dataloader import DataLoader
 from datastorage import DataStorage
 from learning_algs import grid_search
+from types import SimpleNamespace
 import random
 import numpy as np
 import argparse
@@ -55,40 +56,40 @@ def main():
     parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=3)
     args = parser.parse_args()
-    config = json.load(open(args.config_path))
+    config = SimpleNamespace(**json.load(open(args.config_path)))
 
     ### loding hyperparameters from config ###
-    hyperparameters = config["hyperparameters"]
+    hyperparameters = config.hyperparameters
 
     ### loading CONSTANT parameters from config ###
-    global_conf = config["global_conf"]
+    global_conf = SimpleNamespace(**config.global_conf)
     
     ### loading or generating seed ###
     seed = args.seed # prendiamo da riga di comando. il default è l'epoch time
     print(f"seed: {seed}")
     set_seed(seed)
-    global_conf["seed"] = seed
+    global_conf.seed = seed
 
     ### loading and preprocessing dataset from config ###
-    dl = DataLoader(seed)
-    dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+    #dl = DataLoader(seed)
     #dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
     #dl.load_data(config["blind_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+    TR = DataLoader.load_data_static(config.data_conf["train_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
+    TS = DataLoader.load_data_static(config.data_conf["test_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
 
     ### setting up output directories ###
-    data_conf = config["data_conf"]
     now = datetime.now()
     date = str(datetime.date(now))
     hour = str(datetime.time(now))
     hour = hour[:2] + hour[3:5]
     
-    output_path = os.path.abspath(data_conf["output_path"])
+    output_path = os.path.abspath(config.data_conf["output_path"])
     output_path = os.path.join(output_path, date, hour)
     print(output_path)
     if (not os.path.exists(output_path)):
         os.makedirs(output_path)
     
-    graph_path = os.path.abspath(data_conf["graph_path"])
+    graph_path = os.path.abspath(config.data_conf["graph_path"])
     graph_path = os.path.join(graph_path, date, hour)
     print(graph_path)
     if (not os.path.exists(graph_path)):
@@ -96,10 +97,10 @@ def main():
 
     if (args.train or args.traintest):
         #executing training and model selection
-        grid_search(dl, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
+        grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
     if (args.test or args.traintest):
         #getting the test set
-        TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+        #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
         nn = train(seed, config["input_size"], TR, None, TS, global_conf, hyperparameters)

@@ -9,24 +9,25 @@ import numpy as np
 from numpy.core.numeric import empty_like
 from MLP import MLP
 from model.configuration import Configuration
+from model.dataloader import DataLoader
 from model.history import History
 
 
 
 
 
-def train(seed, input_size, TR, VL, TS, global_confs, hyp):
+def train(TR, VL, TS, global_confs, hyp, history, fold=0):
+    input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
-    nn = MLP (global_confs["task"], input_size, hyp.layers, seed)
-    history = History(global_confs["datasets"], global_confs["metrics"], hyp)
-    history.update_plots(nn, tr=TR, vl=VL, ts=TS)
+    nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers)
+    history.update_plots(nn, train=TR, val=VL, test=TS)
     
     #training loop
     oldWeights = nn.get_weights()
     low_wc = 0
     for epoch in range (global_confs["max_step"]):
         
-        for current_batch in dl.dataset_partition(TR, hyp.batch_size):
+        for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             for pattern in current_batch:
                 out = nn.forward(pattern[0])
                 error = pattern[1] - out
@@ -39,7 +40,7 @@ def train(seed, input_size, TR, VL, TS, global_confs, hyp):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update_plots(nn, tr=TR, vl=VL, ts=TS)
+        history.update_plots(nn, fold, train=TR, val=VL, test=TS)
         if(epoch % global_confs["check_step"] == 0):
             #once each check_step epoch
             #print validation error
@@ -62,18 +63,17 @@ def train(seed, input_size, TR, VL, TS, global_confs, hyp):
     return history, nn
 
 
-def cross_val(dl, seed, global_confs, hyp, output_path, graph_path):
+def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
     try:
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
-        input_size    = dl.get_input_size () #se usiamo i metodi statici sta cosa diviene meh 
-        results = {set: 
-                    {metric: 
-                            {"mean": 0, "variance": 0} 
-                     for metric in global_confs["metrics"]}
-                   for set in global_confs["datasets"]}
-        TS = dl.getTS() #???
-        for n_fold, TR, VL in enumerate (dl.get_slices(global_confs["max_fold"])):
-            nn, history = train(seed, input_size, TR, VL, TS, global_confs, hyp)
+        # results = {set: 
+        #             {metric: 
+        #                     {"mean": 0, "variance": 0} 
+        #              for metric in global_confs["metrics"]}
+        #            for set in global_confs["datasets"]}
+        history = History(hyp, global_confs.metrics, global_confs.maxfold)
+        for n_fold, TR, VL in enumerate (DataLoader.get_slices_static(TR, global_confs.max_fold)):
+            nn = train(TR, VL, TS, global_confs, hyp, n_fold, history)
             for set in global_confs["sets"]:
                 for metric in global_confs["metrics"]:
                     final_error = history[set][metric][-1] #ma così se ci sono più metriche viene salvata solo l'ultima
@@ -84,6 +84,7 @@ def cross_val(dl, seed, global_confs, hyp, output_path, graph_path):
             filename =  f"model_{history['name']}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
+            history.nextfold()
         for set in global_confs["sets"]:
                 for metric in global_confs["metrics"]:
                     results[set][metric]['variance'] -= results[set][metric]['mean']**2
@@ -130,7 +131,7 @@ def get_children(hyper, searched_hyper, shrink):
         if key in searched_hyper:
             if key == 'lam':
                 if value != 0:
-                    new_hyper.update({key:[10**(np.log10(value) - 3*(shrink), value, 10**(np.log10(value) + 3*(shrink))]})
+                    new_hyper.update({key:[10**(np.log10(value) - 3*(shrink)), value, 10**(np.log10(value) + 3*(shrink))]})
                 else:
                     new_hyper.update({key:[value]})
             else:
@@ -147,11 +148,11 @@ def get_children(hyper, searched_hyper, shrink):
 
 
 
-def grid_search(seed, dl, ds, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
+def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
     searched_hyper = []
     for key, value in hyper.items():
-        if (key != "hidden_units") | (key != "batch_size"):
+        if (key != "hidden_units") | (key != "batch_size") | (key != "eta_decay"):
             if len(value) > 1:
                 searched_hyper.append(key)
     
@@ -178,8 +179,8 @@ def grid_search(seed, dl, ds, global_conf, hyper, output_path, graph_path, loop=
         with Pool() as pool:
             try:
                 async_results = [
-                    pool.apply_async(cross_val, dl, seed, global_conf, config, output_path, graph_path)
-                    for config in configurations
+                    pool.apply_async(cross_val, TR, TS, global_conf, hyp, output_path, graph_path)
+                    for hyp in configurations
                 ]
                 pool.close
                 pool.join()
@@ -207,8 +208,8 @@ def grid_search(seed, dl, ds, global_conf, hyper, output_path, graph_path, loop=
         shrink *= shrink
         
         
-    
-    test_vs_hyper = { i : history['mean'] for i, history in enumerate(results) }
-    best3 = heapq.nsmallest(1, test_vs_hyper)
-    best_hyper = [ results[best]['hyperparameters'] for best in best3 ]
-    print(f"il migliore modello di sta nested è: {best_hyper}")
+    results.sort(key=lambda result: result['mean'])
+    best_hyper = [ best['hyperparameters'] for best in results[:3] ]
+    print(f"i miglior modelli di questa nested sono: {best_hyper}")
+
+    return best_hyper[0]

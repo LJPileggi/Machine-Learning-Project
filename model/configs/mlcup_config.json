@@ -13,8 +13,9 @@
 		"task": "regression",
 	    "epsilon": 1e-1,
 	    "max_step": 500,
-		"metrics": ["mse"],
-		"datasets": ["train", "test"],
+		"metrics": {"train": ["mee", "acc"],
+					 "test": ["mse", "acc"]
+					},
 		"maxfold": 1,
 		"patience": 4,
 		"wc_threshold": 0
@@ -32,5 +33,4 @@
 			[[20, "tanh", 1], [20, "tanh", 1], [20, "tanh", 1], [2, "linear", 1]]
 		]
 	}
-    }
 }

@@ -27,10 +27,11 @@ def data_standardizer(data):
     return [value-mean/dev for value in data]
 
 class DataLoader():
- 
+    
+    DATA_PATH = os.path.join("..", "data")
+
     def __init__(self, seed=4444):
         set_seed(seed)
-        self.DATA_PATH = os.path.join("..", "data")
         self.data = {}
 
     def load_data (self, filename, input_size, output_size, preprocessing, tag="full", shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
@@ -75,13 +76,13 @@ class DataLoader():
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
             
     @staticmethod
-    def load_data_static (self, filename, input_size, output_size, preprocessing, shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
+    def load_data_static (filename, input_size, output_size, preprocessing, shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
         """
         set the data into the internal dictionary.
         train_slice define how much of this dataset it's going to be training
 
         """
-        full_fn = os.path.join(self.DATA_PATH, filename)
+        full_fn = os.path.join( DataLoader.DATA_PATH, filename)
         with open(full_fn) as f:
             reader = csv.reader(f, delimiter=',')
             inputs = []
@@ -140,7 +141,7 @@ class DataLoader():
             yield indices[train_start:], indices[:train_start]
 
     @staticmethod
-    def get_slices_static (self, data, k_fold=5):
+    def get_slices_static (data, k_fold=5):
         n_samples = len(data)
         if k_fold > 1:
             indices = np.arange(n_samples)
@@ -185,7 +186,7 @@ class DataLoader():
             current = stop
 
     @staticmethod
-    def dataset_partition_static (self, data, batch_size, shuffle=True): #
+    def dataset_partition_static (data, batch_size, shuffle=True): #
         """
         returns an iterator on minibatches:
         if batch_size=n, returns a list of n patterns
@@ -210,7 +211,7 @@ class DataLoader():
         return self.data[tag][0][0].size
 
     @staticmethod
-    def get_input_size_static(self, data):
+    def get_input_size_static(data):
         return data[0][0].size
             
     def get_partition_set(self, indices, tag='full'):

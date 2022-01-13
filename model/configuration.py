@@ -20,4 +20,4 @@ class Configuration:
         out.alpha = hyper_dict["alpha"]
         
     def my_product(inp):
-        return (dict(zip(inp.keys(), values)) for values in itertools.product(*inp.values()))
+        return [dict(zip(inp.keys(), values)) for values in itertools.product(*inp.values())]

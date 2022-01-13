@@ -23,7 +23,7 @@ class MLP:
      . backwards: 
      - update_weights: update weights of the whole network; returns None
     """
-    def __init__(self, task, input_dim, architecture, seed=4444):
+    def __init__(self, seed, task, input_dim, architecture):
         set_seed(seed)
         self.layer_set = []
         prec_dim = input_dim
