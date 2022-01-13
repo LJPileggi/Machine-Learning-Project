@@ -208,6 +208,10 @@ class DataLoader():
 
     def get_input_size(self, tag='full'):
         return self.data[tag][0][0].size
+
+    @staticmethod
+    def get_input_size_static(self, data):
+        return data[0][0].size
             
     def get_partition_set(self, indices, tag='full'):
         return self.data[tag][indices]
