@@ -65,18 +65,18 @@ def train(seed, input_size, TR, VL, TS, global_confs, hyp):
 def cross_val(dl, seed, global_confs, hyp, output_path, graph_path):
     try:
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
-        input_size    = dl.get_input_size ()
+        input_size    = dl.get_input_size () #se usiamo i metodi statici sta cosa diviene meh 
         results = {set: 
                     {metric: 
                             {"mean": 0, "variance": 0} 
                      for metric in global_confs["metrics"]}
                    for set in global_confs["datasets"]}
-        TS = dl.getTS()
+        TS = dl.getTS() #???
         for n_fold, TR, VL in enumerate (dl.get_slices(global_confs["max_fold"])):
             nn, history = train(seed, input_size, TR, VL, TS, global_confs, hyp)
             for set in global_confs["sets"]:
                 for metric in global_confs["metrics"]:
-                    final_error = history[set][metric][-1]
+                    final_error = history[set][metric][-1] #ma così se ci sono più metriche viene salvata solo l'ultima
                     results[set][metric]["mean"] += final_error/global_confs["max_fold"]
                     results[set][metric]["variance"] += (final_error**2)/global_confs["max_fold"]
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")

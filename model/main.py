@@ -30,9 +30,17 @@ def set_seed(seed):
 
 def main():
     ### Parsing cli arguments ###
-    parser = argparse.ArgumentParser(description="Train a model.")
+    parser = argparse.ArgumentParser(description="Train or Test a model.")
     parser.add_argument('--config_path',
                         help='path to config file')
+    parser.add_argument('--train', action='store_true',
+                        help='If you want to train the model')
+    parser.add_argument('--test', action='store_true',
+                        help='If you want to test the model')
+    parser.add_argument('--traintest', action='store_true',
+                        help='If you want to train and then test the model')
+    parser.add_argument('--publish', action='store_true',
+                        help='If you want to train and then test the model')
     parser.add_argument('--seed', type=int,
                         help='random seed')
     parser.add_argument('--loop', type=int,
@@ -40,6 +48,10 @@ def main():
     parser.add_argument('--shrink', type=float,
                         help='how much do you want to shrink during nested grid search')
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
+    parser.set_defaults(train=False)
+    parser.set_defaults(test=False)
+    parser.set_defaults(traintest=False)
+    parser.set_defaults(publish=False)
     parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=3)
     args = parser.parse_args()
@@ -60,6 +72,8 @@ def main():
     ### loading and preprocessing dataset from config ###
     dl = DataLoader(seed)
     dl.load_data(config["train_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+    #dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+    #dl.load_data(config["blind_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
 
     ### setting up output directories ###
     data_conf = config["data_conf"]
@@ -79,9 +93,31 @@ def main():
     print(graph_path)
     if (not os.path.exists(graph_path)):
         os.makedirs(graph_path)
-    
-    #executing training and model selection
-    grid_search(dl, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
+
+    if (args.train or args.traintest):
+        #executing training and model selection
+        grid_search(dl, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
+    if (args.test or args.traintest):
+        #getting the test set
+        TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
+        
+        #obtaining the model
+        nn = train(seed, config["input_size"], TR, None, TS, global_conf, hyperparameters)
+
+        #publishing the model or simply evaluating on the test set
+        if (args.publish):
+            BS = dl.load_data_static(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), shuffle=False)
+            with open(os.path.join(output_path, "results.csv"), 'w') as csv_file:
+                writer = csv.writer(csv_file, delimiter=',')
+                for i, (inp, _) in enumerate(BS):
+                    out = nn.h(inp)
+                    result = [i]
+                    result.extend(inp)
+                    result.extend(out)
+                    writer.writerow(result)
+        else:
+            ts_err = empirical_error(TS, nn, 'mee') #questa linea ha senso rn?
+            print(ts.err)
     
     ##here goes testing
     print("grid search complete!")

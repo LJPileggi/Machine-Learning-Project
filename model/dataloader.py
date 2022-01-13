@@ -73,7 +73,47 @@ class DataLoader():
             if (shuffle):
                 random.shuffle(dataset)
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+    @staticmethod
+    def load_data_static (self, filename, input_size, output_size, preprocessing, shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
+        """
+        set the data into the internal dictionary.
+        train_slice define how much of this dataset it's going to be training
 
+        """
+        full_fn = os.path.join(self.DATA_PATH, filename)
+        with open(full_fn) as f:
+            reader = csv.reader(f, delimiter=',')
+            inputs = []
+            outputs = []
+            #reads file
+            for row in reader:
+                if len(row) == 1 + input_size + output_size:
+                    data = list(map(float, row[1:]))
+                    input = data[:-output_size]
+                    output = data[-output_size:]
+                    inputs.append(np.array(input))
+                    outputs.append(np.array(output))
+                else:
+                    raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
+            
+            #preprocesses data, if needed
+            if(preprocessing == None):
+                pass
+            elif(preprocessing == "output_stand"):
+                outputs = data_standardizer(outputs)
+            elif(preprocessing == "input_stand"):
+                inputs = data_standardizer(inputs)
+            elif(preprocessing == "both_stand"):
+                inputs = data_standardizer(inputs)
+                outputs = data_standardizer(outputs)
+            else:
+                raise NotImplementedError("unknown preprocessing")
+
+            #save data
+            dataset = list(zip(inputs, outputs))
+            if (shuffle):
+                random.shuffle(dataset)
+            return np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
 
     def get_slices (self, k_fold=5, tag='full'):
         if k_fold > 1: 
