@@ -73,6 +73,7 @@ class DataLoader():
             if (shuffle):
                 random.shuffle(dataset)
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+            
     @staticmethod
     def load_data_static (self, filename, input_size, output_size, preprocessing, shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
         """
