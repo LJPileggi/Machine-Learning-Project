@@ -75,7 +75,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
             nn = train(TR, VL, TS, global_confs, hyp, n_fold, history)
             for set in global_confs["sets"]:
                 for metric in global_confs["metrics"]:
-                    final_error = history[set][metric][-1] 
+                    final_error = history.get_last_error(set, metric) 
                     results[set][metric]["mean"] += final_error/global_confs["max_fold"]
                     results[set][metric]["variance"] += (final_error**2)/global_confs["max_fold"]
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
@@ -85,8 +85,8 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
             joblib.dump (nn, path)
             history.nextfold()
         for set in global_confs["sets"]:
-                for metric in global_confs["metrics"]:
-                    results[set][metric]['variance'] -= results[set][metric]['mean']**2
+            for metric in global_confs["metrics"]:
+                results[set][metric]['variance'] -= results[set][metric]['mean']**2
         ### plotting loss ###
         ds.create_graph(history, f"training_loss_{history['name']}.png", graph_path)
         return results

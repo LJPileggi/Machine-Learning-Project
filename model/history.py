@@ -56,7 +56,9 @@ class History:
         #     for metric in self.plots[set_name]:
         #         error = empirical_error(nn, set_value, metric)
         #         self.plots[set_name][metric][fold].append(error)
-        
+
+    def get_last_error (self, set, metric, fold):
+        return self.plots[set, metric][fold][-1]
         
 
     # def plot(self, path):
