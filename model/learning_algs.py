@@ -22,7 +22,7 @@ def train(TR, VL, TS, global_confs, hyp):
     #training loop
     oldWeights = nn.get_weights()
     low_wc = 0
-    for epoch in range (global_confs["max_step"]):
+    for epoch in range (global_confs.max_step):
         
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             for pattern in current_batch:
@@ -38,11 +38,11 @@ def train(TR, VL, TS, global_confs, hyp):
         
         #after each epoch
         history.update_plots(nn, train=TR, val=VL, test=TS)
-        if(epoch % global_confs["check_step"] == 0):
+        if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
             #print validation error
             if (VL != None):
-                val_err = history.plots["val"]["mee"][-1]
+                val_err = history.get_last_error("val", "mee") #hardcodiamo mee????
                 print(f"{epoch} - {history['name']} - val err: {val_err}")
             
             #compute weights change
@@ -51,13 +51,13 @@ def train(TR, VL, TS, global_confs, hyp):
             oldWeights = newWeights
             
             #stopping criteria
-            if wc <= global_confs["threshold"]:
+            if wc <= global_confs.threshold:
                 low_wc +=1
             else:
                 low_wc = 0
-            if (VL != None and np.allclose(val_err, 0, atol=global_confs["epsilon"])):
+            if (VL != None and np.allclose(val_err, 0, atol=global_confs.epsilon)):
                 break
-            if (low_wc >= global_confs["patience"]):
+            if (low_wc >= global_confs.patience):
                 break
     #once training has ended
     return history, nn #cosa restituisce davvero?
@@ -73,7 +73,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         #            for set in global_confs["datasets"]}
         results = Results(global_confs.metrics)
         for n_fold, TR, VL in enumerate (DataLoader.get_slices_static(TR, global_confs.max_fold)):
-            history, nn = train(TR, VL, TS, global_confs, hyp, n_fold)
+            history, nn = train(TR, VL, TS, global_confs, hyp)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model and plotting loss ###

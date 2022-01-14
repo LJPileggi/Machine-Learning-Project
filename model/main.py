@@ -104,7 +104,7 @@ def main():
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
-        if (!args.traintest):
+        if (not args.traintest):
             best_hyper = hyperparameters
         nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper)
 

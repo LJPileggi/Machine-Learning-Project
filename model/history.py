@@ -3,6 +3,8 @@ import numpy as np
 from MLP import MLP
 from types import SimpleNamespace
 from configuration import Configuration
+import matplotlib.pyplot as plt
+import os
 
 # miscclass and accuracy compute nn.h, with a threshold
 # mse and mee compute nn.forward, the direct output of the output layer
@@ -57,6 +59,10 @@ class History:
 
     def get_last_error (self, set, metric):
         return self.plots[set, metric][-1]
+
+    def plot_in_graph (self, plt, set, metric, fold=0):
+        epochs = range(len(self.plots(set, metric)))
+        plt.plot(epochs, self.plots(set, metric), linestyle='-', label=f'{set} {metric} {fold}_fold loss')
         
 class Results ():
     def __init__(self, metrics):
@@ -84,6 +90,32 @@ class Results ():
     #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
     #per quanto riguarda matplot lib possiamo fare in modo figo, ovvero che History ha un metodo che scrive sul canvas il proprio plot, mentre
     #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history. 
+
+    def create_graph (self, graph_path):
+        """
+        questa funzione dovrebbe creare i vari grafici. Crea un grafo per metrica, e dentro il grafico ci mette le statistiche di train, val e test tutte assieme
+        L'unico problema per ora è il titolo, che prende per assodato il fatto che vogliamo le medie e varianze di val.
+        Tutto il casino che sta sotto con i distinct è perchè vogliamo raggruppare per le metriche, che sono dopo i set nel bellissimo dizionario delle metriche
+        quindi se andassi per ordinamento dovrei cancellare e recuperare il grafico ogni volta. così è più complicato ma funziona
+        """
+        distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
+        distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
+        for metric in distinct_metrics:
+            plt.title(f'{metric} - Mean: {self.results["val"][metric]["mean"]:.2f} +- Var: {self.results["val"][metric]["variance"]**0.5:.2f}')
+            plt.xlabel('Epochs')
+            plt.yscale('log')
+            plt.ylabel('Loss')
+            for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.
+                for sett in distinct_sets:
+                    h.plot_in_graph(plt, sett, metric, i)
+            
+            filename = f"{self.histories[0].name}.png"
+            train_path = os.path.join(graph_path, "training", metric)
+            if (not os.path.exists(train_path)):
+                os.makedirs(train_path)
+            plt.legend()
+            plt.savefig(os.path.join(train_path, filename))
+            plt.clf()
 
     # def plot(self, path):
     #     os.join(path, self.name)
