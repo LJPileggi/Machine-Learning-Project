@@ -28,10 +28,10 @@ def empirical_error(NN, set, metric):
         raise NotImplementedError("unknown metric")
 
 class History:
-    def __init__(self, hyp, metrics, folds):
+    def __init__(self, hyp, metrics):
         self.hyperparameters = hyp
         self.plots = {
-            (set, metric): [ [] for k in range(folds) ]
+            (set, metric): []
             for set in metrics.keys()
             for metric in metrics[set]
         }
@@ -39,10 +39,8 @@ class History:
             self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
         else:
             self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
-
-
     
-    def update_plots(self, nn, fold, **sets):
+    def update_plots(self, nn, **sets):
         """ This function accept kwargs, whose names MUST BE 
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
@@ -51,15 +49,41 @@ class History:
         """
         for set, metric in self.plots:
             error = empirical_error(nn, sets[set], metric)
-            self.plots[set, metric][fold].append(error)
+            self.plots[set, metric].append(error)
         # for set_name, set_value in sets.items():
         #     for metric in self.plots[set_name]:
         #         error = empirical_error(nn, set_value, metric)
         #         self.plots[set_name][metric][fold].append(error)
 
-    def get_last_error (self, set, metric, fold):
-        return self.plots[set, metric][fold][-1]
+    def get_last_error (self, set, metric):
+        return self.plots[set, metric][-1]
         
+class Results ():
+    def __init__(self, metrics):
+        self.metrics = metrics
+        self.histories = []
+        self.results = {
+            (set, metric): {"mean": 0, "variance": 0}
+            for set in metrics.keys()
+            for metric in metrics[set]
+        }
+    
+    def add_history(self, history):
+        self.histories.append(history)
+    
+    def calculate_mean (self):
+        for set in self.metrics.keys():
+            for metric in self.metrics[set]:
+                for h in self.histories:
+                    final_error = h.get_last_error(set, metric)
+                    self.results[set][metric]["mean"] += final_error/len(self.histories)
+                    self.results[set][metric]["variance"] += (final_error**2)/len(self.histories)
+                self.results[set][metric]['variance'] -= self.results[set][metric]['mean']**2
+        return self.results
+
+    #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
+    #per quanto riguarda matplot lib possiamo fare in modo figo, ovvero che History ha un metodo che scrive sul canvas il proprio plot, mentre
+    #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history. 
 
     # def plot(self, path):
     #     os.join(path, self.name)

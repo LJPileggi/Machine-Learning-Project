@@ -10,9 +10,10 @@ from numpy.core.numeric import empty_like
 from MLP import MLP
 from model.configuration import Configuration
 from model.dataloader import DataLoader
-from model.history import History
+from model.history import History, Results
 
-def train(TR, VL, TS, global_confs, hyp, history, fold=0):
+def train(TR, VL, TS, global_confs, hyp):
+    history = History(hyp, global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers)
@@ -36,11 +37,11 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update_plots(nn, fold, train=TR, val=VL, test=TS)
+        history.update_plots(nn, train=TR, val=VL, test=TS)
         if(epoch % global_confs["check_step"] == 0):
             #once each check_step epoch
             #print validation error
-            if (VS != None):
+            if (VL != None):
                 val_err = history.plots["val"]["mee"][-1]
                 print(f"{epoch} - {history['name']} - val err: {val_err}")
             
@@ -54,12 +55,12 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
                 low_wc +=1
             else:
                 low_wc = 0
-            if (VS != None and np.allclose(val_err, 0, atol=global_confs["epsilon"])
+            if (VL != None and np.allclose(val_err, 0, atol=global_confs["epsilon"])):
                 break
             if (low_wc >= global_confs["patience"]):
                 break
     #once training has ended
-    return nn #cosa restituisce davvero?
+    return history, nn #cosa restituisce davvero?
 
 
 def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
@@ -70,25 +71,18 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         #                     {"mean": 0, "variance": 0} 
         #              for metric in global_confs["metrics"]}
         #            for set in global_confs["datasets"]}
-        history = History(hyp, global_confs.metrics, global_confs.maxfold)
+        results = Results(global_confs.metrics)
         for n_fold, TR, VL in enumerate (DataLoader.get_slices_static(TR, global_confs.max_fold)):
-            nn = train(TR, VL, TS, global_confs, hyp, n_fold, history)
-            for set in global_confs["sets"]:
-                for metric in global_confs["metrics"]:
-                    final_error = history.get_last_error(set, metric) 
-                    results[set][metric]["mean"] += final_error/global_confs["max_fold"]
-                    results[set][metric]["variance"] += (final_error**2)/global_confs["max_fold"]
+            history, nn = train(TR, VL, TS, global_confs, hyp, n_fold)
+            results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model and plotting loss ###
-            filename =  f"model_{history['name']}_{n_fold}fold.logami"
+            filename =  f"model_{history.name}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
-            history.nextfold()
-        for set in global_confs["sets"]:
-            for metric in global_confs["metrics"]:
-                results[set][metric]['variance'] -= results[set][metric]['mean']**2
+        results.calculate_mean()
         ### plotting loss ###
-        ds.create_graph(history, f"training_loss_{history['name']}.png", graph_path)
+        results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
         print('Interrupted')
