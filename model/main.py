@@ -98,13 +98,15 @@ def main():
 
     if (args.train or args.traintest):
         #executing training and model selection
-        grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
+        best_hyper = grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
     if (args.test or args.traintest):
         #getting the test set
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
-        nn = train(seed, config["input_size"], TR, None, TS, global_conf, hyperparameters)
+        if (!args.traintest):
+            best_hyper = hyperparameters
+        nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper)
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):

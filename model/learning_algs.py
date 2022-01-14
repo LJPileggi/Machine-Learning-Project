@@ -12,10 +12,6 @@ from model.configuration import Configuration
 from model.dataloader import DataLoader
 from model.history import History
 
-
-
-
-
 def train(TR, VL, TS, global_confs, hyp, history, fold=0):
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
@@ -44,8 +40,9 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
         if(epoch % global_confs["check_step"] == 0):
             #once each check_step epoch
             #print validation error
-            val_err = history.plots["val"]["mee"][-1]
-            print(f"{epoch} - {history['name']} - val err: {val_err}")
+            if (VS != None):
+                val_err = history.plots["val"]["mee"][-1]
+                print(f"{epoch} - {history['name']} - val err: {val_err}")
             
             #compute weights change
             newWeights = nn.get_weights()
@@ -56,11 +53,13 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
             if wc <= global_confs["threshold"]:
                 low_wc +=1
             else:
-                low_wc = 0 
-            if (np.allclose(val_err, 0, atol=global_confs["epsilon"]) or low_wc >= global_confs["patience"]):
+                low_wc = 0
+            if (VS != None and np.allclose(val_err, 0, atol=global_confs["epsilon"])
+                break
+            if (low_wc >= global_confs["patience"]):
                 break
     #once training has ended
-    return history, nn
+    return nn #cosa restituisce davvero?
 
 
 def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
@@ -76,7 +75,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
             nn = train(TR, VL, TS, global_confs, hyp, n_fold, history)
             for set in global_confs["sets"]:
                 for metric in global_confs["metrics"]:
-                    final_error = history[set][metric][-1] #ma così se ci sono più metriche viene salvata solo l'ultima
+                    final_error = history[set][metric][-1] 
                     results[set][metric]["mean"] += final_error/global_confs["max_fold"]
                     results[set][metric]["variance"] += (final_error**2)/global_confs["max_fold"]
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")

@@ -1,7 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from model.MLP import MLP
-from model.configuration import Configuration
+from MLP import MLP
+from types import SimpleNamespace
+from configuration import Configuration
 
 # miscclass and accuracy compute nn.h, with a threshold
 # mse and mee compute nn.forward, the direct output of the output layer
@@ -30,14 +31,14 @@ class History:
     def __init__(self, hyp, metrics, folds):
         self.hyperparameters = hyp
         self.plots = {
-            (set, metric): [ [] for k in folds ]
+            (set, metric): [ [] for k in range(folds) ]
             for set in metrics.keys()
             for metric in metrics[set]
         }
         if hyp.eta_decay == -1:
-            self.name  = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
+            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
         else:
-            self.name  =f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
+            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
 
 
     
@@ -55,7 +56,6 @@ class History:
         #     for metric in self.plots[set_name]:
         #         error = empirical_error(nn, set_value, metric)
         #         self.plots[set_name][metric][fold].append(error)
-
         
         
 
