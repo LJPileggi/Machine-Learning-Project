@@ -19,6 +19,7 @@ class Configuration:
         out.eta = hyper_dict["eta"]
         out.lam = hyper_dict["lam"]
         out.alpha = hyper_dict["alpha"]
+        return out
         
     def my_product(inp):
         return [dict(zip(inp.keys(), values)) for values in itertools.product(*inp.values())]

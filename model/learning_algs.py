@@ -8,12 +8,12 @@ from multiprocessing import Pool
 import numpy as np
 from numpy.core.numeric import empty_like
 from MLP import MLP
-from model.configuration import Configuration
-from model.dataloader import DataLoader
-from model.history import History, Results
+from configuration import Configuration
+from dataloader import DataLoader
+from history import History, Results
 
 def train(TR, VL, TS, global_confs, hyp):
-    history = History(hyp, global_confs.metrics)
+    history = History(global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers)
@@ -43,7 +43,7 @@ def train(TR, VL, TS, global_confs, hyp):
             #print validation error
             if (VL != None):
                 val_err = history.get_last_error("val", "mee") #hardcodiamo mee????
-                print(f"{epoch} - {history['name']} - val err: {val_err}")
+                print(f"{epoch} - banana - val err: {val_err}")
             
             #compute weights change
             newWeights = nn.get_weights()
@@ -51,7 +51,7 @@ def train(TR, VL, TS, global_confs, hyp):
             oldWeights = newWeights
             
             #stopping criteria
-            if wc <= global_confs.threshold:
+            if wc <= global_confs.wc_threshold:
                 low_wc +=1
             else:
                 low_wc = 0
@@ -71,13 +71,13 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         #                     {"mean": 0, "variance": 0} 
         #              for metric in global_confs["metrics"]}
         #            for set in global_confs["datasets"]}
-        results = Results(global_confs.metrics)
-        for n_fold, TR, VL in enumerate (DataLoader.get_slices_static(TR, global_confs.max_fold)):
+        results = Results(hyp, global_confs.metrics)
+        for n_fold, (TR, VL) in enumerate (DataLoader.get_slices_static(TR, global_confs.maxfold)):
             history, nn = train(TR, VL, TS, global_confs, hyp)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model and plotting loss ###
-            filename =  f"model_{history.name}_{n_fold}fold.logami"
+            filename =  f"model_{results.name}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
         results.calculate_mean()
@@ -145,10 +145,9 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
     results = []
     searched_hyper = []
     for key, value in hyper.items():
-        if (key != "hidden_units") | (key != "batch_size") | (key != "eta_decay"):
-            if len(value) > 1:
-                searched_hyper.append(key)
-    
+        if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
+            searched_hyper.append(key)
+    print(searched_hyper)
     # configurations = generate configurations
     # train a model for each configuration
     # new configurations = flatten(get_children(model) for model in best model)
@@ -169,16 +168,18 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
 
     for i in range(loop): #possibly just one iteration
         #training the configs of the previous step
+        print("starting a grid search cycle")
         with Pool() as pool:
+            print(configurations)
             try:
                 async_results = [
-                    pool.apply_async(cross_val, TR, TS, global_conf, hyp, output_path, graph_path)
+                    pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path))
                     for hyp in configurations
                 ]
-                pool.close
+                pool.close()
                 pool.join()
                 # result_it = pool.starmap(train, configurations)
-                result_it = map(lambda async_result: async_result.get(), async_results)
+                result_it = list(map(lambda async_result: async_result.get(), async_results))
             except KeyboardInterrupt:
                 print("forcing termination")
                 pool.terminate()
@@ -192,17 +193,17 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #building the config of the next step
         configurations = []
         #we should order w.r.t. wich metric? on which set?
-        results.sort(key=lambda result: result['mean'])
-        best_hyper = [ best['hyperparameters'] for best in results[:3] ]
-        print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
+        results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+        best_hyper = [ best.hyperparameters for best in results[:3] ]
+        print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
-            configurations.append(get_children(best, searched_hyper, shrink))
+            configurations.extend(get_children(best, searched_hyper, shrink))
         shrink *= shrink
         
         
-    results.sort(key=lambda result: result['mean'])
-    best_hyper = [ best['hyperparameters'] for best in results[:3] ]
+    results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+    best_hyper = [ best.hyperparameters for best in results[:3] ]
     print(f"i miglior modelli di questa nested sono: {best_hyper}")
 
     return best_hyper[0]

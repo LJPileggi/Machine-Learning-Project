@@ -30,17 +30,12 @@ def empirical_error(NN, set, metric):
         raise NotImplementedError("unknown metric")
 
 class History:
-    def __init__(self, hyp, metrics):
-        self.hyperparameters = hyp
+    def __init__(self, metrics):
         self.plots = {
             (set, metric): []
             for set in metrics.keys()
             for metric in metrics[set]
         }
-        if hyp.eta_decay == -1:
-            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
-        else:
-            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
     
     def update_plots(self, nn, **sets):
         """ This function accept kwargs, whose names MUST BE 
@@ -61,11 +56,12 @@ class History:
         return self.plots[set, metric][-1]
 
     def plot_in_graph (self, plt, set, metric, fold=0):
-        epochs = range(len(self.plots(set, metric)))
-        plt.plot(epochs, self.plots(set, metric), linestyle='-', label=f'{set} {metric} {fold}_fold loss')
+        epochs = range(len(self.plots[set, metric]))
+        plt.plot(epochs, self.plots[set, metric], linestyle='-', label=f'{set} {metric} {fold}_fold loss')
         
 class Results ():
-    def __init__(self, metrics):
+    def __init__(self, hyp, metrics):
+        self.hyperparameters = hyp
         self.metrics = metrics
         self.histories = []
         self.results = {
@@ -73,6 +69,10 @@ class Results ():
             for set in metrics.keys()
             for metric in metrics[set]
         }
+        if hyp.eta_decay == -1:
+            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
+        else:
+            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
     
     def add_history(self, history):
         self.histories.append(history)
@@ -82,9 +82,9 @@ class Results ():
             for metric in self.metrics[set]:
                 for h in self.histories:
                     final_error = h.get_last_error(set, metric)
-                    self.results[set][metric]["mean"] += final_error/len(self.histories)
-                    self.results[set][metric]["variance"] += (final_error**2)/len(self.histories)
-                self.results[set][metric]['variance'] -= self.results[set][metric]['mean']**2
+                    self.results[set, metric]["mean"] += final_error/len(self.histories)
+                    self.results[set, metric]["variance"] += (final_error**2)/len(self.histories)
+                self.results[set, metric]['variance'] -= self.results[set, metric]['mean']**2
         return self.results
 
     #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
@@ -101,7 +101,7 @@ class Results ():
         distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
         distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
         for metric in distinct_metrics:
-            plt.title(f'{metric} - Mean: {self.results["val"][metric]["mean"]:.2f} +- Var: {self.results["val"][metric]["variance"]**0.5:.2f}')
+            plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
             plt.xlabel('Epochs')
             plt.yscale('log')
             plt.ylabel('Loss')
@@ -109,7 +109,7 @@ class Results ():
                 for sett in distinct_sets:
                     h.plot_in_graph(plt, sett, metric, i)
             
-            filename = f"{self.histories[0].name}.png"
+            filename = f"{self.name}.png"
             train_path = os.path.join(graph_path, "training", metric)
             if (not os.path.exists(train_path)):
                 os.makedirs(train_path)
