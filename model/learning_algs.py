@@ -47,6 +47,9 @@ def train(TR, VL, TS, global_confs, hyp):
                 val_err = history.get_last_error("val", "mee") #hardcodiamo mee????
                 print(f"{epoch} - banana - val err: {val_err}")
             
+            metric = global_confs.gs_preferred_metric
+            err = history.get_last_error(*metric) 
+            print(f"{epoch} - banana - {metric}: {err}")
             #compute weights change
             newWeights = nn.get_weights()
             wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
@@ -57,7 +60,8 @@ def train(TR, VL, TS, global_confs, hyp):
                 low_wc +=1
             else:
                 low_wc = 0
-            if (VL != None and np.allclose(val_err, 0, atol=global_confs.epsilon)):
+            if (np.allclose(err, 0, atol=global_confs.epsilon)):
+                print(f"endend in {epoch} epochs!")
                 break
             if (low_wc >= global_confs.patience):
                 break
@@ -151,6 +155,7 @@ def get_children(hyper, searched_hyper, shrink):
 
 def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
+
     # searched_hyper = []
     # for key, value in hyper.items():
     #     if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
@@ -181,6 +186,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         for eta_decay   in hyper["eta_decay"]
     ]
 
+    selected_metric = tuple(global_conf.gs_preferred_metric)
     for i in range(loop): #possibly just one iteration
         #training the configs of the previous step
         print("starting a grid search cycle")
@@ -199,7 +205,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
             except KeyboardInterrupt:
                 print("forcing termination")
                 pool.terminate()
-                pool.join()
+                #pool.join()
                 print("forced termination")
                 exit()
         results.extend (result_it)
@@ -209,7 +215,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #building the config of the next step
         configurations = []
         #we should order w.r.t. which metric? on which set?
-        #results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+        results.sort(key=lambda result: result.results[selected_metric]['mean'])
         best_hyper = [ vars(best.hyperparameters) for best in results[:3] ]
         print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
@@ -218,7 +224,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         shrink *= shrink
         
         
-    #results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+    results.sort(key=lambda result: result.results[selected_metric]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
     print(f"i miglior modelli di questa nested sono: {best_hyper}")
 

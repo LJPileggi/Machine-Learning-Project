@@ -15,11 +15,12 @@
 	    "max_step": 3,
 		"check_step": 50,
 		"metrics": {"train": ["mee"],
-					"test": ["mee"]
+					"val": 	 ["mee"],
+					"test":  ["mee"]
 					},
-		"preference metric": ["train", "mee"],
+		"gs_preferred_metric": ["train", "mee"],
 		"searched_hyper": ["eta", "lam", "alpha"],
-		"maxfold": 0,
+		"maxfold": 1,
 		"patience": 4,
 		"wc_threshold": 0
 	},

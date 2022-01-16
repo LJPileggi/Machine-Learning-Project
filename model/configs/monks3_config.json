@@ -1,34 +1,37 @@
 {
-	"train_set": "monks-3.test.csv",
-    "output_path": "output/monks3/",
-    "graph_path": "graphs/monks3/",
-    "input_size": 17,
-    "output_size": 1,
-	
-    "model": {
+	"data_conf":{
+		"train_set": "monks-3.train.csv",
+		"test_set": "monks-3.test.csv",
+    	"output_path": "output/monks3/",
+    	"graph_path": "graphs/monks3/",
+		"input_size": 17,
+		"output_size": 1
+	},
+
 	"global_conf": {
 		"task": "classification",
 	    "epsilon": 1e-4,
-	    "max_step": 300,
-	    "check_step": 50,
+	    "max_step": 100,
+	    "check_step": 10,
 		"metrics": {"train": ["mse", "accuracy"],
 					"test":  ["mse", "accuracy"]
 					},
-		"preference metric": ["train", "mse"],
+		"gs_preferred_metric": ["train", "mse"],
+		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 0,
 		"patience": 4,
 		"wc_threshold": 0
 	},
+
 	"hyperparameters":{
-		"eta_decay": [-1, 25],
-	    "eta": [1],
-	    "lambda": [0],
-	    "alpha": [0.8],
+		"eta_decay": [-1],
+	    "eta": [0.1, 0.5],
+	    "lam": [0],
+	    "alpha": [0.5],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[[2, "sigmoidal", 1], [2, "sigmoidal", 1], [1, "sigmoidal", 1]],
 			[[2, "tanh", 1], [2, "tanh", 1], [1, "tanh", 1]]
 		]
 	}
-    }
 }
