@@ -55,7 +55,7 @@ def main():
     parser.set_defaults(traintest=False)
     parser.set_defaults(publish=False)
     parser.set_defaults(shrink=0.1)
-    parser.set_defaults(loop=3)
+    parser.set_defaults(loop=1)
     args = parser.parse_args()
     config = SimpleNamespace(**json.load(open(args.config_path)))
 

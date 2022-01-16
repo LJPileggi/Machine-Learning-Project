@@ -9,12 +9,15 @@
 	"global_conf": {
 		"task": "classification",
 	    "epsilon": 1e-4,
-	    "max_step": 3000,
-	    "check_step": 100,
-		"validation_metric": "missclass",
-		"patience": 2,
-		"wc_threshold": 0,
-	    "max_fold": 1
+	    "max_step": 300,
+	    "check_step": 50,
+		"metrics": {"train": ["mse", "accuracy"],
+					"test":  ["mse", "accuracy"]
+					},
+		"preference metric": ["train", "mse"],
+		"maxfold": 0,
+		"patience": 4,
+		"wc_threshold": 0
 	},
 	"hyperparameters":{
 		"eta_decay": [-1, 25],

@@ -11,6 +11,9 @@ class Configuration:
           self.lam          = lam 
           self.alpha        = alpha
     
+    def __repr__(self):
+       return f'layers: {self.layers}, batch: {self.batch_size}, eta {self.eta}, eta_decay {self.eta_decay}, lambda {self.lam}, alpha  {self.alpha}'    
+
     def get_copy_with(self, hyper_dict):
         out = copy.deepcopy(self)
         out.layers = hyper_dict["layers"]

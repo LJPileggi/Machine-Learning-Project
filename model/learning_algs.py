@@ -76,12 +76,12 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
             history, nn = train(TR, VL, TS, global_confs, hyp)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
-            ### saving model and plotting loss ###
+            ### saving model ###
             filename =  f"model_{results.name}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
+        ### plotting loss###
         results.calculate_mean()
-        ### plotting loss ###
         results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
@@ -148,6 +148,8 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
             searched_hyper.append(key)
     print(searched_hyper)
+
+    
     # configurations = generate configurations
     # train a model for each configuration
     # new configurations = flatten(get_children(model) for model in best model)
@@ -193,7 +195,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #building the config of the next step
         configurations = []
         #we should order w.r.t. wich metric? on which set?
-        results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+        #results.sort(key=lambda result: result.results["val", "mee"]['mean'])
         best_hyper = [ best.hyperparameters for best in results[:3] ]
         print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
@@ -202,7 +204,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         shrink *= shrink
         
         
-    results.sort(key=lambda result: result.results["val", "mee"]['mean'])
+    #results.sort(key=lambda result: result.results["val", "mee"]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
     print(f"i miglior modelli di questa nested sono: {best_hyper}")
 

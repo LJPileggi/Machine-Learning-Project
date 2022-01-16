@@ -12,13 +12,13 @@
 	"global_conf": {
 		"task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 50,
+	    "max_step": 30,
 		"check_step": 50,
-		"metrics": {"train": ["mee", "mse"],
-					"val": ["mee", "mse"],
-					"test": ["mse", "mee"]
+		"metrics": {"train": ["mee"],
+					"test": ["mee"]
 					},
-		"maxfold": 1,
+		"preference metric": ["train", "mee"],
+		"maxfold": 0,
 		"patience": 4,
 		"wc_threshold": 0
 	},
@@ -30,7 +30,7 @@
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[[2, "tanh", 1], [2, "tanh", 1], [2, "linear", 1]]
+			[[10, "tanh", 1], [10, "tanh", 1], [2, "linear", 1]]
 		]
 	}
 }
