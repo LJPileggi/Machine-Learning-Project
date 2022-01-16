@@ -12,12 +12,13 @@
 	"global_conf": {
 		"task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 30,
+	    "max_step": 3,
 		"check_step": 50,
 		"metrics": {"train": ["mee"],
 					"test": ["mee"]
 					},
 		"preference metric": ["train", "mee"],
+		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 0,
 		"patience": 4,
 		"wc_threshold": 0
@@ -26,7 +27,7 @@
 	"hyperparameters":{
 	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [1e-4],
+	    "lam": [1e-4],
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [

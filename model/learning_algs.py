@@ -1,6 +1,8 @@
 import heapq
+from copy import deepcopy
 import itertools
 import os
+from types import SimpleNamespace
 
 from matplotlib.pyplot import hist
 import joblib
@@ -8,7 +10,7 @@ from multiprocessing import Pool
 import numpy as np
 from numpy.core.numeric import empty_like
 from MLP import MLP
-from configuration import Configuration
+# from configuration import Configuration
 from dataloader import DataLoader
 from history import History, Results
 
@@ -118,9 +120,15 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
 #     ]
 
 
+def copy_and_update(old_dict, new_dict):
+    d = old_dict
+    out = deepcopy(d)
+    out.update(new_dict)
+    return out
+
 def get_children(hyper, searched_hyper, shrink):
     new_hyper = {}
-    for key, value in vars(hyper).items():
+    for key, value in hyper.items():
         if key in searched_hyper:
             if key == 'lam':
                 if value != 0:
@@ -132,10 +140,10 @@ def get_children(hyper, searched_hyper, shrink):
         else:
             new_hyper.update({key:[value]})
 
-    new_configs = Configuration.my_product(new_hyper)
+    new_configs = [dict(zip(new_hyper.keys(), values)) for values in itertools.product(*new_hyper.values())]
     return [
-        hyper.get_copy_with(new)
-        for new in new_configs
+        copy_and_update(hyper, new_config)
+        for new_config in new_configs
     ]
 
 
@@ -143,11 +151,11 @@ def get_children(hyper, searched_hyper, shrink):
 
 def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
-    searched_hyper = []
-    for key, value in hyper.items():
-        if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
-            searched_hyper.append(key)
-    print(searched_hyper)
+    # searched_hyper = []
+    # for key, value in hyper.items():
+    #     if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
+    #         searched_hyper.append(key)
+    # print(searched_hyper)
 
     
     # configurations = generate configurations
@@ -158,12 +166,17 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
 
     #configuration used for the first grid search
     configurations = [ 
-        Configuration(layers, batch_size, eta_decay, eta, lam, alpha)
+        {"layers": layers, 
+         "batch_size": batch_size,
+         "eta_decay": eta_decay,
+         "eta": eta,
+         "lam": lam,
+         "alpha": alpha}
         
         for layers      in hyper["hidden_units"]
         for batch_size  in hyper["batch_size"]
         for eta         in hyper["eta"]
-        for lam         in hyper["lambda"]
+        for lam         in hyper["lam"]
         for alpha       in hyper["alpha"]
         for eta_decay   in hyper["eta_decay"]
     ]
@@ -174,10 +187,11 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         with Pool() as pool:
             print(configurations)
             try:
-                async_results = [
-                    pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path))
-                    for hyp in configurations
-                ]
+                async_results = []
+                for hyp in configurations:
+                    hyp = SimpleNamespace(**hyp)
+                    async_result = pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path))
+                    async_results.append(async_result)
                 pool.close()
                 pool.join()
                 # result_it = pool.starmap(train, configurations)
@@ -194,13 +208,13 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
 
         #building the config of the next step
         configurations = []
-        #we should order w.r.t. wich metric? on which set?
+        #we should order w.r.t. which metric? on which set?
         #results.sort(key=lambda result: result.results["val", "mee"]['mean'])
-        best_hyper = [ best.hyperparameters for best in results[:3] ]
+        best_hyper = [ vars(best.hyperparameters) for best in results[:3] ]
         print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
-            configurations.extend(get_children(best, searched_hyper, shrink))
+            configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
         shrink *= shrink
         
         

@@ -1,8 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from MLP import MLP
-from types import SimpleNamespace
-from configuration import Configuration
 import matplotlib.pyplot as plt
 import os
 
@@ -112,10 +110,10 @@ class Results ():
         # distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
         # distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
         for metric in self.distinct_metrics:
-            if ("val", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
-            else:
-                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.2f} +- Var: {self.results["train", metric]["variance"]**0.5:.2f}')
+            # if ("val", metric) in self.results:
+            #     plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
+            # else:
+            #     plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.2f} +- Var: {self.results["train", metric]["variance"]**0.5:.2f}')
             plt.xlabel('Epochs')
             plt.yscale('log')
             plt.ylabel('Loss')
