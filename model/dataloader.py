@@ -19,6 +19,7 @@ def mean_variance_dev(vec_set):
         mean += vec
         var += vec**2
     mean /= len(vec_set)
+    var  /= len(vec_set)
     var -= mean**2
     return mean, var, var**0.5
 

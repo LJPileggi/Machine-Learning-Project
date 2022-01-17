@@ -18,7 +18,7 @@
 					"val": 	 ["mee"],
 					"test":  ["mee"]
 					},
-		"gs_preferred_metric": ["train", "mee"],
+		"gs_preferred_metric": ["val", "mee"],
 		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 1,
 		"patience": 4,

@@ -15,6 +15,7 @@ from dataloader import DataLoader
 from history import History, Results
 
 def train(TR, VL, TS, global_confs, hyp):
+    hyp = SimpleNamespace(**hyp)
     history = History(global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
@@ -43,9 +44,6 @@ def train(TR, VL, TS, global_confs, hyp):
         if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
             #print validation error
-            if (VL != None):
-                val_err = history.get_last_error("val", "mee") #hardcodiamo mee????
-                print(f"{epoch} - banana - val err: {val_err}")
             
             metric = global_confs.gs_preferred_metric
             err = history.get_last_error(*metric) 
@@ -193,11 +191,10 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         with Pool() as pool:
             print(configurations)
             try:
-                async_results = []
-                for hyp in configurations:
-                    hyp = SimpleNamespace(**hyp)
-                    async_result = pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path))
-                    async_results.append(async_result)
+                async_results = [
+                    pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
+                    for hyp in configurations
+                ]
                 pool.close()
                 pool.join()
                 # result_it = pool.starmap(train, configurations)
@@ -216,7 +213,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         configurations = []
         #we should order w.r.t. which metric? on which set?
         results.sort(key=lambda result: result.results[selected_metric]['mean'])
-        best_hyper = [ vars(best.hyperparameters) for best in results[:3] ]
+        best_hyper = [ best.hyperparameters for best in results[:3] ]
         print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:

@@ -59,6 +59,9 @@ class layer:
         else:
           raise Exception("activation function Not implemented yet")
 
+    def activation():
+      
+
     def forward (self, inputs):
         self._activated_inputs = np.random.choice([1., 0.], size=inputs.size, p=[self._dropout, 1-self._dropout])
         self.inputs = inputs * self._activated_inputs                      #stores inputs, for backprop calculation
