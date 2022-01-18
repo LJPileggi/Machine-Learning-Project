@@ -15,7 +15,7 @@ def mean_variance_dev(vec_set):
         mean += vec
         var += vec**2/len(vec_set)
     mean /= len(vec_set)
-    var -= mean**2len(vec_set)
+    var -= mean**2
     return mean, var, var**0.5
 
 def data_standardiser(data):
@@ -35,14 +35,15 @@ def data_normaliser(dataset):
     min_data, max_data = np.array(min_data), np.array(max_data)
     norm = []
     for data in dataset:
-        norm.append((data-min_data)/(max_data-min_data)
+        print(data)
+        norm.append(data-min_data)/(max_data-min_data)
     return norm
 
 def file_parsing():
     parser = argparse.ArgumentParser(description='Preprocessing of data for regression via normalisation or standardisation.')
     parser.add_argument('--filename', metavar='filename', type=str, dest='filename', help='Name of file to preprocess.')
-    parser.add_argument('--input_task', metavar='input_task', dest='input_task', help='Select task to perform on input data; choose between \"stand\" and \"norm\". Default on normalisation.')
-    parser.add_argument('--output_task', metavar='output_task', dest='output_task', help='Select task to perform on output data; choose between \"stand\" and \"norm\". Default on normalisation.')
+    parser.add_argument('--input_task', metavar='input_task', dest='input_task', help='Select task to perform on input data; choose between "stand" and "norm". Default on normalisation.')
+    parser.add_argument('--output_task', metavar='output_task', dest='output_task', help='Select task to perform on output data; choose between "stand" and "norm". Default on normalisation.')
     parser.set_defaults(input_task=None)
     parser.set_defaults(output_task=None)
     args = parser.parse_args()
@@ -55,7 +56,8 @@ def main():
     dataset = ["TR.csv", "TS.csv"]
     filenames = [folder+title+data for data in dataset]
     """
-    filename, input_task, output_task = file_parsing()
+    args = file_parsing()
+    filename, input_task, output_task = args.filename, args.input_task, args.output_task
     #for filename, data in zip(filenames, dataset):
     f_in = open(folder+filename, 'r', newline='')
     f_out = open(folder+"processed-"+filename, 'w', newline='')
@@ -89,8 +91,10 @@ def main():
     writer.writerow(var+null+mean)
     """
     for id, input, output in zip(data_id, inputs, outputs):
-        output = list(output)
-        writer.writerow(id+input+output)
+        results = [id]
+        results.extend(input)
+        results.extend(output)
+        writer.writerow(results)
 
 
 if __name__ == '__main__':
