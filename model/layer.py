@@ -108,6 +108,8 @@ class Sigmoidal(Layer):
         lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
         self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
         self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        #self._WM = np.random.normal(loc=0.0, scale=5.0, size=(input_dim, layer_dim) )
+        #self._biases = np.random.normal(loc = 0.0, scale = 5.0, size=layer_dim )
 
     def activation (self, network_value, a=1.):
         return 1./(1. + np.exp(-a*network_value))
