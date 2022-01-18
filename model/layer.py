@@ -128,6 +128,8 @@ class Tanh(Layer):
         lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
         self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
         self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        #self._WM = np.random.normal(loc=0.0, scale=5.0, size=(input_dim, layer_dim) )
+        #self._biases = np.random.normal(loc = 0.0, scale = 5.0, size=layer_dim )
 
     def activation (self, network_value):
         return np.tanh(network_value)
@@ -156,7 +158,7 @@ class ReLu(Layer):
         print(f"{layer_dim}; ReLu")
         super().__init__()
         self._WM = np.random.normal(loc=0.0, scale=math.sqrt(2/input_dim), size=(input_dim, layer_dim)) * math.sqrt(2./input_dim) #He weight initialization
-        self._biases = np.zeros(size=layer_dim)
+        self._biases = np.zeros(shape=(layer_dim,))
 
     def activation (self, network_value):
         return np.maximum(0, network_value)
@@ -190,6 +192,7 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
         self.input_dim = input_dim
         self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
         self.scale = 1./(1.-rate)
+        self.rate = rate
 
     def forward(self, inputs, training=True):
         if (training):
@@ -201,4 +204,4 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
         return error_signal
 
     def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
-        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
+        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[self.rate, 1-self.rate])
