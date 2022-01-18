@@ -26,7 +26,6 @@ def train(TR, VL, TS, global_confs, hyp):
     oldWeights = nn.get_weights()
     low_wc = 0
     for epoch in range (global_confs.max_step):
-        
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             for pattern in current_batch:
                 out = nn.forward(pattern[0])
@@ -41,6 +40,7 @@ def train(TR, VL, TS, global_confs, hyp):
         
         #after each epoch
         history.update_plots(nn, train=TR, val=VL, test=TS)
+        #print (f"{np.where(np.array([ele[0] for ele in TR]) != np.array([ele[0] for ele in TS]), 1., 0.)}")
         if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
             #print validation error

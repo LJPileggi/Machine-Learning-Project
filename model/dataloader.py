@@ -73,7 +73,7 @@ class DataLoader():
             #save data
             dataset = list(zip(inputs, outputs))
             if (shuffle):
-                random.shuffle(dataset)
+                np.random.shuffle(dataset)
             self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
             
     @staticmethod
@@ -115,7 +115,7 @@ class DataLoader():
             #save data
             dataset = list(zip(inputs, outputs))
             if (shuffle):
-                random.shuffle(dataset)
+                np.random.shuffle(dataset)
             return np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
 
     def get_slices (self, k_fold=5, tag='full'):
@@ -181,7 +181,7 @@ class DataLoader():
         batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
         batchs_sizes[: tr_size % batch_size] += 1
         current = 0
-        random.shuffle(curr_data)
+        np.random.shuffle(curr_data)
         
         for batch in batchs_sizes:
             start, stop = current, current + batch
@@ -203,7 +203,7 @@ class DataLoader():
         batchs_sizes[: tr_size % batch_size] += 1
         current = 0
         if (shuffle):
-            random.shuffle(data)
+            np.random.shuffle(data)
         
         for batch in batchs_sizes:
             start, stop = current, current + batch

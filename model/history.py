@@ -20,11 +20,11 @@ def empirical_error(NN, set, metric):
         return 1-error/len(set)
     if metric == "mse":
         for pattern in set:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum() 
+            error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum() 
         return error/len(set)
     elif metric == "mee":
         for pattern in set:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()**1/2
+            error += ((NN.h(pattern[0], training=False) - pattern[1])**2).sum()**1/2
         return error/len(set)
     else:
         raise NotImplementedError("unknown metric")
