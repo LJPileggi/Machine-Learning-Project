@@ -94,9 +94,6 @@ class Layer():
       return self._last_max_grad
 
     def get_weights(self):
-      return (self._WM, self._biases)
-
-    def get_weights2(self):
       return np.vstack((self._WM, self._biases)).flatten()
         
 class Sigmoidal(Layer):
@@ -177,7 +174,6 @@ class BatchNormalization(Layer):
     def activation (self, network_value): #in realtà a lui non servono
         raise NotImplementedError ("This layer doesn't have an activation Function")
         
-
     def activation_prime (self, network_value):
         raise NotImplementedError ("This layer doesn't have an activation Function")
         
@@ -201,7 +197,13 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
             return inputs
 
     def backwards(self, error_signal):
-        return error_signal
+        return (self.scale * error_signal) * self.activated_inputs #teoricamente si
 
     def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
         self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[self.rate, 1-self.rate])
+
+    def get_max_grad(self):
+      return 0
+
+    def get_weights(self):
+      return [0]

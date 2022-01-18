@@ -80,4 +80,4 @@ class MLP:
         return [layer.get_max_grad() for layer in self.layer_set]
 
     def get_weights(self):
-        return np.concatenate([layer.get_weights2() for layer in self.layer_set])
+        return np.concatenate([layer.get_weights() for layer in self.layer_set])

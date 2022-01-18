@@ -4,6 +4,7 @@
 		"test_set": "mlcup_internaltest.csv",
 		"output_path": "output/mlcup/",
 		"graph_path": "graphs/mlcup/",
+		"preprocessing": "both_stand",
 		"input_size": 10,
 		"output_size": 2
 	},
@@ -28,11 +29,11 @@
 	"hyperparameters":{
 	    "eta": [0.7],
 	    "eta_decay": [-1],
-	    "lam": [1e-5],
-	    "alpha": [0.5],
+	    "lam": [1e-6],
+	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["sigmoidal", 15], ["sigmoidal", 15], ["sigmoidal", 15], ["linear", 2]]
+			[["relu", 5], ["dropout", 0.5], ["relu", 5], ["dropout", 0.5], ["linear", 2]]
 		]
 	}
 }
