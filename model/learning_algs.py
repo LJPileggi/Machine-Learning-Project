@@ -58,7 +58,8 @@ def train(TR, VL, TS, global_confs, hyp):
                 low_wc +=1
             else:
                 low_wc = 0
-            if (np.allclose(err, 0, atol=global_confs.epsilon)):
+            desired_value = 1 if metric[1] == "accuracy" else 0
+            if (np.allclose(err, desired_value, atol=global_confs.epsilon)):
                 print(f"endend in {epoch} epochs!")
                 break
             if (low_wc >= global_confs.patience):
