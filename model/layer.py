@@ -1,8 +1,9 @@
 from os import error
 import numpy as np
+import math
 import activation_functions
 
-class layer:
+class Layer():
     """
     Single layer of the MLP.
 
@@ -26,8 +27,7 @@ class layer:
      - backward
      - update_weights
     """
-    def __init__(self, input_dim, layer_dim, activation, dropout=None):
-        print(f"{layer_dim}; {activation}")
+    def __init__(self):
         self._negGrad = 0.
         self._last_max_grad = 0.
         self._biases_negGrad = 0.
@@ -35,38 +35,21 @@ class layer:
         self._biases_DWold = 0.
         self.inputs = None
         self.output_prime = None
-        self._dropout = dropout if dropout is not None else 1 #must be a number between 0 and 1
-        if activation == "sigmoidal":
-          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
-          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
-          self._activation = activation_functions.sigmoidal
-          self._act_prime = activation_functions.d_sigmoidal
-        elif activation == "tanh":
-          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
-          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
-          self._activation = activation_functions.tanh
-          self._act_prime = activation_functions.d_tanh
-        elif activation == "linear":
-          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
-          self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
-          self._activation = activation_functions.linear
-          self._act_prime = activation_functions.d_linear
-        elif activation == "relu":
-          self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
-          self._biases = np.full(shape=layer_dim, fill_value=0.01)
-          self._activation = activation_functions.ReLu
-          self._act_prime = activation_functions.d_ReLU
-        else:
-          raise Exception("activation function Not implemented yet")
+        self._WM = None
+        self._biases = None
 
+    def activation (self, network_value):
+        NotImplementedError ("This layer doesn't have an activation Function")
+
+    def activation_prime (self, network_value):
+        NotImplementedError ("This layer doesn't have an activation Function")
+      
     def forward (self, inputs):
-        self._activated_inputs = np.random.choice([1., 0.], size=inputs.size, p=[self._dropout, 1-self._dropout])
-        self.inputs = inputs * self._activated_inputs                      #stores inputs, for backprop calculation
-        #self._activated_units = np.random.choice([1., 0.], size=self._biases.size, p=[self._dropout, 1-self._dropout])
+        self.inputs = inputs              #stores inputs, for backprop calculation
         net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
-        output = self._activation(net)     #computes the out of all units at one
+        output = self.activation(net)     #computes the out of all units at one
 
-        self.output_prime = self._act_prime(net)  #stores out_pr, for backprop calculation
+        self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
         return output
     
     def backwards(self, error_signal):
@@ -110,15 +93,105 @@ class layer:
     def get_max_grad(self):
       return self._last_max_grad
 
-
     def get_weights(self):
       return (self._WM, self._biases)
 
     def get_weights2(self):
       return np.vstack((self._WM, self._biases)).flatten()
-
-
-    def load_weights(self, weights, biases):
-        self._WM = weights
-        self._biases = biases
         
+class Sigmoidal(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        print(f"{layer_dim}; Sigmoidal")
+        super().__init__()
+        #lower, upper = -1./(math.sqrt(input_dim)), 1./(math.sqrt(input_dim)) #xavier
+        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
+        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
+        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+
+    def activation (self, network_value, a=1.):
+        return 1./(1. + np.exp(-a*network_value))
+
+    def activation_prime (self, network_value, a=1.):
+        k = np.exp(a*network_value)
+        out = k / ((k+1)**2)
+        return out
+
+class Tanh(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        print(f"{layer_dim}; Tanh")
+        super().__init__()
+        #lower, upper = -1./(math.sqrt(input_dim)), 1./(math.sqrt(input_dim)) #xavier
+        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
+        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
+        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+
+    def activation (self, network_value):
+        return np.tanh(network_value)
+
+    def activation_prime (self, network_value):
+        return 1-(tanh(network_value)**2)
+
+class Linear(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        print(f"{layer_dim}; Linear")
+        super().__init__()
+        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
+        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
+        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+
+    def activation (self, network_value):
+        return network_value
+
+    def activation_prime (self, network_value):
+        return 1.
+
+class ReLu(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        print(f"{layer_dim}; ReLu")
+        super().__init__()
+        self._WM = np.random.normal(loc=0.0, scale=math.sqrt(2/input_dim), size=(input_dim, layer_dim)) * math.sqrt(2./input_dim) #He weight initialization
+        self._biases = np.zeros(size=layer_dim)
+
+    def activation (self, network_value):
+        return np.maximum(0, network_value)
+
+    def activation_prime (self, network_value):
+        return np.where(network_value > 0, 1., 0.)
+
+class BatchNormalization(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        print(f"{layer_dim}; BatchNormalization")
+        super().__init__()
+        self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) ) #in realtà ha pesi diversi
+        self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
+
+    def activation (self, network_value): #in realtà a lui non servono
+
+    def activation_prime (self, network_value):
+
+class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
+
+    def __init__(self, input_dim, rate):
+        print(f"{layer_dim}; Dropout")
+        super().__init__()
+        if isinstance(rate, (int, float)) and not 0 <= rate <= 1:
+            raise ValueError (f"Invalid Value {rate} received - `rate` needs to be betweek 0 and 1")
+        self.input_dim = input_dim
+        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
+
+    def forward(self, inputs, training=True):
+        if (training):
+            return inputs * self.activated_inputs
+        else:
+            return inputs
+
+    def backwards(self, error_signal):
+        return error_signal
+
+    def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
+        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])

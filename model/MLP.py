@@ -2,7 +2,7 @@ import numpy as np
 import random
 import h5py
 
-from layer import layer
+from layer import Layer
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -28,7 +28,7 @@ class MLP:
         self.layer_set = []
         prec_dim = input_dim
         for layer_dim, activation, dropout in architecture:
-            self.layer_set.append(layer(prec_dim, layer_dim, activation, dropout))
+            self.layer_set.append(Layer(prec_dim, layer_dim, activation, dropout))
             prec_dim = layer_dim
         last_layer_fun = architecture[-1][1]
         self.threshold = None
