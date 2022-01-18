@@ -149,9 +149,6 @@ def get_children(hyper, searched_hyper, shrink):
         for new_config in new_configs
     ]
 
-
-
-
 def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
 
@@ -190,7 +187,6 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #training the configs of the previous step
         print("starting a grid search cycle")
         with Pool() as pool:
-            print(configurations)
             try:
                 async_results = [
                     pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 

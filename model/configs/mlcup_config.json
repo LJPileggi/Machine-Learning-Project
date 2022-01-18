@@ -12,8 +12,8 @@
 	"global_conf": {
 		"task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 3,
-		"check_step": 50,
+	    "max_step": 50,
+		"check_step": 1,
 		"metrics": {"train": ["mee"],
 					"val": 	 ["mee"],
 					"test":  ["mee"]
@@ -32,7 +32,7 @@
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[[10, "tanh", 1], [10, "tanh", 1], [2, "linear", 1]]
+			[["relu", 25], ["relu", 25], ["linear", 2]]
 		]
 	}
 }
