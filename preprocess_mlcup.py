@@ -35,7 +35,6 @@ def data_normaliser(dataset):
     min_data, max_data = np.array(min_data), np.array(max_data)
     norm = []
     for data in dataset:
-        print(data)
         norm.append(data-min_data)/(max_data-min_data)
     return norm
 
@@ -64,9 +63,10 @@ def main():
     data_id = []
     inputs = []
     outputs = []
+    reader = csv.reader(f_in, delimiter=',')
     writer = csv.writer(f_out)
-    for line in f_in.readlines():
-        pattern = line.split()
+    for line in reader:
+        pattern = list(map(float, line[:]))
         data_id.append(pattern[0])
         inp = np.array(pattern[1:-2])
         inputs.append(inp)
