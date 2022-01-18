@@ -12,25 +12,27 @@
 	"global_conf": {
 		"task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 500,
-		"metrics": {"train": ["mee", "acc"],
-					 "test": ["mse", "acc"]
+	    "max_step": 3,
+		"check_step": 50,
+		"metrics": {"train": ["mee"],
+					"val": 	 ["mee"],
+					"test":  ["mee"]
 					},
+		"gs_preferred_metric": ["val", "mee"],
+		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 1,
 		"patience": 4,
 		"wc_threshold": 0
 	},
 
 	"hyperparameters":{
-	    "eta": [1, 0.7, 0.5],
+	    "eta": [0.7],
 	    "eta_decay": [25],
-	    "lambda": [1e-6, 1e-5, 1e-4],
-	    "alpha": [0.3, 0.5, 0.7],
+	    "lam": [1e-4],
+	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[[15, "sigmoidal", 1], [15, "sigmoidal", 1], [15, "sigmoidal", 1], [2, "linear", 1]],
-			[[15, "tanh", 1], [15, "tanh", 1], [15, "tanh", 1], [2, "linear", 1]],
-			[[20, "tanh", 1], [20, "tanh", 1], [20, "tanh", 1], [2, "linear", 1]]
+			[[10, "tanh", 1], [10, "tanh", 1], [2, "linear", 1]]
 		]
 	}
 }

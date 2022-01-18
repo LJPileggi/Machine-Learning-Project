@@ -55,7 +55,7 @@ def main():
     parser.set_defaults(traintest=False)
     parser.set_defaults(publish=False)
     parser.set_defaults(shrink=0.1)
-    parser.set_defaults(loop=3)
+    parser.set_defaults(loop=1)
     args = parser.parse_args()
     config = SimpleNamespace(**json.load(open(args.config_path)))
 
@@ -104,7 +104,7 @@ def main():
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
-        if (!args.traintest):
+        if (not args.traintest):
             best_hyper = hyperparameters
         nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper)
 

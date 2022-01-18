@@ -1,6 +1,8 @@
 import heapq
+from copy import deepcopy
 import itertools
 import os
+from types import SimpleNamespace
 
 from matplotlib.pyplot import hist
 import joblib
@@ -8,11 +10,13 @@ from multiprocessing import Pool
 import numpy as np
 from numpy.core.numeric import empty_like
 from MLP import MLP
-from model.configuration import Configuration
-from model.dataloader import DataLoader
-from model.history import History
+# from configuration import Configuration
+from dataloader import DataLoader
+from history import History, Results
 
-def train(TR, VL, TS, global_confs, hyp, history, fold=0):
+def train(TR, VL, TS, global_confs, hyp):
+    hyp = SimpleNamespace(**hyp)
+    history = History(global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers)
@@ -21,7 +25,7 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
     #training loop
     oldWeights = nn.get_weights()
     low_wc = 0
-    for epoch in range (global_confs["max_step"]):
+    for epoch in range (global_confs.max_step):
         
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             for pattern in current_batch:
@@ -36,30 +40,31 @@ def train(TR, VL, TS, global_confs, hyp, history, fold=0):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update_plots(nn, fold, train=TR, val=VL, test=TS)
-        if(epoch % global_confs["check_step"] == 0):
+        history.update_plots(nn, train=TR, val=VL, test=TS)
+        if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
             #print validation error
-            if (VS != None):
-                val_err = history.plots["val"]["mee"][-1]
-                print(f"{epoch} - {history['name']} - val err: {val_err}")
             
+            metric = global_confs.gs_preferred_metric
+            err = history.get_last_error(*metric) 
+            print(f"{epoch} - banana - {metric}: {err}")
             #compute weights change
             newWeights = nn.get_weights()
             wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
             oldWeights = newWeights
             
             #stopping criteria
-            if wc <= global_confs["threshold"]:
+            if wc <= global_confs.wc_threshold:
                 low_wc +=1
             else:
                 low_wc = 0
-            if (VS != None and np.allclose(val_err, 0, atol=global_confs["epsilon"])
+            if (np.allclose(err, 0, atol=global_confs.epsilon)):
+                print(f"endend in {epoch} epochs!")
                 break
-            if (low_wc >= global_confs["patience"]):
+            if (low_wc >= global_confs.patience):
                 break
     #once training has ended
-    return nn #cosa restituisce davvero?
+    return history, nn #cosa restituisce davvero?
 
 
 def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
@@ -70,25 +75,18 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         #                     {"mean": 0, "variance": 0} 
         #              for metric in global_confs["metrics"]}
         #            for set in global_confs["datasets"]}
-        history = History(hyp, global_confs.metrics, global_confs.maxfold)
-        for n_fold, TR, VL in enumerate (DataLoader.get_slices_static(TR, global_confs.max_fold)):
-            nn = train(TR, VL, TS, global_confs, hyp, n_fold, history)
-            for set in global_confs["sets"]:
-                for metric in global_confs["metrics"]:
-                    final_error = history.get_last_error(set, metric) 
-                    results[set][metric]["mean"] += final_error/global_confs["max_fold"]
-                    results[set][metric]["variance"] += (final_error**2)/global_confs["max_fold"]
+        results = Results(hyp, global_confs.metrics)
+        for n_fold, (TR, VL) in enumerate (DataLoader.get_slices_static(TR, global_confs.maxfold)):
+            history, nn = train(TR, VL, TS, global_confs, hyp)
+            results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
-            ### saving model and plotting loss ###
-            filename =  f"model_{history['name']}_{n_fold}fold.logami"
+            ### saving model ###
+            filename =  f"model_{results.name}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
-            history.nextfold()
-        for set in global_confs["sets"]:
-            for metric in global_confs["metrics"]:
-                results[set][metric]['variance'] -= results[set][metric]['mean']**2
-        ### plotting loss ###
-        ds.create_graph(history, f"training_loss_{history['name']}.png", graph_path)
+        ### plotting loss###
+        results.calculate_mean()
+        results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
         print('Interrupted')
@@ -124,9 +122,15 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
 #     ]
 
 
+def copy_and_update(old_dict, new_dict):
+    d = old_dict
+    out = deepcopy(d)
+    out.update(new_dict)
+    return out
+
 def get_children(hyper, searched_hyper, shrink):
     new_hyper = {}
-    for key, value in vars(hyper).items():
+    for key, value in hyper.items():
         if key in searched_hyper:
             if key == 'lam':
                 if value != 0:
@@ -138,10 +142,10 @@ def get_children(hyper, searched_hyper, shrink):
         else:
             new_hyper.update({key:[value]})
 
-    new_configs = Configuration.my_product(new_hyper)
+    new_configs = [dict(zip(new_hyper.keys(), values)) for values in itertools.product(*new_hyper.values())]
     return [
-        hyper.get_copy_with(new)
-        for new in new_configs
+        copy_and_update(hyper, new_config)
+        for new_config in new_configs
     ]
 
 
@@ -149,11 +153,13 @@ def get_children(hyper, searched_hyper, shrink):
 
 def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
     results = []
-    searched_hyper = []
-    for key, value in hyper.items():
-        if (key != "hidden_units") | (key != "batch_size") | (key != "eta_decay"):
-            if len(value) > 1:
-                searched_hyper.append(key)
+
+    # searched_hyper = []
+    # for key, value in hyper.items():
+    #     if (key != "hidden_units") or (key != "batch_size") or (key != "eta_decay"):
+    #         searched_hyper.append(key)
+    # print(searched_hyper)
+
     
     # configurations = generate configurations
     # train a model for each configuration
@@ -163,32 +169,40 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
 
     #configuration used for the first grid search
     configurations = [ 
-        Configuration(layers, batch_size, eta_decay, eta, lam, alpha)
+        {"layers": layers, 
+         "batch_size": batch_size,
+         "eta_decay": eta_decay,
+         "eta": eta,
+         "lam": lam,
+         "alpha": alpha}
         
         for layers      in hyper["hidden_units"]
         for batch_size  in hyper["batch_size"]
         for eta         in hyper["eta"]
-        for lam         in hyper["lambda"]
+        for lam         in hyper["lam"]
         for alpha       in hyper["alpha"]
         for eta_decay   in hyper["eta_decay"]
     ]
 
+    selected_metric = tuple(global_conf.gs_preferred_metric)
     for i in range(loop): #possibly just one iteration
         #training the configs of the previous step
+        print("starting a grid search cycle")
         with Pool() as pool:
+            print(configurations)
             try:
                 async_results = [
-                    pool.apply_async(cross_val, TR, TS, global_conf, hyp, output_path, graph_path)
+                    pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
                     for hyp in configurations
                 ]
-                pool.close
+                pool.close()
                 pool.join()
                 # result_it = pool.starmap(train, configurations)
-                result_it = map(lambda async_result: async_result.get(), async_results)
+                result_it = list(map(lambda async_result: async_result.get(), async_results))
             except KeyboardInterrupt:
                 print("forcing termination")
                 pool.terminate()
-                pool.join()
+                #pool.join()
                 print("forced termination")
                 exit()
         results.extend (result_it)
@@ -197,18 +211,18 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
 
         #building the config of the next step
         configurations = []
-        #we should order w.r.t. wich metric? on which set?
-        results.sort(key=lambda result: result['mean'])
-        best_hyper = [ best['hyperparameters'] for best in results[:3] ]
-        print(f"i migliori 3 modelli di sto ciclio sono: {best_hyper}")
+        #we should order w.r.t. which metric? on which set?
+        results.sort(key=lambda result: result.results[selected_metric]['mean'])
+        best_hyper = [ best.hyperparameters for best in results[:3] ]
+        print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
-            configurations.append(get_children(best, searched_hyper, shrink))
+            configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
         shrink *= shrink
         
         
-    results.sort(key=lambda result: result['mean'])
-    best_hyper = [ best['hyperparameters'] for best in results[:3] ]
+    results.sort(key=lambda result: result.results[selected_metric]['mean'])
+    best_hyper = [ best.hyperparameters for best in results[:3] ]
     print(f"i miglior modelli di questa nested sono: {best_hyper}")
 
     return best_hyper[0]

@@ -1,12 +1,14 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from MLP import MLP
-from types import SimpleNamespace
-from configuration import Configuration
+import matplotlib.pyplot as plt
+import os
 
 # miscclass and accuracy compute nn.h, with a threshold
 # mse and mee compute nn.forward, the direct output of the output layer
 def empirical_error(NN, set, metric):
+    if len(set) == 0:
+        return None
     error = 0
     if metric == "missclass":
         for pattern in set:
@@ -28,21 +30,14 @@ def empirical_error(NN, set, metric):
         raise NotImplementedError("unknown metric")
 
 class History:
-    def __init__(self, hyp, metrics, folds):
-        self.hyperparameters = hyp
+    def __init__(self, metrics):
         self.plots = {
-            (set, metric): [ [] for k in range(folds) ]
+            (set, metric): []
             for set in metrics.keys()
             for metric in metrics[set]
         }
-        if hyp.eta_decay == -1:
-            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_nonvar_{hyp.lam}_{hyp.alpha}"
-        else:
-            self.name = f"{hyp.layers}_{hyp.batch_size}_{hyp.eta}_{hyp.eta_decay}_{hyp.lam}_{hyp.alpha}"
-
-
     
-    def update_plots(self, nn, fold, **sets):
+    def update_plots(self, nn, **sets):
         """ This function accept kwargs, whose names MUST BE 
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
@@ -51,15 +46,88 @@ class History:
         """
         for set, metric in self.plots:
             error = empirical_error(nn, sets[set], metric)
-            self.plots[set, metric][fold].append(error)
+            self.plots[set, metric].append(error)
         # for set_name, set_value in sets.items():
         #     for metric in self.plots[set_name]:
         #         error = empirical_error(nn, set_value, metric)
         #         self.plots[set_name][metric][fold].append(error)
 
-    def get_last_error (self, set, metric, fold):
-        return self.plots[set, metric][fold][-1]
+    def get_last_error (self, set, metric):
+        return self.plots[set, metric][-1]
+
+    def plot_in_graph (self, plt, set, metric, fold=0):
+        epochs = range(len(self.plots[set, metric]))
+        if set == "test":
+            linestyle='-.'
+        elif set == "val":
+            linestyle = '--'
+        else:
+            linestyle = '-'
+        plt.plot(epochs, self.plots[set, metric], linestyle=linestyle, label=f'{set} {metric} {fold}_fold loss')
         
+class Results ():
+    def __init__(self, hyp, metrics):
+        self.hyperparameters = hyp
+        #metrics.values() is a list of list of metrics, with a double for we concat all these metrics togoether
+        #and by using a set comprehension, all the duplicates are deleted
+        self.distinct_metrics = {metric for metric_list in metrics.values() for metric in metric_list}
+        self.distinct_sets = {set for set in metrics}
+        self.histories = []
+        self.results = {
+            (set, metric): {"mean": 0, "variance": 0}
+            for set in metrics.keys()
+            for metric in metrics[set]
+        }
+        if hyp["eta_decay"] == -1:
+            self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
+        else:
+            self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
+    
+    def add_history(self, history):
+        self.histories.append(history)
+    
+    def calculate_mean (self):
+        for set, metric in self.results:
+            for h in self.histories:
+                final_error = h.get_last_error(set, metric)
+                self.results[set, metric]["mean"] += final_error/len(self.histories)
+                self.results[set, metric]["variance"] += (final_error**2)/len(self.histories)
+            self.results[set, metric]['variance'] -= self.results[set, metric]['mean']**2
+        print(self.results)
+        return self.results
+
+    #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
+    #per quanto riguarda matplot lib possiamo fare in modo figo, ovvero che History ha un metodo che scrive sul canvas il proprio plot, mentre
+    #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history. 
+
+    def create_graph (self, graph_path):
+        """
+        questa funzione dovrebbe creare i vari grafici. Crea un grafo per metrica, e dentro il grafico ci mette le statistiche di train, val e test tutte assieme
+        L'unico problema per ora è il titolo, che prende per assodato il fatto che vogliamo le medie e varianze di val.
+        Tutto il casino che sta sotto con i distinct è perchè vogliamo raggruppare per le metriche, che sono dopo i set nel bellissimo dizionario delle metriche
+        quindi se andassi per ordinamento dovrei cancellare e recuperare il grafico ogni volta. così è più complicato ma funziona
+        """
+        # distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
+        # distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
+        for metric in self.distinct_metrics:
+            if ("val", metric) in self.results:
+                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
+            else:
+                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.2f} +- Var: {self.results["train", metric]["variance"]**0.5:.2f}')
+            plt.xlabel('Epochs')
+            plt.yscale('log')
+            plt.ylabel('Loss')
+            for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.
+                for set in self.distinct_sets:
+                    h.plot_in_graph(plt, set, metric, i)
+            
+            filename = f"{self.name}.png"
+            train_path = os.path.join(graph_path, "training", metric)
+            if (not os.path.exists(train_path)):
+                os.makedirs(train_path)
+            plt.legend()
+            plt.savefig(os.path.join(train_path, filename))
+            plt.clf()
 
     # def plot(self, path):
     #     os.join(path, self.name)

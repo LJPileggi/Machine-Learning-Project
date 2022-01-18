@@ -19,6 +19,7 @@ def mean_variance_dev(vec_set):
         mean += vec
         var += vec**2
     mean /= len(vec_set)
+    var  /= len(vec_set)
     var -= mean**2
     return mean, var, var**0.5
 
@@ -158,10 +159,12 @@ class DataLoader():
                 test_index = indices[test_mask]
                 yield data[train_index], data[test_index]
                 current = stop
-        else:
+        elif k_fold == 1:
             indices = np.arange(n_samples)
             train_start = n_samples // 5
             yield data[indices[train_start:]], data[indices[:train_start]]
+        else:
+            yield data, None
 
      
     def dataset_partition (self, indices, batch_size, tag='full'): #
