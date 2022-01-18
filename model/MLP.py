@@ -2,7 +2,7 @@ import numpy as np
 import random
 import h5py
 
-from layer import Layer
+import layer
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -27,9 +27,23 @@ class MLP:
         set_seed(seed)
         self.layer_set = []
         prec_dim = input_dim
-        for layer_dim, activation, dropout in architecture:
-            self.layer_set.append(Layer(prec_dim, layer_dim, activation, dropout))
-            prec_dim = layer_dim
+        for activation, options in architecture:
+            if activation == "sigmoidal":
+                self.layer_set.append(layer.Sigmoidal(prec_dim, options))
+                prec_layer = options
+            elif activation == "tanh":
+                self.layer_set.append(layer.Tanh(prec_dim, options))
+                prec_layer = options
+            elif activation == "linear":
+                self.layer_set.append(layer.Tanh(prec_dim, options))
+                prec_layer = options
+            elif activation == "ReLU":
+                self.layer_set.append(layer.Tanh(prec_dim, options))
+                prec_layer = options
+            elif activation == "BatchNormalization":
+                self.layer_set.append(layer.Tanh(prec_dim, options))
+            elif activation == "dropout":
+                self.layer_set.append(layer.Tanh(prec_dim, options))
         last_layer_fun = architecture[-1][1]
         self.threshold = None
         if last_layer_fun == "sigmoidal" and task == "classification":
@@ -50,9 +64,9 @@ class MLP:
 
     def h(self, input):
         if self.threshold == None:
-            return self.forward(input)
+            return self.forward(input, training=False)
         else:
-            return self.forward(input) > self.threshold
+            return self.forward(input, training=False) > self.threshold
 
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):

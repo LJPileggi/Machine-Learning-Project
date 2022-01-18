@@ -44,12 +44,12 @@ class Layer():
     def activation_prime (self, network_value):
         NotImplementedError ("This layer doesn't have an activation Function")
       
-    def forward (self, inputs):
+    def forward (self, inputs, training=True):
         self.inputs = inputs              #stores inputs, for backprop calculation
         net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
         output = self.activation(net)     #computes the out of all units at one
-
-        self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
+        if training: #tbh non so questo
+            self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
         return output
     
     def backwards(self, error_signal):
@@ -183,10 +183,11 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
             raise ValueError (f"Invalid Value {rate} received - `rate` needs to be betweek 0 and 1")
         self.input_dim = input_dim
         self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
+        self.scale = 1./(1.-rate)
 
     def forward(self, inputs, training=True):
         if (training):
-            return inputs * self.activated_inputs
+            return (self.scale * inputs) * self.activated_inputs
         else:
             return inputs
 
