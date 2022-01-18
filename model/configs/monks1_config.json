@@ -10,7 +10,7 @@
 
 	"global_conf": {
 		"task": "classification",
-	    "epsilon": 1e-4,
+	    "epsilon": 0,
 	    "max_step": 100,
 	    "check_step": 1,
 		"metrics": {"train": ["mse", "accuracy"],
@@ -30,8 +30,7 @@
 	    "alpha": [0.5],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[[2, "sigmoidal", 1], [1, "sigmoidal", 1]],
-			[[2, "tanh", 1], [1, "tanh", 1]]
+			[["tanh", 2], ["tanh", 1]]
 		]
 	}
 }

@@ -30,21 +30,21 @@ class MLP:
         for activation, options in architecture:
             if activation == "sigmoidal":
                 self.layer_set.append(layer.Sigmoidal(prec_dim, options))
-                prec_layer = options
+                prec_dim = options
             elif activation == "tanh":
                 self.layer_set.append(layer.Tanh(prec_dim, options))
-                prec_layer = options
+                prec_dim = options
             elif activation == "linear":
                 self.layer_set.append(layer.Tanh(prec_dim, options))
-                prec_layer = options
+                prec_dim = options
             elif activation == "ReLU":
                 self.layer_set.append(layer.Tanh(prec_dim, options))
-                prec_layer = options
+                prec_dim = options
             elif activation == "BatchNormalization":
                 self.layer_set.append(layer.Tanh(prec_dim, options))
             elif activation == "dropout":
                 self.layer_set.append(layer.Tanh(prec_dim, options))
-        last_layer_fun = architecture[-1][1]
+        last_layer_fun = architecture[-1][0]
         self.threshold = None
         if last_layer_fun == "sigmoidal" and task == "classification":
             self.threshold = 0.5
@@ -56,9 +56,9 @@ class MLP:
             raise NotImplementedError("unsupported activation function in output layer")
 
 
-    def forward(self, input):
+    def forward(self, input, training=True):
         for layer in self.layer_set:
-            output = layer.forward(input)
+            output = layer.forward(input, training)
             input = output
         return output
 

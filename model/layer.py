@@ -39,10 +39,10 @@ class Layer():
         self._biases = None
 
     def activation (self, network_value):
-        NotImplementedError ("This layer doesn't have an activation Function")
+        raise NotImplementedError ("This layer doesn't have an activation Function")
 
     def activation_prime (self, network_value):
-        NotImplementedError ("This layer doesn't have an activation Function")
+        raise NotImplementedError ("This layer doesn't have an activation Function")
       
     def forward (self, inputs, training=True):
         self.inputs = inputs              #stores inputs, for backprop calculation
@@ -131,7 +131,7 @@ class Tanh(Layer):
         return np.tanh(network_value)
 
     def activation_prime (self, network_value):
-        return 1-(tanh(network_value)**2)
+        return 1-(np.tanh(network_value)**2)
 
 class Linear(Layer):
 
@@ -171,13 +171,17 @@ class BatchNormalization(Layer):
         self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
 
     def activation (self, network_value): #in realtà a lui non servono
+        raise NotImplementedError ("This layer doesn't have an activation Function")
+        
 
     def activation_prime (self, network_value):
+        raise NotImplementedError ("This layer doesn't have an activation Function")
+        
 
 class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
 
     def __init__(self, input_dim, rate):
-        print(f"{layer_dim}; Dropout")
+        print(f"Dropout: {rate}")
         super().__init__()
         if isinstance(rate, (int, float)) and not 0 <= rate <= 1:
             raise ValueError (f"Invalid Value {rate} received - `rate` needs to be betweek 0 and 1")
