@@ -12,8 +12,8 @@
 	"global_conf": {
 		"task": "regression",
 	    "epsilon": 1e-1,
-	    "max_step": 50,
-		"check_step": 1,
+	    "max_step": 200,
+		"check_step": 20,
 		"metrics": {"train": ["mee"],
 					"val": 	 ["mee"],
 					"test":  ["mee"]
@@ -27,12 +27,12 @@
 
 	"hyperparameters":{
 	    "eta": [0.7],
-	    "eta_decay": [25],
-	    "lam": [1e-4],
-	    "alpha": [0.7],
+	    "eta_decay": [-1],
+	    "lam": [1e-5],
+	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["relu", 25], ["relu", 25], ["linear", 2]]
+			[["sigmoidal", 15], ["sigmoidal", 15], ["sigmoidal", 15], ["linear", 2]]
 		]
 	}
 }
