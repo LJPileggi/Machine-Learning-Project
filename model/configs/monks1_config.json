@@ -11,8 +11,8 @@
 	"global_conf": {
 		"task": "classification",
 	    "epsilon": 0,
-	    "max_step": 100,
-	    "check_step": 1,
+	    "max_step": 500,
+	    "check_step": 10,
 		"metrics": {"train": ["mse", "accuracy"],
 					"test":  ["mse", "accuracy"]
 					},
@@ -25,12 +25,13 @@
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [0.1, 0.5],
+	    "eta": [120, 60],
 	    "lam": [0],
-	    "alpha": [0.5],
+	    "alpha": [0],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[["tanh", 2], ["tanh", 1]]
+			[["sigmoidal", 3], ["sigmoidal", 1]],
+			[["tanh", 3], ["tanh", 1]]
 		]
 	}
 }

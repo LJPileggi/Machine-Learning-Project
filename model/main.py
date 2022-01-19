@@ -49,6 +49,8 @@ def main():
                         help='how many nested loop you want to do')
     parser.add_argument('--shrink', type=float,
                         help='how much do you want to shrink during nested grid search')
+    parser.add_argument('--preprocessing',
+                        help='Selects type of preprocessing')
     parser.set_defaults(seed=int(time.time())) #when no seed is provided in CLI nor in config, use the unix time
     parser.set_defaults(train=False)
     parser.set_defaults(test=False)
@@ -56,6 +58,7 @@ def main():
     parser.set_defaults(publish=False)
     parser.set_defaults(shrink=0.1)
     parser.set_defaults(loop=1)
+    parser.set_defaults(preprocessing=None)
     args = parser.parse_args()
     config = SimpleNamespace(**json.load(open(args.config_path)))
 
