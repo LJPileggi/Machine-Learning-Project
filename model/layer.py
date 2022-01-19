@@ -89,11 +89,11 @@ class Layer():
     def backwards_mb(self, error_signal):
         #print(f"{error_signal.shape}")
         deltas = error_signal * self.output_prime
-        for delta in deltas:
-            for inp in self.inputs:
-                self._negGrad += np.outer(inp, delta)
+        for i, delta in enumerate(deltas):
+            for j, inp in enumerate(self.inputs):
+                if (i == j):
+                    self._negGrad += np.outer(inp, delta)
         self._biases_negGrad += np.sum(deltas, axis=0)
-        print(f"IMPORTANT 2: {deltas @ self._WM.T}")
         return deltas @ self._WM.T
 
 
@@ -104,7 +104,6 @@ class Layer():
         #In a (mini)batch alg, we call this.backward for each pattern, and
         #   this.update_weights just once per batch.
         DW = eta * self._negGrad + alpha*self._DWold
-        print(f"{self._biases_negGrad}")
         self._WM += DW - lam*self._WM
         self._DWold = DW
         

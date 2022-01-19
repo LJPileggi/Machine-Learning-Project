@@ -28,18 +28,17 @@ def train(TR, VL, TS, global_confs, hyp):
     low_wc = 0
     for epoch in range (global_confs.max_step):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
-            #patterns, labels = list(map(np.array, list(zip(*current_batch))))
+            patterns, labels = list(map(np.array, list(zip(*current_batch))))
             #print(f"{patterns.shape} - {labels.shape}")
-            #outs = nn.forward_mb(patterns)
-            #errors = labels - outs
+            outs = nn.forward_mb(patterns)
+            errors = labels - outs
             #print(f"error - {errors.shape}")
-            #nn.backwards_mb(errors)
-            for pattern in current_batch:
-                out = nn.forward(pattern[0])
-                error = pattern[1] - out
-                nn.backwards(error)
+            nn.backwards_mb(errors)
+            #for pattern in current_batch:
+            #    out = nn.forward(pattern[0])
+            #    error = pattern[1] - out
+            #    nn.backwards(error)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            exit()
             len_batch = len(TR) #if batch_size != 1 else len(whole_TR)
             if hyp.eta_decay == -1:
                 nn.update_weights(hyp.eta/len_batch, hyp.lam, hyp.alpha)
