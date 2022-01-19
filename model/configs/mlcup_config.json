@@ -4,7 +4,6 @@
 		"test_set": "mlcup_internaltest.csv",
 		"output_path": "output/mlcup/",
 		"graph_path": "graphs/mlcup/",
-		"preprocess": "both_norm",
 		"input_size": 10,
 		"output_size": 2
 	},
@@ -32,7 +31,7 @@
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["sigmoidal", 15], ["sigmoidal", 15], ["sigmoidal", 15], ["linear", 2]]
+			[["tanh", 15], ["tanh", 15], ["linear", 2]]
 		]
 	}
 }

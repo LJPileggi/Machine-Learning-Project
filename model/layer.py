@@ -46,19 +46,34 @@ class Layer():
       
     def forward (self, inputs, training=True):
         self.inputs = inputs              #stores inputs, for backprop calculation
-        net = np.dot(inputs, self._WM) + self._biases    #computes the net of all units at one
+        net = np.dot(self.inputs, self._WM) + self._biases    #computes the net of all units at one
         output = self.activation(net)     #computes the out of all units at one
         if training: #tbh non so questo
             self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
         return output
+
+    def forward_mb (self, inputs, training=True):
+        self.inputs = inputs
+        output = []
+        self.output_prime = []
+        for inp in self.inputs:
+            #print(f"{inp.shape}")
+            net = np.dot(inp, self._WM) + self._biases
+            #print(f"{net}")
+            output.append(self.activation(net))
+            if training:
+                self.output_prime.append(self.activation_prime(net))
+        self.output_prime=np.array(self.output_prime)
+        return np.array(output)
     
     def backwards(self, error_signal):
         #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
-        deltas = error_signal * self.output_prime 
+        deltas = error_signal * self.output_prime
         
         #here we compute the negative gradient for the current layer, but we don't apply it yet
         #   we add to the total neg gradient the current contribution, ie the neg grad calculated from this pattern
         #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
+        #print(f"{self.inputs.shape} - {deltas.shape}")
         self._negGrad += np.outer(self.inputs, deltas)
         self._biases_negGrad += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
 
@@ -68,7 +83,18 @@ class Layer():
         #    (the w vector of unit t is just a column vetor in the WM matrix).
         #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
         #    i.e. the error signal for each unit in the previous layer
-        return np.sum(self._WM*deltas, axis=1)
+        print(f"IMPORTANT 1: {self._WM*deltas}")
+        return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
+
+    def backwards_mb(self, error_signal):
+        #print(f"{error_signal.shape}")
+        deltas = error_signal * self.output_prime
+        for delta in deltas:
+            for inp in self.inputs:
+                self._negGrad += np.outer(inp, delta)
+        self._biases_negGrad += np.sum(deltas, axis=0)
+        print(f"IMPORTANT 2: {deltas @ self._WM.T}")
+        return deltas @ self._WM.T
 
 
     def update_weights(self, eta, lam, alpha):
@@ -77,7 +103,8 @@ class Layer():
         #   so for each pattern, negGrad is computed and applied immediately.
         #In a (mini)batch alg, we call this.backward for each pattern, and
         #   this.update_weights just once per batch.
-        DW = eta*self._negGrad + alpha*self._DWold
+        DW = eta * self._negGrad + alpha*self._DWold
+        print(f"{self._biases_negGrad}")
         self._WM += DW - lam*self._WM
         self._DWold = DW
         
@@ -94,7 +121,7 @@ class Layer():
       return self._last_max_grad
 
     def get_weights(self):
-      return np.vstack((self._WM, self._biases)).flatten()
+      return np.vstack((self._WM, self._biases)).flatten() #if (self._WM != None and self._biases != None) else [0]
         
 class Sigmoidal(Layer):
 
@@ -147,7 +174,7 @@ class Linear(Layer):
         return network_value
 
     def activation_prime (self, network_value):
-        return 1.
+        return [1. for ele in network_value]
 
 class ReLu(Layer):
 
@@ -170,12 +197,6 @@ class BatchNormalization(Layer):
         super().__init__()
         self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) ) #in realtà ha pesi diversi
         self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
-
-    def activation (self, network_value): #in realtà a lui non servono
-        raise NotImplementedError ("This layer doesn't have an activation Function")
-        
-    def activation_prime (self, network_value):
-        raise NotImplementedError ("This layer doesn't have an activation Function")
         
 
 class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
@@ -186,12 +207,13 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
         if isinstance(rate, (int, float)) and not 0 <= rate <= 1:
             raise ValueError (f"Invalid Value {rate} received - `rate` needs to be betweek 0 and 1")
         self.input_dim = input_dim
-        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
+        #self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
         self.scale = 1./(1.-rate)
         self.rate = rate
 
     def forward(self, inputs, training=True):
         if (training):
+            self.activated_inputs = np.random_choice([1., 0.], size=inputs.shape, p=[self.rate, 1-self.rate])
             return (self.scale * inputs) * self.activated_inputs
         else:
             return inputs
@@ -199,11 +221,5 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
     def backwards(self, error_signal):
         return (self.scale * error_signal) * self.activated_inputs #teoricamente si
 
-    def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
-        self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[self.rate, 1-self.rate])
-
-    def get_max_grad(self):
-      return 0
-
-    def get_weights(self):
-      return [0]
+    #def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
+        #self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[self.rate, 1-self.rate])
