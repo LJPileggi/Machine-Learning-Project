@@ -11,7 +11,6 @@
 	
 	"global_conf": {
 		"task": "regression",
-	    "epsilon": 1e-3,
 	    "max_step": 200,
 		"check_step": 20,
 		"metrics": {"train": ["mee", "mse"],
@@ -20,8 +19,10 @@
 		"gs_preferred_metric": ["val", "mse"],
 		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 1,
-		"patience": 4,
-		"wc_threshold": 0
+		"loss_tolerance": 1e-3,
+		"loss_patience": 1,
+		"wc_tolerance": 0,
+		"wc_patience": 1
 	},
 
 	"hyperparameters":{

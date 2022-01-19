@@ -90,7 +90,6 @@ class Layer():
         #    (the w vector of unit t is just a column vetor in the WM matrix).
         #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
         #    i.e. the error signal for each unit in the previous layer
-        print(f"IMPORTANT 1: {self._WM*deltas}")
         return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
 
     def backwards(self, error_signal):
@@ -110,7 +109,6 @@ class Layer():
             #    (the w vector of unit t is just a column vetor in the WM matrix).
             #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
             #    i.e. the error signal for each unit in the previous layer
-            print(f"IMPORTANT 1: {self._WM*deltas}")
             return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
         else:
             for i, delta in enumerate(deltas):
