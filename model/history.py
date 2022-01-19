@@ -109,7 +109,9 @@ class Results ():
         """
         # distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
         # distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
-        for n,  metric in enumerate(self.distinct_metrics):
+        #plt.figure(dpi=1200)
+        plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
+        for n, metric in enumerate(self.distinct_metrics):
             plt.subplot(len(self.distinct_metrics), 1, n+1)
             if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
