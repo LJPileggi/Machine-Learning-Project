@@ -62,12 +62,6 @@ class MLP:
             input = output
         return output
 
-    def forward_mb(self, input, training=True):
-        for layer in self.layer_set:
-            output = layer.forward_mb(input, training)
-            input = output
-        return output
-
     def h(self, input):
         if self.threshold == None:
             return self.forward(input, training=False)
@@ -77,10 +71,6 @@ class MLP:
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):
             error_signal = layer.backwards(error_signal)
-
-    def backwards_mb(self, error_signal):
-        for layer in reversed(self.layer_set):
-            error_signal = layer.backwards_mb(error_signal)
     
     def update_weights(self, eta, lam, alpha):
         for layer in self.layer_set:
