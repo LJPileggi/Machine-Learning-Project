@@ -16,23 +16,21 @@
         	"loss_patience": 1,
         	"wc_tolerance": 0,
         	"wc_patience": 1,
-	    	"max_step": 10,
-		"check_step": 10,
+	    	"max_step": 200,
+		"check_step": 30,
 		"metrics": {"train": ["mee", "mse"],
 					"val": 	 ["mee", "mse"]
 					},
 		"gs_preferred_metric": ["val", "mee"],
 		"searched_hyper": ["eta", "lam", "alpha"],
-		"maxfold": 1,
-		"loss_patience": 4,
-		"wc_threshold": 0
+		"maxfold": 1
 	},
 
 	"hyperparameters":{
-	    "eta": [0.7, 0.1],
+	    "eta": [0.1, 0.01],
 	    "eta_decay": [-1],
 	    "lam": [1e-6],
-	    "alpha": [0.7],
+	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
 			[["relu", 10], ["dropout", 0.3], ["relu", 10], ["dropout", 0.3],

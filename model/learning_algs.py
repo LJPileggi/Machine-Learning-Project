@@ -21,7 +21,7 @@ def train(TR, VL, TS, global_confs, hyp):
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers)
-    history.update_plots(nn, train=TR, val=VL, test=TS)
+    #history.update_plots(nn, train=TR, val=VL, test=TS)
     
     #training loop
     oldWeights = nn.get_weights()
