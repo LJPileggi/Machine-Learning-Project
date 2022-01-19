@@ -4,8 +4,6 @@ import itertools
 import os
 import time
 from types import SimpleNamespace
-
-from matplotlib.pyplot import hist
 import joblib
 from multiprocessing import Pool
 import numpy as np

@@ -27,8 +27,8 @@
 	"hyperparameters":{
 		"eta_decay": [-1],
 	    "eta": [12],
-	    "lam": [0, 1e-2],
-	    "alpha": [0.5],
+	    "lam": [1e-2, 0],
+	    "alpha": [0.5, 0.8],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[["sigmoidal", 4], ["sigmoidal", 1]]

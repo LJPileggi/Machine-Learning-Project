@@ -70,8 +70,8 @@ class Results ():
         self.hyperparameters = hyp
         #metrics.values() is a list of list of metrics, with a double for we concat all these metrics togoether
         #and by using a set comprehension, all the duplicates are deleted
-        self.distinct_metrics = {metric for metric_list in metrics.values() for metric in metric_list}
-        self.distinct_sets = {set for set in metrics}
+        self.distinct_metrics = sorted({metric for metric_list in metrics.values() for metric in metric_list})
+        self.distinct_sets = sorted({set for set in metrics})
         self.histories = []
         self.results = {
             (set, metric): {"mean": 0, "variance": 0}
