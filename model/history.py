@@ -20,7 +20,7 @@ def empirical_error(NN, set, metric):
         return 1-error/len(set)
     if metric == "mse":
         for pattern in set:
-            error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum() 
+            error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()
         return error/len(set)
     elif metric == "mee":
         for pattern in set:
@@ -36,9 +36,9 @@ class History:
             for set in metrics.keys()
             for metric in metrics[set]
         }
-    
+
     def update_plots(self, nn, **sets):
-        """ This function accept kwargs, whose names MUST BE 
+        """ This function accept kwargs, whose names MUST BE
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
         value of the argument will be passed to empricial_error
@@ -64,7 +64,7 @@ class History:
         else:
             linestyle = '-'
         plt.plot(epochs, self.plots[set, metric], linestyle=linestyle, label=f'{set} {metric} {fold}_fold loss')
-        
+
 class Results ():
     def __init__(self, hyp, metrics):
         self.hyperparameters = hyp
@@ -82,10 +82,10 @@ class Results ():
             self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
         else:
             self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
-    
+
     def add_history(self, history):
         self.histories.append(history)
-    
+
     def calculate_mean (self):
         for set, metric in self.results:
             for h in self.histories:
@@ -98,7 +98,7 @@ class Results ():
 
     #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
     #per quanto riguarda matplot lib possiamo fare in modo figo, ovvero che History ha un metodo che scrive sul canvas il proprio plot, mentre
-    #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history. 
+    #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history.
 
     def create_graph (self, graph_path):
         """
@@ -109,25 +109,28 @@ class Results ():
         """
         # distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
         # distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
-        for metric in self.distinct_metrics:
+        for n,  metric in enumerate(self.distinct_metrics):
+            plt.subplot(len(self.distinct_metrics), 1, n+1)
             if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
             else:
                 plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.2f} +- Var: {self.results["train", metric]["variance"]**0.5:.2f}')
-            plt.xlabel('Epochs')
-            plt.yscale('log')
-            plt.ylabel('Loss')
             for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.
                 for set in self.distinct_sets:
+                    plt.xlabel('Epochs')
+                    plt.yscale('log')
+                    plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
-            
-            filename = f"{self.name}.png"
-            train_path = os.path.join(graph_path, "training", metric)
-            if (not os.path.exists(train_path)):
-                os.makedirs(train_path)
-            plt.legend()
-            plt.savefig(os.path.join(train_path, filename))
-            plt.clf()
+
+        filename = f"{self.name}.png"
+        train_path = os.path.join(graph_path, "training")
+        if (not os.path.exists(train_path)):
+            os.makedirs(train_path)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(train_path, filename))
+        # plt.show()
+        plt.clf()
 
     # def plot(self, path):
     #     os.join(path, self.name)
@@ -173,7 +176,7 @@ class Results ():
     #     # plt.xlabel('Epochs')
     #     # plt.yscale('log')
     #     # plt.ylabel('Loss')
-        
+
     #     # if (not os.path.exists(val_path)):
     #     #     os.makedirs(val_path)
     #     # plt.legend()

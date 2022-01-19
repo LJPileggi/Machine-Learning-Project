@@ -91,7 +91,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         return results
     except KeyboardInterrupt:
         print('Interrupted')
-        return None
+        exit()
 
 # def get_children_paremetrs(hyper, shrink, parameters):    
 #     eta_new = [
@@ -199,7 +199,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
             except KeyboardInterrupt:
                 print("forcing termination")
                 pool.terminate()
-                #pool.join()
+                pool.join()
                 print("forced termination")
                 exit()
         results.extend (result_it)

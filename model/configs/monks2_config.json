@@ -1,6 +1,6 @@
 {
 	"data_conf":{
-		"train_set": "monks-2.test.csv",
+		"train_set": "monks-2.train.csv",
 		"test_set": "monks-2.test.csv",
     	"output_path": "output/monks2/",
     	"graph_path": "graphs/monks2/",
@@ -16,7 +16,7 @@
 		"metrics": {"train": ["mse", "accuracy"],
 					"test":  ["mse", "accuracy"]
 					},
-		"gs_preferred_metric": ["train", "mse"],
+		"gs_preferred_metric": ["train", "accuracy"],
 		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 0,
 		"patience": 4,
@@ -25,12 +25,12 @@
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [0.1],
-	    "lam": [1e-5],
-	    "alpha": [0.5],
+	    "eta": [169, 16.9],
+	    "lam": [0],
+	    "alpha": [0],
 	    "batch_size": [1],
 	    "hidden_units": [
-			[["sigmoidal", 4], ["sigmoidal", 1]]
+			[["sigmoidal", 2], ["sigmoidal", 1]]
 		]
 	}
 }
