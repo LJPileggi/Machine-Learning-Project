@@ -28,7 +28,7 @@
 		"eta_decay": [-1],
 	    "eta": [12],
 	    "lam": [0],
-	    "alpha": [0.3],
+	    "alpha": [0.3, 0.5, 0.7],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[["sigmoidal", 3], ["sigmoidal", 1]]
