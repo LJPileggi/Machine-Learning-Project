@@ -223,6 +223,8 @@ class BatchNormalization(Layer):
         self.moving_mean = 0
         self.moving_var = 0
         self.momentum = momentum
+        self._betaold = 0
+        self._gammaold = 0
 
     def forward(self, inputs, training=True):
         self.inputs = inputs
@@ -234,7 +236,6 @@ class BatchNormalization(Layer):
             evil_inputs = inputs - mean
 
             variance = 1./n * np.sum(self.inputs**2, axis=0)
-            print(f"{evil_inputs.shape} - {mean.shape} - {variance.shape}")
 
             evil_inputs = evil_inputs * (variance + self.epsilon)**(-1./2.)
 
@@ -243,22 +244,34 @@ class BatchNormalization(Layer):
             self.moving_mean = self.moving_mean*self.momentum + mean * (1-self.momentum)
             self.moving_var = self.moving_var*self.momentum + variance * (1-self.momentum)
         else:
-            evil_inputs = (inputs - self.moving_mean) / math.sqrt(self.moving_var + self.epsilon)
+            evil_inputs = (inputs - self.moving_mean) * (self.moving_var + self.epsilon)**(-1./2.)
             out = self.gamma * evil_inputs + self.beta
         return out
 
     def backwards(self, error_signal):
-        
         n, m = error_signal.shape
 
         mean = 1./n * np.sum(self.inputs, axis = 0) #usare moving mean? No perché siamo ancora con una batch
         variance = 1./n * np.sum((self.inputs - mean)**2, axis = 0)
         
-        dbeta = np.sum(error_signal, axis=0)
-        dgamma = np.sum(((self.inputs-mean) * (variance + self.epsilon)**(-1./2.) * error_signal), axis=0)
+        self.dbeta = np.sum(error_signal, axis=0)
+        self.dgamma = np.sum(((self.inputs-mean) * (variance + self.epsilon)**(-1./2.) * error_signal), axis=0)
         new_error_signal = ((1./n) * self.gamma * (variance + self.epsilon)**(-1./2.) * (n * error_signal - np.sum(error_signal, axis=0))
                             - (self.inputs - mean) * (variance + self.epsilon)**(-1.) * np.sum(error_signal - (self.inputs - mean), axis=0))
         return new_error_signal
+
+    def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
+        B = eta * self.dbeta + alpha*self._betaold
+        self.beta += B - lam*self.beta
+        self._betaold = B
+
+        G = eta * self.dgamma + alpha*self._gammaold
+        self.gamma += G - lam*self.gamma
+        self._gammaold = G
+
+
+    def get_weights(self):
+        return [0]
         
 
 class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo

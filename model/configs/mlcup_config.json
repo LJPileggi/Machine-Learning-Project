@@ -11,7 +11,7 @@
 	
 	"global_conf": {
 		"task": "regression",
-	    "max_step": 200,
+	    "max_step": 100,
 		"check_step": 20,
 		"metrics": {"train": ["mee", "mse"],
 					"val": 	 ["mee", "mse"]
