@@ -10,24 +10,25 @@
 
 	"global_conf": {
 		"task": "classification",
-	    "epsilon": 0,
-	    "max_step": 500,
+	    "max_step": 400,
 	    "check_step": 10,
-		"metrics": {"train": ["mse", "accuracy"],
-					"test":  ["mse", "accuracy"]
-					},
-		"gs_preferred_metric": ["train", "mse"],
-		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 0,
-		"patience": 4,
-		"wc_threshold": 0
+		"metrics": {"train": ["mse", "accuracy"],
+			"test":  ["mse", "accuracy"]
+		},
+		"gs_preferred_metric": ["train", "accuracy"],
+		"searched_hyper": ["eta", "lam", "alpha"],
+		"loss_tolerance": 0,
+		"loss_patience": 4,
+		"wc_tolerance": 0,
+		"wc_patience": 1
 	},
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [24, 12],
+	    "eta": [12],
 	    "lam": [0],
-	    "alpha": [0.5, 0.3],
+	    "alpha": [0.3],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[["sigmoidal", 3], ["sigmoidal", 1]]
