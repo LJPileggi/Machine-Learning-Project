@@ -121,15 +121,17 @@ class Results ():
                     plt.yscale('log')
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
+                    plt.legend()
 
+
+        plt.suptitle(self.name)
         filename = f"{self.name}.png"
         train_path = os.path.join(graph_path, "training")
         if (not os.path.exists(train_path)):
             os.makedirs(train_path)
-        plt.legend()
         plt.tight_layout()
         plt.savefig(os.path.join(train_path, filename))
-        # plt.show()
+        #plt.show()
         plt.clf()
 
     # def plot(self, path):
