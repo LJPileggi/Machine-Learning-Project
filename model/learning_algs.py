@@ -25,6 +25,7 @@ def train(TR, VL, TS, global_confs, hyp):
     
     #training loop
     oldWeights = nn.get_weights()
+    low_loss = 0
     low_wc = 0
     for epoch in range (global_confs.max_step):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
@@ -52,25 +53,36 @@ def train(TR, VL, TS, global_confs, hyp):
             #once each check_step epoch
             #print validation error
             
+            #retrieve preferred metric
             metric = global_confs.gs_preferred_metric
             err = history.get_last_error(*metric) 
             #compute weights change
             newWeights = nn.get_weights()
             wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
             oldWeights = newWeights
+            #print both
             print(f"{epoch} - banana - {metric}: {err} - wc: {wc}")
-            
-            #stopping criteria
-            if wc <= global_confs.wc_threshold:
+               
+            #preferred metric stopping criterion
+            desired_value = 1 if metric[1] == "accuracy" else 0
+            if (np.allclose(err, desired_value, atol=global_confs.loss_tolerance)):
+                low_loss += 1
+            else:
+                low_loss = 0
+            if (low_loss >= global_confs.loss_patience):
+                print("loss convergence reached")
+                print(f"endend in {epoch} epochs!")
+                break
+            #weight change stopping criterion
+            if wc <= global_confs.wc_tolerance:
                 low_wc +=1
             else:
                 low_wc = 0
-            desired_value = 1 if metric[1] == "accuracy" else 0
-            if (np.allclose(err, desired_value, atol=global_confs.epsilon)):
+            if (low_wc >= global_confs.wc_patience):
+                print("wc convergence reached")
                 print(f"endend in {epoch} epochs!")
                 break
-            if (low_wc >= global_confs.patience):
-                break
+            
     #once training has ended
     return history, nn #cosa restituisce davvero?
 
@@ -218,7 +230,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #we should order w.r.t. which metric? on which set?
         results.sort(key=lambda result: result.results[selected_metric]['mean'])
         best_hyper = [ best.hyperparameters for best in results[:3] ]
-        print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
+        #print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
             configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
@@ -227,6 +239,6 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         
     results.sort(key=lambda result: result.results[selected_metric]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
-    print(f"i miglior modelli di questa nested sono: {best_hyper}")
+    #print(f"i miglior modelli di questa nested sono: {best_hyper}")
 
     return best_hyper[0]
