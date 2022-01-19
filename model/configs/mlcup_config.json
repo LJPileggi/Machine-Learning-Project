@@ -32,7 +32,7 @@
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["tanh", 15], ["tanh", 15], ["linear", 2]]
+			[["relu", 15], ["BatchNormalization", 0.99], ["relu", 15], ["linear", 2]]
 		]
 	}
 }
