@@ -1,3 +1,4 @@
+from doctest import master
 import os
 import csv
 import argparse
@@ -34,8 +35,9 @@ def data_normaliser(dataset):
                 pass
     min_data, max_data = np.array(min_data), np.array(max_data)
     norm = []
+    print(max_data-min_data)
     for data in dataset:
-        norm.append(data-min_data)/(max_data-min_data)
+        norm.append((data-min_data)/(max_data-min_data))
     return norm
 
 def file_parsing():

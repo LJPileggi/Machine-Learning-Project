@@ -27,6 +27,23 @@ def data_standardizer(data):
     mean, _, dev = mean_variance_dev(data)
     return [value-mean/dev for value in data]
 
+def data_normaliser(dataset):
+    min_data, max_data = [comp for comp in dataset[0]], [comp for comp in dataset[0]]
+    for data in dataset[1:]:
+        for i, component in enumerate(data):
+            if component < min_data[i]:
+                min_data[i] = component
+            elif component > max_data[i]:
+                max_data[i] = component
+            else:
+                pass
+    min_data, max_data = np.array(min_data), np.array(max_data)
+    norm = []
+    print(max_data-min_data)
+    for data in dataset:
+        norm.append((data-min_data)/(max_data-min_data))
+    return norm
+
 class DataLoader():
     
     DATA_PATH = os.path.join("..", "data")
@@ -67,6 +84,13 @@ class DataLoader():
             elif(preprocessing == "both_stand"):
                 inputs = data_standardizer(inputs)
                 outputs = data_standardizer(outputs)
+            elif(preprocessing == "output_norm"):
+                outputs = data_normaliser(outputs)
+            elif(preprocessing == "input_norm"):
+                inputs = data_normaliser(inputs)
+            elif(preprocessing == "both_norm"):
+                inputs = data_normaliser(inputs)
+                outputs = data_normaliser(outputs)
             else:
                 raise NotImplementedError("unknown preprocessing")
 
