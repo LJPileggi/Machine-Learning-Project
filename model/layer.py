@@ -1,4 +1,5 @@
 from os import error
+from site import enablerlcompleter
 import numpy as np
 import math
 import activation_functions
@@ -213,11 +214,51 @@ class ReLu(Layer):
 
 class BatchNormalization(Layer):
 
-    def __init__(self, input_dim, layer_dim):
-        print(f"{layer_dim}; BatchNormalization")
+    def __init__(self, input_dim, momentum=0.99, epsilon=0.001):
+        print(f"BatchNormalization")
         super().__init__()
-        self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) ) #in realtà ha pesi diversi
-        self._biases = np.random.normal(loc=0.0, scale=0.5, size=layer_dim )
+        self.gamma = 1
+        self.beta = 0
+        self.epsilon = epsilon #per stabilità numerica
+        self.moving_mean = 0
+        self.moving_var = 0
+        self.momentum = momentum
+
+    def forward(self, inputs, training=True):
+        self.inputs = inputs
+        if (training):
+            n, m = inputs.shape
+
+            mean = 1./n * np.sum(inputs, axis=0) #forse axis = 1
+
+            evil_inputs = inputs - mean
+
+            variance = 1./n * np.sum(self.inputs**2, axis=0)
+            print(f"{evil_inputs.shape} - {mean.shape} - {variance.shape}")
+
+            evil_inputs = evil_inputs * (variance + self.epsilon)**(-1./2.)
+
+            out = self.gamma * evil_inputs + self.beta
+
+            self.moving_mean = self.moving_mean*self.momentum + mean * (1-self.momentum)
+            self.moving_var = self.moving_var*self.momentum + variance * (1-self.momentum)
+        else:
+            evil_inputs = (inputs - self.moving_mean) / math.sqrt(self.moving_var + self.epsilon)
+            out = self.gamma * evil_inputs + self.beta
+        return out
+
+    def backwards(self, error_signal):
+        
+        n, m = error_signal.shape
+
+        mean = 1./n * np.sum(self.inputs, axis = 0) #usare moving mean? No perché siamo ancora con una batch
+        variance = 1./n * np.sum((self.inputs - mean)**2, axis = 0)
+        
+        dbeta = np.sum(error_signal, axis=0)
+        dgamma = np.sum(((self.inputs-mean) * (variance + self.epsilon)**(-1./2.) * error_signal), axis=0)
+        new_error_signal = ((1./n) * self.gamma * (variance + self.epsilon)**(-1./2.) * (n * error_signal - np.sum(error_signal, axis=0))
+                            - (self.inputs - mean) * (variance + self.epsilon)**(-1.) * np.sum(error_signal - (self.inputs - mean), axis=0))
+        return new_error_signal
         
 
 class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
