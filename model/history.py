@@ -107,12 +107,12 @@ class Results ():
         Tutto il casino che sta sotto con i distinct è perchè vogliamo raggruppare per le metriche, che sono dopo i set nel bellissimo dizionario delle metriche
         quindi se andassi per ordinamento dovrei cancellare e recuperare il grafico ogni volta. così è più complicato ma funziona
         """
-        # distinct_metrics = list(set(list(zip(*self.results.keys()))[1]))
-        # distinct_sets = list(set(list(zip(*self.results.keys()))[0])) #pretty convoluted but it works
         #plt.figure(dpi=1200)
-        plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
+        #plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
+        plt.rcParams["figure.figsize"] = (10*len(self.distinct_metrics), 7)
         for n, metric in enumerate(self.distinct_metrics):
-            plt.subplot(len(self.distinct_metrics), 1, n+1)
+            # plt.subplot(len(self.distinct_metrics), 1, n+1)
+            plt.subplot(1, len(self.distinct_metrics), n+1)
             if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
             else:
