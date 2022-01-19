@@ -28,11 +28,11 @@
 	"hyperparameters":{
 	    "eta": [0.7],
 	    "eta_decay": [-1],
-	    "lam": [1e-6],
+	    "lam": [1e-5],
 	    "alpha": [0.7],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["tanh", 5], ["tanh", 5], ["linear", 2]]
+			[["sigmoidal", 15], ["sigmoidal", 15], ["sigmoidal", 15], ["linear", 2]]
 		]
 	}
 }
