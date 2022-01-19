@@ -110,9 +110,11 @@ class Results ():
         #plt.figure(dpi=1200)
         #plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
         plt.rcParams["figure.figsize"] = (10*len(self.distinct_metrics), 7)
+        print('we\'re here')
         for n, metric in enumerate(self.distinct_metrics):
             # plt.subplot(len(self.distinct_metrics), 1, n+1)
             plt.subplot(1, len(self.distinct_metrics), n+1)
+            print('start plot')
             if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.2f} +- Var: {self.results["val", metric]["variance"]**0.5:.2f}')
             else:
@@ -124,6 +126,7 @@ class Results ():
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
                     plt.legend()
+            print("made it")
 
 
         plt.suptitle(self.name)

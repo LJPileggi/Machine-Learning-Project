@@ -234,7 +234,7 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
 
     def forward(self, inputs, training=True):
         if (training):
-            self.activated_inputs = np.random_choice([1., 0.], size=inputs.shape, p=[self.rate, 1-self.rate])
+            self.activated_inputs = np.random.choice([1., 0.], size=inputs.shape, p=[self.rate, 1-self.rate])
             return (self.scale * inputs) * self.activated_inputs
         else:
             return inputs
@@ -242,5 +242,9 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
     def backwards(self, error_signal):
         return (self.scale * error_signal) * self.activated_inputs #teoricamente si
 
-    #def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
+    def update_weights (self, eta, lam, alpha): #lanciare questo significa che è finito un batch
+        pass
         #self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[self.rate, 1-self.rate])
+
+    def get_weights(self):
+        return [0]
