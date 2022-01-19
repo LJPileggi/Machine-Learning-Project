@@ -44,7 +44,7 @@ class Layer():
     def activation_prime (self, network_value):
         raise NotImplementedError ("This layer doesn't have an activation Function")
       
-    def forward (self, inputs, training=True):
+    def forward_old (self, inputs, training=True):
         self.inputs = inputs              #stores inputs, for backprop calculation
         net = np.dot(self.inputs, self._WM) + self._biases    #computes the net of all units at one
         output = self.activation(net)     #computes the out of all units at one
@@ -52,21 +52,28 @@ class Layer():
             self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
         return output
 
-    def forward_mb (self, inputs, training=True):
+    def forward (self, inputs, training=True):
         self.inputs = inputs
-        output = []
-        self.output_prime = []
-        for inp in self.inputs:
-            #print(f"{inp.shape}")
-            net = np.dot(inp, self._WM) + self._biases
-            #print(f"{net}")
-            output.append(self.activation(net))
-            if training:
-                self.output_prime.append(self.activation_prime(net))
-        self.output_prime=np.array(self.output_prime)
-        return np.array(output)
+        if (inputs.ndim == 1):
+            net = np.dot(self.inputs, self._WM) + self._biases    #computes the net of all units at one
+            output = self.activation(net)     #computes the out of all units at one
+            if training: #tbh non so questo
+                self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
+        else:
+            output = []
+            self.output_prime = []
+            for inp in self.inputs:
+                #print(f"{inp.shape}")
+                net = np.dot(inp, self._WM) + self._biases
+                #print(f"{net}")
+                output.append(self.activation(net))
+                if training:
+                    self.output_prime.append(self.activation_prime(net))
+            self.output_prime=np.array(self.output_prime)
+            output=np.array(output)
+        return output
     
-    def backwards(self, error_signal):
+    def backwards_old(self, error_signal):
         #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
         deltas = error_signal * self.output_prime
         
@@ -83,18 +90,33 @@ class Layer():
         #    (the w vector of unit t is just a column vetor in the WM matrix).
         #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
         #    i.e. the error signal for each unit in the previous layer
-        print(f"IMPORTANT 1: {self._WM*deltas}")
         return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
 
-    def backwards_mb(self, error_signal):
+    def backwards(self, error_signal):
         #print(f"{error_signal.shape}")
         deltas = error_signal * self.output_prime
-        for i, delta in enumerate(deltas):
-            for j, inp in enumerate(self.inputs):
-                if (i == j):
-                    self._negGrad += np.outer(inp, delta)
-        self._biases_negGrad += np.sum(deltas, axis=0)
-        return deltas @ self._WM.T
+        if(error_signal.ndim == 1):
+            #here we compute the negative gradient for the current layer, but we don't apply it yet
+            #   we add to the total neg gradient the current contribution, ie the neg grad calculated from this pattern
+            #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
+            #print(f"{self.inputs.shape} - {deltas.shape}")
+            self._negGrad += np.outer(self.inputs, deltas)
+            self._biases_negGrad += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
+
+            #here we compute the error signal for the previous layer
+            #    deltas, seen as a row vector, is broadcasted to a matrix with all equal rows.
+            #    The point-wise multiplicaion multiplies the w vector of unit t with it's corresponding d_t
+            #    (the w vector of unit t is just a column vetor in the WM matrix).
+            #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
+            #    i.e. the error signal for each unit in the previous layer
+            return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
+        else:
+            for i, delta in enumerate(deltas):
+                for j, inp in enumerate(self.inputs):
+                    if (i == j):
+                        self._negGrad += np.outer(inp, delta)
+            self._biases_negGrad += np.sum(deltas, axis=0)
+            return deltas @ self._WM.T
 
 
     def update_weights(self, eta, lam, alpha):

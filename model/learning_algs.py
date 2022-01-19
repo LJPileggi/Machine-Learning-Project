@@ -31,10 +31,10 @@ def train(TR, VL, TS, global_confs, hyp):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             patterns, labels = list(map(np.array, list(zip(*current_batch))))
             #print(f"{patterns.shape} - {labels.shape}")
-            outs = nn.forward_mb(patterns)
+            outs = nn.forward(patterns)
             errors = labels - outs
             #print(f"error - {errors.shape}")
-            nn.backwards_mb(errors)
+            nn.backwards(errors)
             #for pattern in current_batch:
             #    out = nn.forward(pattern[0])
             #    error = pattern[1] - out
