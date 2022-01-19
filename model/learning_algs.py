@@ -2,6 +2,7 @@ import heapq
 from copy import deepcopy
 import itertools
 import os
+import time
 from types import SimpleNamespace
 
 from matplotlib.pyplot import hist
@@ -28,11 +29,18 @@ def train(TR, VL, TS, global_confs, hyp):
     low_wc = 0
     for epoch in range (global_confs.max_step):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
+            #patterns, labels = list(map(np.array, list(zip(*current_batch))))
+            #print(f"{patterns.shape} - {labels.shape}")
+            #outs = nn.forward_mb(patterns)
+            #errors = labels - outs
+            #print(f"error - {errors.shape}")
+            #nn.backwards_mb(errors)
             for pattern in current_batch:
                 out = nn.forward(pattern[0])
                 error = pattern[1] - out
                 nn.backwards(error)
-                #we are updating with eta/TS_size in order to compute LMS, not simply LS
+            #we are updating with eta/TS_size in order to compute LMS, not simply LS
+            exit()
             len_batch = len(TR) #if batch_size != 1 else len(whole_TR)
             if hyp.eta_decay == -1:
                 nn.update_weights(hyp.eta/len_batch, hyp.lam, hyp.alpha)
@@ -49,7 +57,13 @@ def train(TR, VL, TS, global_confs, hyp):
             #retrieve preferred metric
             metric = global_confs.gs_preferred_metric
             err = history.get_last_error(*metric) 
-            print(f"{epoch} - banana - {metric}: {err}")
+            #compute weights change
+            newWeights = nn.get_weights()
+            wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
+            oldWeights = newWeights
+            #print both
+            print(f"{epoch} - banana - {metric}: {err} - wc: {wc}")
+               
             #preferred metric stopping criterion
             desired_value = 1 if metric[1] == "accuracy" else 0
             if (np.allclose(err, desired_value, atol=global_confs.loss_tolerance)):
@@ -60,12 +74,7 @@ def train(TR, VL, TS, global_confs, hyp):
                 print("loss convergence reached")
                 print(f"endend in {epoch} epochs!")
                 break
-
-            #compute weights change
-            newWeights = nn.get_weights()
-            wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
-            oldWeights = newWeights
-            #weight chanfe stopping criteria
+            #weight change stopping criterion
             if wc <= global_confs.wc_tolerance:
                 low_wc +=1
             else:
@@ -74,6 +83,7 @@ def train(TR, VL, TS, global_confs, hyp):
                 print("wc convergence reached")
                 print(f"endend in {epoch} epochs!")
                 break
+            
     #once training has ended
     return history, nn #cosa restituisce davvero?
 
