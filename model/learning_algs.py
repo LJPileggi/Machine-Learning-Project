@@ -13,7 +13,7 @@ from MLP import MLP
 from dataloader import DataLoader
 from history import History, Results
 
-def train(TR, VL, TS, global_confs, hyp):
+def train(TR, VL, TS, global_confs, hyp, TR_preproc):
     hyp = SimpleNamespace(**hyp)
     history = History(global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
@@ -45,7 +45,7 @@ def train(TR, VL, TS, global_confs, hyp):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update_plots(nn, train=TR, val=VL, test=TS)
+        history.update_plots(nn, TR_preproc, train=TR, val=VL, test=TS)
         #print (f"{np.where(np.array([ele[0] for ele in TR]) != np.array([ele[0] for ele in TS]), 1., 0.)}")
         if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
@@ -85,7 +85,7 @@ def train(TR, VL, TS, global_confs, hyp):
     return history, nn #cosa restituisce davvero?
 
 
-def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
+def cross_val(TR, TS, global_confs, hyp, output_path, graph_path, TR_preproc):
     try:
         #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
         # results = {set: 
@@ -95,7 +95,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         #            for set in global_confs["datasets"]}
         results = Results(hyp, global_confs.metrics)
         for n_fold, (TR, VL) in enumerate (DataLoader.get_slices_static(TR, global_confs.maxfold)):
-            history, nn = train(TR, VL, TS, global_confs, hyp)
+            history, nn = train(TR, VL, TS, global_confs, hyp, TR_preproc)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model ###
@@ -166,7 +166,7 @@ def get_children(hyper, searched_hyper, shrink):
         for new_config in new_configs
     ]
 
-def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shrink=0.1):
+def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, TR_preproc, loop=1, shrink=0.1):
     results = []
 
     # searched_hyper = []
@@ -200,13 +200,13 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
     ]
 
     selected_metric = tuple(global_conf.gs_preferred_metric)
-    for i in range(loop): #possibly just one iteration
+    for i in range(int(loop)): #possibly just one iteration
         #training the configs of the previous step
         print("starting a grid search cycle")
         pool = Pool()
             # try:
         async_results = [
-            pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
+            pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path, TR_preproc)) 
             for hyp in configurations
         ]
         pool.close()

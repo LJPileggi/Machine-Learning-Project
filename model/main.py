@@ -84,8 +84,8 @@ def main():
     #dl = DataLoader(seed)
     #dl.load_data(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
     #dl.load_data(config["blind_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
-    TR = DataLoader.load_data_static(config.data_conf["train_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
-    TS = DataLoader.load_data_static(config.data_conf["test_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
+    TR, TR_preproc = DataLoader.load_data_static(config.data_conf["train_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
+    TS, TS_preproc = DataLoader.load_data_static(config.data_conf["test_set"], config.data_conf["input_size"], config.data_conf["output_size"], config.data_conf.get("preprocessing"))
 
     ### setting up output directories ###
     now = datetime.now()
@@ -107,7 +107,7 @@ def main():
 
     if (args.train or args.traintest):
         #executing training and model selection
-        best_hyper = grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, args.loop, args.shrink)
+        best_hyper = grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, TR_preproc, args.loop, args.shrink)
     if (args.test or args.traintest):
         #getting the test set
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
@@ -115,7 +115,7 @@ def main():
         #obtaining the model
         if (not args.traintest):
             best_hyper = hyperparameters
-        nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper)
+        nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper, TR_preproc)
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):

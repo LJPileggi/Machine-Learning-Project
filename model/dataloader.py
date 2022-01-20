@@ -24,7 +24,7 @@ def mean_variance_dev(vec_set):
 
 def data_standardizer(data):
     mean, _, dev = mean_variance_dev(data)
-    return [value-mean/dev for value in data]
+    return [value-mean/dev for value in data], ("stand", mean, dev)
 
 def data_normalizer(dataset):
     min_data, max_data = [comp for comp in dataset[0]], [comp for comp in dataset[0]]
@@ -40,7 +40,7 @@ def data_normalizer(dataset):
     norm = []
     for data in dataset:
         norm.append((data-min_data)/(max_data-min_data))
-    return norm
+    return norm, ("norm", min_data, max_data)
 
 class DataLoader():
     
@@ -61,6 +61,8 @@ class DataLoader():
             reader = csv.reader(f, delimiter=',')
             inputs = []
             outputs = []
+            preproc_in = None
+            preproc_out = None
             #reads file
             for row in reader:
                 if len(row) == 1 + input_size + output_size:
@@ -76,19 +78,19 @@ class DataLoader():
             if(preprocessing == None):
                 pass
             elif(preprocessing == "output_stand"):
-                outputs = data_standardizer(outputs)
+                outputs, preproc_out = data_standardizer(outputs)
             elif(preprocessing == "output_norm"):
-                outputs = data_normalizer(outputs)
+                outputs, preproc_out = data_normalizer(outputs)
             elif(preprocessing == "input_stand"):
-                inputs = data_standardizer(inputs)
+                inputs, preproc_in = data_standardizer(inputs)
             elif(preprocessing == "input_norm"):
-                inputs = data_normalizer(inputs)
+                inputs, preproc_in = data_normalizer(inputs)
             elif(preprocessing == "both_stand"):
-                inputs = data_standardizer(inputs)
-                outputs = data_standardizer(outputs)
+                inputs, preproc_in = data_standardizer(inputs)
+                outputs, preproc_out = data_standardizer(outputs)
             elif(preprocessing == "both_norm"):
-                inputs = data_normalizer(inputs)
-                outputs = data_normalizer(outputs)
+                inputs, preproc_in = data_normalizer(inputs)
+                outputs, preproc_out = data_normalizer(outputs)
             else:
                 raise NotImplementedError("unknown preprocessing")
 
@@ -110,6 +112,8 @@ class DataLoader():
             reader = csv.reader(f, delimiter=',')
             inputs = []
             outputs = []
+            preproc_in = [None]
+            preproc_out = [None]
             #reads file
             for row in reader:
                 if len(row) == 1 + input_size + output_size:
@@ -125,27 +129,28 @@ class DataLoader():
             if(preprocessing == None):
                 pass
             elif(preprocessing == "output_stand"):
-                outputs = data_standardizer(outputs)
+                outputs, preproc_out = data_standardizer(outputs)
             elif(preprocessing == "output_norm"):
-                outputs = data_normalizer(outputs)
+                outputs, preproc_out = data_normalizer(outputs)
             elif(preprocessing == "input_stand"):
-                inputs = data_standardizer(inputs)
+                inputs, preproc_in = data_standardizer(inputs)
             elif(preprocessing == "input_norm"):
-                inputs = data_normalizer(inputs)
+                inputs, preproc_in = data_normalizer(inputs)
             elif(preprocessing == "both_stand"):
-                inputs = data_standardizer(inputs)
-                outputs = data_standardizer(outputs)
+                inputs, preproc_in = data_standardizer(inputs)
+                outputs, preproc_out = data_standardizer(outputs)
             elif(preprocessing == "both_norm"):
-                inputs = data_normalizer(inputs)
-                outputs = data_normalizer(outputs)
+                inputs, preproc_in = data_normalizer(inputs)
+                outputs, preproc_out = data_normalizer(outputs)
             else:
                 raise NotImplementedError("unknown preprocessing")
 
             #save data
             dataset = list(zip(inputs, outputs))
+            preproc_params = list(zip(preproc_in, preproc_out)) 
             if (shuffle):
                 np.random.shuffle(dataset)
-            return np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
+            return np.array(dataset, dtype=object), preproc_params #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
 
     def get_slices (self, k_fold=5, tag='full'):
         if k_fold > 1: 

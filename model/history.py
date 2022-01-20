@@ -6,7 +6,7 @@ import os
 
 # miscclass and accuracy compute nn.h, with a threshold
 # mse and mee compute nn.forward, the direct output of the output layer
-def empirical_error(NN, set, metric):
+def empirical_error(NN, set, metric, preproc=None):
     if len(set) == 0:
         return None
     error = 0
@@ -19,13 +19,35 @@ def empirical_error(NN, set, metric):
             error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
         return 1-error/len(set)
     if metric == "mse":
-        for pattern in set:
-            error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()
-        return error/len(set)
+        if preproc[0][1] == None:
+            for pattern in set:
+                error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()
+            return error/len(set)
+        elif preproc[0][1][0] == "stand":
+            for pattern in set:
+                error += (((NN.forward(pattern[0], training=False) - pattern[1])*preproc[2])**2).sum()
+            return error/len(set)
+        elif preproc[0][1][0] == "norm":
+            for pattern in set:
+                error += (((NN.forward(pattern[0], training=False) - pattern[1])*(preproc[2]-preproc[1]))**2).sum()
+            return error/len(set)
+        else:
+            raise NotImplementedError("unknown preprocessing")
     elif metric == "mee":
-        for pattern in set:
-            error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()**1/2
-        return error/len(set)
+        if preproc[0][1] == None:
+            for pattern in set:
+                error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()**1/2
+            return error/len(set)
+        elif preproc[0][1][0] == "stand":
+            for pattern in set:
+                error += (((NN.forward(pattern[0], training=False) - pattern[1])*preproc[2])**2).sum()**1/2
+            return error/len(set)
+        elif preproc[0][1][0] == "norm":
+            for pattern in set:
+                error += (((NN.forward(pattern[0], training=False) - pattern[1])*(preproc[2]-preproc[1]))**2).sum()**1/2
+            return error/len(set)
+        else:
+            raise NotImplementedError("unknown preprocessing")
     else:
         raise NotImplementedError("unknown metric")
 
@@ -37,7 +59,7 @@ class History:
             for metric in metrics[set]
         }
 
-    def update_plots(self, nn, **sets):
+    def update_plots(self, nn, preproc=None, **sets):
         """ This function accept kwargs, whose names MUST BE
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
@@ -45,7 +67,7 @@ class History:
         Example: history.update_plots(nn, train=TR, test=TS)
         """
         for set, metric in self.plots:
-            error = empirical_error(nn, sets[set], metric)
+            error = empirical_error(nn, sets[set], metric, preproc)
             self.plots[set, metric].append(error)
         # for set_name, set_value in sets.items():
         #     for metric in self.plots[set_name]:
@@ -79,9 +101,9 @@ class Results ():
             for metric in metrics[set]
         }
         if hyp["eta_decay"] == -1:
-            self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
+            self.name = f'{hyp["layers"][0][0:3]}{hyp["layers"][1]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
         else:
-            self.name = f'{hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
+            self.name = f'{hyp["layers"][0][0:3]}{hyp["layers"][1]}_{hyp["batch_size"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
 
     def add_history(self, history):
         self.histories.append(history)
