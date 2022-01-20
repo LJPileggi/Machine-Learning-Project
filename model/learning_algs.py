@@ -25,7 +25,7 @@ def train(TR, VL, TS, global_confs, hyp):
     oldWeights = nn.get_weights()
     low_loss = 0
     low_wc = 0
-    for epoch in range (global_confs.max_step):
+    for epoch in range (1, global_confs.max_step+1):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             patterns, labels = list(map(np.array, list(zip(*current_batch))))
             #print(f"{patterns.shape} - {labels.shape}")
@@ -56,7 +56,7 @@ def train(TR, VL, TS, global_confs, hyp):
             err = history.get_last_error(*metric) 
             #compute weights change
             newWeights = nn.get_weights()
-            wc = np.mean(np.abs((oldWeights-newWeights)/oldWeights))
+            wc = np.mean(np.abs((oldWeights-newWeights)/(oldWeights+0.001)))
             oldWeights = newWeights
             #print both
             print(f"{epoch} - banana - {metric}: {err} - wc: {wc}")
