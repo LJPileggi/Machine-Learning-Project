@@ -108,7 +108,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         return results
     except KeyboardInterrupt:
         print('Interrupted')
-        exit()
+        return None
 
 # def get_children_paremetrs(hyper, shrink, parameters):    
 #     eta_new = [
@@ -203,22 +203,22 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
     for i in range(loop): #possibly just one iteration
         #training the configs of the previous step
         print("starting a grid search cycle")
-        with Pool() as pool:
-            try:
-                async_results = [
-                    pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
-                    for hyp in configurations
-                ]
-                pool.close()
-                pool.join()
-                # result_it = pool.starmap(train, configurations)
-                result_it = list(map(lambda async_result: async_result.get(), async_results))
-            except KeyboardInterrupt:
-                print("forcing termination")
-                pool.terminate()
-                pool.join()
-                print("forced termination")
-                exit()
+        pool = Pool()
+            # try:
+        async_results = [
+            pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
+            for hyp in configurations
+        ]
+        pool.close()
+        pool.join()
+        # result_it = pool.starmap(train, configurations)
+        result_it = list(map(lambda async_result: async_result.get(), async_results))
+            # except KeyboardInterrupt:
+            #     print("forcing termination")
+            #     pool.terminate()
+            #     pool.join()
+            #     print("forced termination")
+            #     exit()
         results.extend (result_it)
         print("a cycle of nest has ended")
         print(f"models trained: {len(result_it)}")

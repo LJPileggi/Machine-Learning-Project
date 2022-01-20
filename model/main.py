@@ -1,3 +1,4 @@
+import signal
 from dataloader import DataLoader
 from learning_algs import grid_search, train
 from types import SimpleNamespace
@@ -30,7 +31,12 @@ def set_seed(seed):
 #     history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
 #     return history
 
+def signal_handler(signal, frame):
+    print('You pressed Ctrl+C!')
+    os._exit(1)
+
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
     ### Parsing cli arguments ###
     parser = argparse.ArgumentParser(description="Train or Test a model.")
     parser.add_argument('--config_path',
