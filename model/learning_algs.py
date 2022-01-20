@@ -110,6 +110,28 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path):
         print('Interrupted')
         return None
 
+def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path):
+    try:
+        print("started multiple trials")
+        results = Results(hyp, global_confs.metrics)
+        for n_trial in range(global_confs.maxfold):
+            TR, VL = TR, None
+            global_confs.seed += n_trial*100
+            history, nn = train(TR, VL, TS, global_confs, hyp)
+            results.add_history(history)
+            #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
+            ### saving model ###
+            filename =  f"model_{results.name}_{n_trial}trial.logami"
+            path = os.path.join(output_path, filename)
+            joblib.dump (nn, path)
+        ### plotting loss###
+        results.calculate_mean()
+        results.create_graph(graph_path)
+        return results
+    except KeyboardInterrupt:
+        print('Interrupted')
+        return None
+
 # def get_children_paremetrs(hyper, shrink, parameters):    
 #     eta_new = [
 #         hyper['eta'], hyper['eta']+(shrink), hyper['eta']-(shrink)
@@ -204,21 +226,18 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, loop=1, shr
         #training the configs of the previous step
         print("starting a grid search cycle")
         pool = Pool()
-            # try:
+        if global_conf.validation == "trials":
+            f = multiple_trials
+        else :
+            f = cross_val
         async_results = [
-            pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path)) 
+            pool.apply_async(f, (TR, TS, global_conf, hyp, output_path, graph_path)) 
             for hyp in configurations
         ]
         pool.close()
         pool.join()
         # result_it = pool.starmap(train, configurations)
         result_it = list(map(lambda async_result: async_result.get(), async_results))
-            # except KeyboardInterrupt:
-            #     print("forcing termination")
-            #     pool.terminate()
-            #     pool.join()
-            #     print("forced termination")
-            #     exit()
         results.extend (result_it)
         print("a cycle of nest has ended")
         print(f"models trained: {len(result_it)}")

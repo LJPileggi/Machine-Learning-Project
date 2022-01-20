@@ -12,6 +12,7 @@
 	
 	"global_conf": {
 		"task": "regression",
+		"validation": "crossval",
 		"loss_tolerance": 1e-2,
         	"loss_patience": 1,
         	"wc_tolerance": 0,
