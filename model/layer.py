@@ -7,28 +7,17 @@ import activation_functions
 class Layer():
     """
     Single layer of the MLP.
-
-    Constructor arguments:
-     - input_dim: size of the input vector/previous layer output
-     - layer_dim: number of units of the layer; class type: int;
-     - activation: activation function of the various units; class type: str
-     - dropout: tells which units are active or deactivated;
-       default value: numpy.ones(layer_dim); class type: numpy.ndarray. 
-
-    Attributes:
-     - _WM: Weight matrix, n rows and m columns, where eeach column is the weight vector of 1 unit.
-     - _input: array of input; class type: numpy.ndarray;
-     - _output_prime: array of output_prime values from units; class type: numpy.ndarray;
-     - _activation:
-     - _activation_prime:
-     - _dropout: dropout mask
-
-    Methods:
-     - forward
-     - backward
-     - update_weights
+    This is a superclass used to define a typical layer
     """
+    
     def __init__(self):
+        """ Constructor of the Layer class
+
+        Args:
+
+        Returns:
+            A Layer Object
+        """
         self._negGrad = 0.
         self._last_max_grad = 0.
         self._biases_negGrad = 0.
@@ -40,20 +29,38 @@ class Layer():
         self._biases = None
 
     def activation (self, network_value):
+        """Activation function method
+
+        Args:
+            network_value (ndarray): The network value of each node in the layer
+        
+        Returns:
+            NotImplementedError if the subclass didn't implement this method
+            out a ndarray of float, the final output of each node
+        """
         raise NotImplementedError ("This layer doesn't have an activation Function")
 
     def activation_prime (self, network_value):
+        """Activation prime function method
+
+        Args:
+            network_value (ndarray): The network value of each node in the layer
+        
+        Returns:
+            NotImplementedError if the subclass didn't implement this method
+            out_prime a ndarray of float, the output of each node given the derivative of the activation function
+        """
         raise NotImplementedError ("This layer doesn't have an activation Function")
-      
-    def forward_old (self, inputs, training=True):
-        self.inputs = inputs              #stores inputs, for backprop calculation
-        net = np.dot(self.inputs, self._WM) + self._biases    #computes the net of all units at one
-        output = self.activation(net)     #computes the out of all units at one
-        if training: #tbh non so questo
-            self.output_prime = self.activation_prime(net)  #stores out_pr, for backprop calculation
-        return output
 
     def forward (self, inputs, training=True):
+        """Forward method
+
+        Args:
+            inputs (ndarray): The inputs of this layer. if ndim = 1 then it calculate the forward over a single pattern, if ndim = 2 then calculate the outputs of an entire batch of inputs 
+        
+        Returns:
+            output (ndarray): the output vector (or matrix) of all the nodes in the layer given the inputs vector (or matrix)
+        """
         self.inputs = inputs
         if (inputs.ndim == 1):
             net = np.dot(self.inputs, self._WM) + self._biases    #computes the net of all units at one
@@ -73,28 +80,16 @@ class Layer():
             self.output_prime=np.array(self.output_prime)
             output=np.array(output)
         return output
-    
-    def backwards_old(self, error_signal):
-        #deltas is the vector (d_t1, d_t2, d_t3..), for each unit t1, t2, t3 ..
-        deltas = error_signal * self.output_prime
-        
-        #here we compute the negative gradient for the current layer, but we don't apply it yet
-        #   we add to the total neg gradient the current contribution, ie the neg grad calculated from this pattern
-        #   the outer product produes the matrix array([ d_t*input for each unit t in layer])
-        #print(f"{self.inputs.shape} - {deltas.shape}")
-        self._negGrad += np.outer(self.inputs, deltas)
-        self._biases_negGrad += deltas #for each unit t, Dbias_t = d_t * input, where input is 1
-
-        #here we compute the error signal for the previous layer
-        #    deltas, seen as a row vector, is broadcasted to a matrix with all equal rows.
-        #    The point-wise multiplicaion multiplies the w vector of unit t with it's corresponding d_t
-        #    (the w vector of unit t is just a column vetor in the WM matrix).
-        #    By summing on the orizontal axis, we get a column vector: the error signal for each input,
-        #    i.e. the error signal for each unit in the previous layer
-        return np.sum(self._WM*deltas, axis=1) #forse dovremmo cambiarlo con deltas @ self._WM
 
     def backwards(self, error_signal):
-        #print(f"{error_signal.shape}")
+        """Backwards method
+
+        Args:
+            error_signal (ndarray): The error_signal of the layer above. if ndim = 1 then it calculate the backwards over a single ES, if ndim = 2 then calculate the outputs of an entire batch of ES
+        
+        Returns:
+            error_signal (ndarray): the error_signal vector (or matrix) to be backpropagated to the layers under us given the error_signal vector (or matrix) of the layer above
+        """
         deltas = error_signal * self.output_prime
         if(error_signal.ndim == 1):
             #here we compute the negative gradient for the current layer, but we don't apply it yet
@@ -121,11 +116,19 @@ class Layer():
 
 
     def update_weights(self, eta, lam, alpha):
-        #here we apply the negGradient computed during backward.
-        #In a online alg, we continously call this.backward and this.update_weights,
-        #   so for each pattern, negGrad is computed and applied immediately.
-        #In a (mini)batch alg, we call this.backward for each pattern, and
-        #   this.update_weights just once per batch.
+        """Update weights method
+            here we apply the negGradient computed during backward.
+            In a online alg, we continously call this.backward and this.update_weights,
+              so for each pattern, negGrad is computed and applied immediately.
+            In a (mini)batch alg, we call this.backward for each pattern, and
+              this.update_weights just once per batch.
+
+            Args:
+                eta (float) - the learning rate of this update
+                lam (float) - the lambda used for tikhonov regularization
+                alpha (float) - the alpha used to calculate the momentum
+        """
+        
         DW = eta * self._negGrad + alpha*self._DWold
         self._WM += DW - lam*self._WM
         self._DWold = DW
@@ -139,9 +142,23 @@ class Layer():
         self._biases_negGrad = 0
     
     def get_max_grad(self):
+        """Get Max Grad method
+            A method used to get the maximum gradient it the net
+
+            Args:
+
+            Returns:
+                last_max_grad
+        """
         return self._last_max_grad
 
     def get_weights(self):
+        """Get weights
+            A method used to retrieve a list of all the weights and biases of the layer
+
+            Returns:
+                all_weights (list): a flatten ndarray with all the weights and biases of the units in this layer
+        """
         return np.vstack((self._WM, self._biases)).flatten() #if (self._WM != None and self._biases != None) else [0]
         
 class Sigmoidal(Layer):
