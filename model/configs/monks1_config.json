@@ -10,7 +10,7 @@
 
 	"global_conf": {
 		"task": "classification",
-	    "max_step": 400,
+	    "max_step": 500,
 	    "check_step": 10,
 		"maxfold": 5,
 		"validation": "trials",
@@ -27,9 +27,9 @@
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [12, 24],
+	    "eta": [12, 18],
 	    "lam": [0],
-	    "alpha": [0.3, 0.5],
+	    "alpha": [0.3, 0.5, 0.7],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[["sigmoidal", 3], ["sigmoidal", 1]]

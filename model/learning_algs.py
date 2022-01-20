@@ -116,7 +116,7 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path):
         results = Results(hyp, global_confs.metrics)
         for n_trial in range(global_confs.maxfold):
             TR, VL = TR, None
-            global_confs.seed += n_trial*100
+            global_confs.seed += n_trial*1729
             history, nn = train(TR, VL, TS, global_confs, hyp)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
