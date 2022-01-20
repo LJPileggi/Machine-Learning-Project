@@ -3,7 +3,7 @@
 		"train_set": "mlcup_internaltrain.csv",
 		"test_set": "mlcup_internaltest.csv",
 		"output_path": "output/mlcup/",
-		"graph_path": "graphs/mlcup/",
+	    "graph_path": "graphs/mlcup/",
 		"input_size": 10,
 		"output_size": 2
 	},
@@ -26,13 +26,13 @@
 	},
 
 	"hyperparameters":{
-	    "eta": [0.7],
+	    "eta": [0.01],
 	    "eta_decay": [-1],
-	    "lam": [1e-5],
-	    "alpha": [0.7],
+	    "lam": [0],
+	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["relu", 15], ["BatchNormalization", 0.99], ["relu", 15], ["linear", 2]]
+			[["relu", 15], ["relu", 15], ["linear", 2]]
 		]
 	}
 }
