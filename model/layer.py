@@ -134,16 +134,15 @@ class Layer():
         self._biases += Dbias
         self._biases_DWold = Dbias
 
-
         self._last_max_grad = np.amax(np.absolute(self._negGrad))
         self._negGrad = 0.
         self._biases_negGrad = 0
     
     def get_max_grad(self):
-      return self._last_max_grad
+        return self._last_max_grad
 
     def get_weights(self):
-      return np.vstack((self._WM, self._biases)).flatten() #if (self._WM != None and self._biases != None) else [0]
+        return np.vstack((self._WM, self._biases)).flatten() #if (self._WM != None and self._biases != None) else [0]
         
 class Sigmoidal(Layer):
 
@@ -203,7 +202,9 @@ class ReLu(Layer):
     def __init__(self, input_dim, layer_dim):
         print(f"{layer_dim}; ReLu")
         super().__init__()
-        self._WM = np.random.normal(loc=0.0, scale=math.sqrt(2/input_dim), size=(input_dim, layer_dim)) * math.sqrt(2./input_dim) #He weight initialization
+        #self._WM = np.random.normal(loc=0.0, scale=math.sqrt(2/input_dim), size=(input_dim, layer_dim)) * math.sqrt(2./input_dim) #HeNormal weight initialization
+        lower, upper = -math.sqrt(6/input_dim), math.sqrt(6/input_dim)
+        self._WM = np.random.uniform(low=lower, high=upper, size=(input_dim, layer_dim) ) #HeUniform weight initialization
         self._biases = np.zeros(shape=(layer_dim,))
 
     def activation (self, network_value):
