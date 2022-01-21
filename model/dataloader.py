@@ -8,7 +8,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-def mean_variance_dev(vec_set):
+def get_mean_variance_dev(vec_set):
     """
     Returns mean, variance and std deviation of a set
     of vectors, component wise. Returns 3 vectors
@@ -23,10 +23,14 @@ def mean_variance_dev(vec_set):
     return mean, var, var**0.5
 
 def data_standardizer(data):
-    mean, _, dev = mean_variance_dev(data)
-    return [value-mean/dev for value in data], ("stand", mean, dev)
+    mean, _, dev = get_mean_variance_dev(data)
+    return [value-mean/dev for value in data]
 
-def data_normalizer(dataset):
+def get_standardizer(data):
+    mean, _, dev = get_mean_variance_dev(data)
+    return ("stand", mean, dev)
+
+def get_min_max(dataset):
     min_data, max_data = [comp for comp in dataset[0]], [comp for comp in dataset[0]]
     for data in dataset[1:]:
         for i, component in enumerate(data):
@@ -37,10 +41,23 @@ def data_normalizer(dataset):
             else:
                 pass
     min_data, max_data = np.array(min_data), np.array(max_data)
-    norm = []
-    for data in dataset:
-        norm.append((data-min_data)/(max_data-min_data))
-    return norm, ("norm", min_data, max_data)
+    return min_data, max_data
+
+
+
+def data_normalizer(dataset):
+    min_data, max_data = get_min_max(dataset)
+    norm = [
+        (data-min_data)/(max_data-min_data)
+        for data in dataset
+        ]
+    return norm
+
+def get_normalizer(dataset):
+    min_data, max_data = get_min_max(dataset)
+    return ("norm", min_data, max)
+
+    
 
 class DataLoader():
     
@@ -50,58 +67,58 @@ class DataLoader():
         set_seed(seed)
         self.data = {}
 
-    def load_data (self, filename, input_size, output_size, preprocessing, tag="full", shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
-        """
-        set the data into the internal dictionary.
-        train_slice define how much of this dataset it's going to be training
+    # def load_data (self, filename, input_size, output_size, preprocessing, tag="full", shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
+    #     """
+    #     set the data into the internal dictionary.
+    #     train_slice define how much of this dataset it's going to be training
 
-        """
-        full_fn = os.path.join(self.DATA_PATH, filename)
-        with open(full_fn) as f:
-            reader = csv.reader(f, delimiter=',')
-            inputs = []
-            outputs = []
-            preproc_in = None
-            preproc_out = None
-            #reads file
-            for row in reader:
-                if len(row) == 1 + input_size + output_size:
-                    data = list(map(float, row[1:]))
-                    input = data[:-output_size]
-                    output = data[-output_size:]
-                    inputs.append(np.array(input))
-                    outputs.append(np.array(output))
-                else:
-                    raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
+    #     """
+    #     full_fn = os.path.join(self.DATA_PATH, filename)
+    #     with open(full_fn) as f:
+    #         reader = csv.reader(f, delimiter=',')
+    #         inputs = []
+    #         outputs = []
+    #         preproc_in = None
+    #         preproc_out = None
+    #         #reads file
+    #         for row in reader:
+    #             if len(row) == 1 + input_size + output_size:
+    #                 data = list(map(float, row[1:]))
+    #                 input = data[:-output_size]
+    #                 output = data[-output_size:]
+    #                 inputs.append(np.array(input))
+    #                 outputs.append(np.array(output))
+    #             else:
+    #                 raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
             
-            #preprocesses data, if needed
-            if(preprocessing == None):
-                pass
-            elif(preprocessing == "output_stand"):
-                outputs, preproc_out = data_standardizer(outputs)
-            elif(preprocessing == "output_norm"):
-                outputs, preproc_out = data_normalizer(outputs)
-            elif(preprocessing == "input_stand"):
-                inputs, preproc_in = data_standardizer(inputs)
-            elif(preprocessing == "input_norm"):
-                inputs, preproc_in = data_normalizer(inputs)
-            elif(preprocessing == "both_stand"):
-                inputs, preproc_in = data_standardizer(inputs)
-                outputs, preproc_out = data_standardizer(outputs)
-            elif(preprocessing == "both_norm"):
-                inputs, preproc_in = data_normalizer(inputs)
-                outputs, preproc_out = data_normalizer(outputs)
-            else:
-                raise NotImplementedError("unknown preprocessing")
+    #         #preprocesses data, if needed
+    #         if(preprocessing == None):
+    #             pass
+    #         elif(preprocessing == "output_stand"):
+    #             outputs, preproc_out = data_standardizer(outputs)
+    #         elif(preprocessing == "output_norm"):
+    #             outputs, preproc_out = data_normalizer(outputs)
+    #         elif(preprocessing == "input_stand"):
+    #             inputs, preproc_in = data_standardizer(inputs)
+    #         elif(preprocessing == "input_norm"):
+    #             inputs, preproc_in = data_normalizer(inputs)
+    #         elif(preprocessing == "both_stand"):
+    #             inputs, preproc_in = data_standardizer(inputs)
+    #             outputs, preproc_out = data_standardizer(outputs)
+    #         elif(preprocessing == "both_norm"):
+    #             inputs, preproc_in = data_normalizer(inputs)
+    #             outputs, preproc_out = data_normalizer(outputs)
+    #         else:
+    #             raise NotImplementedError("unknown preprocessing")
 
-            #save data
-            dataset = list(zip(inputs, outputs))
-            if (shuffle):
-                np.random.shuffle(dataset)
-            self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
+    #         #save data
+    #         dataset = list(zip(inputs, outputs))
+    #         if (shuffle):
+    #             np.random.shuffle(dataset)
+    #         self.data[tag] = np.array(dataset, dtype=object) #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiva
             
     @staticmethod
-    def load_data_static (filename, input_size, output_size, preprocessing, shuffle=True): #normalmente usiamo full che è anche quello che salva tutto e poi verrà usato pe kfold. Oppure possiamo usare train e test
+    def load_data_static (filename, input_size, output_size, preprocessing, shuffle=True): 
         """
         set the data into the internal dictionary.
         train_slice define how much of this dataset it's going to be training
@@ -112,8 +129,6 @@ class DataLoader():
             reader = csv.reader(f, delimiter=',')
             inputs = []
             outputs = []
-            preproc_in = [None]
-            preproc_out = [None]
             #reads file
             for row in reader:
                 if len(row) == 1 + input_size + output_size:
@@ -126,54 +141,55 @@ class DataLoader():
                     raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
             
             #preprocesses data, if needed
+            preproc = {"input": None, "output": None}
             if(preprocessing == None):
                 pass
             elif(preprocessing == "output_stand"):
-                outputs, preproc_out = data_standardizer(outputs)
+                preproc["output"] = get_standardizer(outputs)
             elif(preprocessing == "output_norm"):
-                outputs, preproc_out = data_normalizer(outputs)
+                preproc["output"] = get_normalizer(outputs)
             elif(preprocessing == "input_stand"):
-                inputs, preproc_in = data_standardizer(inputs)
+                preproc["input"] = get_standardizer(inputs)
             elif(preprocessing == "input_norm"):
-                inputs, preproc_in = data_normalizer(inputs)
+                preproc["input"] = get_normalizer(inputs)
             elif(preprocessing == "both_stand"):
-                inputs, preproc_in = data_standardizer(inputs)
-                outputs, preproc_out = data_standardizer(outputs)
+                preproc["output"] = get_standardizer(outputs)
+                preproc["input"] = get_standardizer(inputs)
             elif(preprocessing == "both_norm"):
-                inputs, preproc_in = data_normalizer(inputs)
-                outputs, preproc_out = data_normalizer(outputs)
+                preproc["output"] = get_normalizer(outputs)
+                preproc["input"] = get_normalizer(inputs)
             else:
                 raise NotImplementedError("unknown preprocessing")
-
+            
             #save data
             dataset = list(zip(inputs, outputs))
-            preproc_params = list(zip(preproc_in, preproc_out)) 
             if (shuffle):
                 np.random.shuffle(dataset)
-            return np.array(dataset, dtype=object), preproc_params #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
+            print(f"selected preprocessing is: {preproc}")
+            return np.array(dataset, dtype=object), preproc #cambiamo e ci salviamo tutto il dataset, che poi splitteremo usando gli indici della funzione successiv
 
-    def get_slices (self, k_fold=5, tag='full'):
-        if k_fold > 1: 
-            n_samples = len(self.data[tag])
-            indices = np.arange(n_samples)
+    # def get_slices (self, k_fold=5, tag='full'):
+    #     if k_fold > 1: 
+    #         n_samples = len(self.data[tag])
+    #         indices = np.arange(n_samples)
 
-            fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
-            fold_sizes[: n_samples % k_fold] += 1
-            current = 0
+    #         fold_sizes = np.full(k_fold, n_samples // k_fold, dtype=int)
+    #         fold_sizes[: n_samples % k_fold] += 1
+    #         current = 0
             
-            for fold_size in fold_sizes:
-                start, stop = current, current + fold_size
-                test_mask = np.zeros(n_samples, dtype=bool)
-                test_mask[indices[start:stop]] = True
-                train_index = indices[np.logical_not(test_mask)]
-                test_index = indices[test_mask]
-                yield train_index, test_index
-                current = stop
-        else:
-            n_samples = len(self.data[tag])
-            indices = np.arange(n_samples)
-            train_start = n_samples // 5
-            yield indices[train_start:], indices[:train_start]
+    #         for fold_size in fold_sizes:
+    #             start, stop = current, current + fold_size
+    #             test_mask = np.zeros(n_samples, dtype=bool)
+    #             test_mask[indices[start:stop]] = True
+    #             train_index = indices[np.logical_not(test_mask)]
+    #             test_index = indices[test_mask]
+    #             yield train_index, test_index
+    #             current = stop
+    #     else:
+    #         n_samples = len(self.data[tag])
+    #         indices = np.arange(n_samples)
+    #         train_start = n_samples // 5
+    #         yield indices[train_start:], indices[:train_start]
 
     @staticmethod
     def get_slices_static (data, k_fold=5):
@@ -201,26 +217,26 @@ class DataLoader():
             yield data, None
 
      
-    def dataset_partition (self, indices, batch_size, tag='full'): #
-        """
-        returns an iterator on minibatches:
-        if batch_size=n, returns a list of n patterns
-        if batch_size=1, returns 1 pattern at a time (techincally, a list conteining just one pattern)
-        after traversing the whole TS, the TS is shuffled
-        """
-        tr_size = len(indices)
-        batch_size = tr_size if batch_size == -1 else batch_size
-        curr_data = self.data[tag][indices]
-        idxs = np.arange(tr_size)
-        batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
-        batchs_sizes[: tr_size % batch_size] += 1
-        current = 0
-        np.random.shuffle(curr_data)
+    # def dataset_partition (self, indices, batch_size, tag='full'): #
+    #     """
+    #     returns an iterator on minibatches:
+    #     if batch_size=n, returns a list of n patterns
+    #     if batch_size=1, returns 1 pattern at a time (techincally, a list conteining just one pattern)
+    #     after traversing the whole TS, the TS is shuffled
+    #     """
+    #     tr_size = len(indices)
+    #     batch_size = tr_size if batch_size == -1 else batch_size
+    #     curr_data = self.data[tag][indices]
+    #     idxs = np.arange(tr_size)
+    #     batchs_sizes = np.full(tr_size // batch_size, batch_size, dtype=int)
+    #     batchs_sizes[: tr_size % batch_size] += 1
+    #     current = 0
+    #     np.random.shuffle(curr_data)
         
-        for batch in batchs_sizes:
-            start, stop = current, current + batch
-            yield curr_data[start:stop]
-            current = stop
+    #     for batch in batchs_sizes:
+    #         start, stop = current, current + batch
+    #         yield curr_data[start:stop]
+    #         current = stop
 
     @staticmethod
     def dataset_partition_static (data, batch_size, shuffle=True): #
@@ -244,8 +260,8 @@ class DataLoader():
             yield data[start:stop]
             current = stop
 
-    def get_input_size(self, tag='full'):
-        return self.data[tag][0][0].size
+    # def get_input_size(self, tag='full'):
+    #     return self.data[tag][0][0].size
 
     @staticmethod
     def get_input_size_static(data):

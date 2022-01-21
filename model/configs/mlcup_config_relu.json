@@ -6,17 +6,18 @@
 		"graph_path": "graphs/mlcup/",
 		"input_size": 10,
 		"output_size": 2,
-		"preprocessing": "output_norm"
+		"preprocessing": "output_stand"
 	},
 
 	
 	"global_conf": {
 		"task": "regression",
+		"validation": "crossval",
 		"loss_tolerance": 1e-2,
-        	"loss_patience": 1,
-        	"wc_tolerance": 0,
-        	"wc_patience": 1,
-	    	"max_step": 200,
+		"loss_patience": 1,
+		"wc_tolerance": 0,
+		"wc_patience": 1,
+		"max_step": 200,
 		"check_step": 30,
 		"metrics": {"train": ["mee", "mse"],
 					"val": 	 ["mee", "mse"]
