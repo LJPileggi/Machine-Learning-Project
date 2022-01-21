@@ -22,14 +22,14 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     #history.update_plots(nn, train=TR, val=VL, test=TS)
     
     #scaling inputs
-    TR = nn.scale_dataset(TR)
+    scaledTR = nn.scale_dataset(TR)
 
     #training loop
     oldWeights = nn.get_weights()
     low_loss = 0
     low_wc = 0
     for epoch in range (1, global_confs.max_step+1):
-        for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
+        for current_batch in DataLoader.dataset_partition_static(scaledTR, hyp.batch_size):
             patterns, labels = list(map(np.array, list(zip(*current_batch))))
             #print(f"{patterns.shape} - {labels.shape}")
             outs = nn.forward(patterns)
@@ -41,7 +41,7 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
             #    error = pattern[1] - out
             #    nn.backwards(error)
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
-            len_batch = len(TR) #if batch_size != 1 else len(whole_TR)
+            len_batch = len(scaledTR) #if batch_size != 1 else len(whole_TR)
             if hyp.eta_decay == -1:
                 nn.update_weights(hyp.eta/len_batch, hyp.lam, hyp.alpha)
             else:
