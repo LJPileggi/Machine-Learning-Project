@@ -10,7 +10,7 @@
 
 	"global_conf": {
 		"task": "classification",
-	    "max_step": 300,
+	    "max_step": 400,
 	    "check_step": 10,
 		"maxfold": 10,
 		"validation": "trials",
