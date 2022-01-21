@@ -175,7 +175,7 @@ class Sigmoidal(Layer):
     """Subclass of Layer for the Sigmoidal type
     """
 
-    def __init__(self, input_dim, layer_dim):
+    def __init__(self, input_dim, layer_dim, a=1):
         """Constructor of the Sigmoidal Layer
         In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
 
@@ -191,12 +191,13 @@ class Sigmoidal(Layer):
         self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
         #self._WM = np.random.normal(loc=0.0, scale=0.5, size=(input_dim, layer_dim) )
         #self._biases = np.random.normal(loc = 0.0, scale = 0.5, size=layer_dim )
+        self.a = a
 
-    def activation (self, network_value, a=1.):
-        return 1./(1. + np.exp(-a*network_value))
+    def activation (self, network_value):
+        return 1./(1. + np.exp(-self.a*network_value))
 
-    def activation_prime (self, network_value, a=1.):
-        k = np.exp(a*network_value)
+    def activation_prime (self, network_value):
+        k = np.exp(self.a*network_value)
         out = k / ((k+1)**2)
         return out
 
@@ -272,7 +273,7 @@ class ReLu(Layer):
 
 class SiLu(Layer):
 
-    def __init__(self, input_dim, layer_dim):
+    def __init__(self, input_dim, layer_dim, a=1):
         """Constructor of the SiLu Layer
         In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
 
@@ -285,16 +286,19 @@ class SiLu(Layer):
         lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
         self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
         self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        self.a = a
 
     def activation (self, network_value):
-        return af.SiLu(network_value)
+        out = network_value/(1. + np.exp(-self.a*network_value))
+        return out
 
     def activation_prime (self, network_value):
-        return af.d_SiLu(network_value)
+        out = np.exp(self.a*network_value)*(self.a*network_value + np.exp(self.a*network_value) + 1.)/(np.exp(self.a*network_value) + 1.)**2
+        return out
 
 class Softplus(Layer):
 
-    def __init__(self, input_dim, layer_dim):
+    def __init__(self, input_dim, layer_dim, a=1):
         """Constructor of the Softplus Layer
         In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
 
@@ -307,12 +311,15 @@ class Softplus(Layer):
         lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
         self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
         self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        self.a = a
 
     def activation (self, network_value):
-        return af.softplus(network_value)
+        out = np.log(1 + np.exp(self.a*network_value))/self.a
+        return out 
 
     def activation_prime (self, network_value):
-        return af.d_softplus(network_value)
+        out = 1./(1. + np.exp(-self.a*network_value))
+        return out
 
 class BatchNormalization(Layer):
 
