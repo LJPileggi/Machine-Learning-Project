@@ -23,8 +23,9 @@ class MLP:
      . backwards: 
      - update_weights: update weights of the whole network; returns None
     """
-    def __init__(self, seed, task, input_dim, architecture):
+    def __init__(self, seed, task, input_dim, architecture, preproc):
         set_seed(seed)
+        self.preproc = preproc
         self.layer_set = []
         prec_dim = input_dim
         for activation, options in architecture:
@@ -55,6 +56,14 @@ class MLP:
         else:
             raise NotImplementedError("unsupported activation function in output layer")
 
+
+    def scale(self, datas, preproc):
+        if(preproc[0] == "stand"):
+            means, devs = preproc[1], preproc[2]
+            return (datas-means)/devs
+        elif(preproc[0] == "norm"):
+            mins, maxs = preproc[1], preproc[2]
+            (datas-mins)/(maxs-mins)
 
     def forward(self, input, training=True):
         for layer in self.layer_set:
