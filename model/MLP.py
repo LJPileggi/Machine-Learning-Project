@@ -41,9 +41,9 @@ class MLP:
                 self.layer_set.append(layer.ReLu(prec_dim, options))
                 prec_dim = options
             elif activation == "BatchNormalization":
-                self.layer_set.append(layer.BatchNormalization(prec_dim, options))
+                self.layer_set.append(layer.BatchNormalization(options))
             elif activation == "dropout":
-                self.layer_set.append(layer.Dropout(prec_dim, options))
+                self.layer_set.append(layer.Dropout(options))
         last_layer_fun = architecture[-1][0]
         self.threshold = None
         if last_layer_fun == "sigmoidal" and task == "classification":

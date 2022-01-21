@@ -19,7 +19,7 @@
 		},
 		"gs_preferred_metric": ["train", "accuracy"],
 		"searched_hyper": ["eta", "lam", "alpha"],
-		"loss_tolerance": 4e-2,
+		"loss_tolerance": 3e-2,
 		"loss_patience": 1,
 		"wc_tolerance": 0,
 		"wc_patience": 1

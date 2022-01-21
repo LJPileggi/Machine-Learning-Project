@@ -54,6 +54,10 @@ class Layer():
 
     def forward (self, inputs, training=True):
         """Forward method
+        This method does the forward pass of the layer.
+        The forward pass consist of calculating the output of each node given the inputs
+        The output is calculated as the inputs * weights + biases
+        This method works with a singular input or a batch of inputs
 
         Args:
             inputs (ndarray): The inputs of this layer. if ndim = 1 then it calculate the forward over a single pattern, if ndim = 2 then calculate the outputs of an entire batch of inputs 
@@ -83,6 +87,12 @@ class Layer():
 
     def backwards(self, error_signal):
         """Backwards method
+        This method does the backwards pass of the layer
+        The backwards pass consist in calculating the delta and negative gradients of the layer given the error signal from the layer above
+        the delta is calculated as error_signal * output_prime
+        the negative gradient is calculated as the outer product between the inputs and the deltas
+        it's returned the error signal for the next layer, calculated as deltas * weights
+        This method too accept a single input or a batch of error_signals
 
         Args:
             error_signal (ndarray): The error_signal of the layer above. if ndim = 1 then it calculate the backwards over a single ES, if ndim = 2 then calculate the outputs of an entire batch of ES
@@ -162,8 +172,17 @@ class Layer():
         return np.vstack((self._WM, self._biases)).flatten() #if (self._WM != None and self._biases != None) else [0]
         
 class Sigmoidal(Layer):
+    """Subclass of Layer for the Sigmoidal type
+    """
 
     def __init__(self, input_dim, layer_dim):
+        """Constructor of the Sigmoidal Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
         print(f"{layer_dim}; Sigmoidal")
         super().__init__()
         #lower, upper = -1./(math.sqrt(input_dim)), 1./(math.sqrt(input_dim)) #xavier
@@ -184,6 +203,13 @@ class Sigmoidal(Layer):
 class Tanh(Layer):
 
     def __init__(self, input_dim, layer_dim):
+        """Constructor of the Tanh Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
         print(f"{layer_dim}; Tanh")
         super().__init__()
         #lower, upper = -1./(math.sqrt(input_dim)), 1./(math.sqrt(input_dim)) #xavier
@@ -202,6 +228,13 @@ class Tanh(Layer):
 class Linear(Layer):
 
     def __init__(self, input_dim, layer_dim):
+        """Constructor of the Linear Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
         print(f"{layer_dim}; Linear")
         super().__init__()
         lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
@@ -217,6 +250,13 @@ class Linear(Layer):
 class ReLu(Layer):
 
     def __init__(self, input_dim, layer_dim):
+        """Constructor of the ReLu Layer
+        In this constructor we intialize the weights and biases of the layer using a HeNormal weights initialization
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
         print(f"{layer_dim}; ReLu")
         super().__init__()
         #self._WM = np.random.normal(loc=0.0, scale=math.sqrt(2/input_dim), size=(input_dim, layer_dim)) * math.sqrt(2./input_dim) #HeNormal weight initialization
@@ -232,7 +272,14 @@ class ReLu(Layer):
 
 class BatchNormalization(Layer):
 
-    def __init__(self, input_dim, momentum=0.99, epsilon=0.001):
+    def __init__(self, momentum=0.99, epsilon=0.001):
+        """Constructor of the BatchNormalization Layer
+        In this constructor we intialize the special weights of this layer.
+
+        Args:
+            momentum (float): the momentum at wich we want to update the moving mean and var
+            epsilon (int): a small number to help us stabilize the division 
+        """
         print(f"BatchNormalization")
         super().__init__()
         self.gamma = 1
@@ -294,12 +341,17 @@ class BatchNormalization(Layer):
 
 class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
 
-    def __init__(self, input_dim, rate):
+    def __init__(self, rate):
+        """Constructor of the Dropout Layer
+        In this constructor we intialize the rate of the dropout and the scale of wich the input will be multiplied
+
+        Args:
+            rate (int): the rate at wich the nodes will be turned on (turn off at 1-rate)
+        """
         print(f"Dropout: {rate}")
         super().__init__()
         if isinstance(rate, (int, float)) and not 0 <= rate <= 1:
             raise ValueError (f"Invalid Value {rate} received - `rate` needs to be betweek 0 and 1")
-        self.input_dim = input_dim
         #self.activated_inputs = np.random.choice([1., 0.], size=(self.input_dim, ), p=[rate, 1-rate])
         self.scale = 1./(1.-rate)
         self.rate = rate
