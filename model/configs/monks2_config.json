@@ -32,7 +32,8 @@
 	    "alpha": [0.7],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[["sigmoidal", 2], ["sigmoidal", 1]]
+			[["sigmoidal", 2], ["sigmoidal", 1]],
+			[["sigmoidal", 4], ["sigmoidal", 1]]
 		]
 	}
 }
