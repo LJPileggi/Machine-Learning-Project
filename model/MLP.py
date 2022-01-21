@@ -3,6 +3,7 @@ import random
 import h5py
 
 import layer
+from model.dataloader import data_normalizer
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -57,13 +58,45 @@ class MLP:
             raise NotImplementedError("unsupported activation function in output layer")
 
 
-    def scale(self, datas, preproc):
-        if(preproc[0] == "stand"):
-            means, devs = preproc[1], preproc[2]
-            return (datas-means)/devs
-        elif(preproc[0] == "norm"):
-            mins, maxs = preproc[1], preproc[2]
-            (datas-mins)/(maxs-mins)
+    def scale_input(self, data):
+        key, a, b = self.preproc["input"]
+        if(key == "stand"):
+            means, devs = a, b
+            return (data-means)/devs
+        elif(key == "norm"):
+            mins, maxs = a, b
+            (data-mins)/(maxs-mins)
+        else:
+            raise NotImplementedError("unsupported key")
+
+    def scale_output(self, data):
+        key, a, b = self.preproc["output"]
+        if(key == "stand"):
+            means, devs = a, b
+            return (data-means)/devs
+        elif(key == "norm"):
+            mins, maxs = a, b
+            return (data-mins)/(maxs-mins)
+        else:
+            raise NotImplementedError("unsupported key")
+    
+    def unscale_output(self, data):
+        key, a, b = self.preproc["output"]
+        if(key == "stand"):
+            means, devs = a, b
+            return data*devs + means
+        elif(key == "norm"):
+            mins, maxs = a, b
+            return data*(maxs-mins) + mins
+            
+        else:
+            raise NotImplementedError("unsupported key")
+
+    def scale_dataset(self, dataset):
+        return [
+            (self.scale_input(pattern), self.scale_output(target))
+            for (pattern, target) in dataset
+        ]
 
     def forward(self, input, training=True):
         for layer in self.layer_set:
@@ -72,6 +105,8 @@ class MLP:
         return output
 
     def h(self, input):
+        if preproc != None:
+            return self.unscale_output(self.forward(input, training=False))
         if self.threshold == None:
             return self.forward(input, training=False)
         else:

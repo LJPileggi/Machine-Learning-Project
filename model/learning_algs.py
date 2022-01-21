@@ -21,6 +21,9 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers, preproc)
     #history.update_plots(nn, train=TR, val=VL, test=TS)
     
+    #scaling inputs
+    TR = nn.scale_dataset(TR)
+
     #training loop
     oldWeights = nn.get_weights()
     low_loss = 0
@@ -29,8 +32,6 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
         for current_batch in DataLoader.dataset_partition_static(TR, hyp.batch_size):
             patterns, labels = list(map(np.array, list(zip(*current_batch))))
             #print(f"{patterns.shape} - {labels.shape}")
-            patterns = nn.scale(patterns, preproc["input"])
-            labels = nn.scale(labels, preproc["output"])
             outs = nn.forward(patterns)
             errors = labels - outs
             #print(f"error - {errors.shape}")
