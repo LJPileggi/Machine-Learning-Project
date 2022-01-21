@@ -2,7 +2,7 @@ from os import error
 from site import enablerlcompleter
 import numpy as np
 import math
-import activation_functions
+import activation_functions as af
 
 class Layer():
     """
@@ -269,6 +269,50 @@ class ReLu(Layer):
 
     def activation_prime (self, network_value):
         return np.where(network_value > 0, 1., 0.)
+
+class SiLu(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        """Constructor of the SiLu Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
+        print(f"{layer_dim}; Linear")
+        super().__init__()
+        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
+        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
+        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+
+    def activation (self, network_value):
+        return af.SiLu(network_value)
+
+    def activation_prime (self, network_value):
+        return af.d_SiLu(network_value)
+
+class Softplus(Layer):
+
+    def __init__(self, input_dim, layer_dim):
+        """Constructor of the Softplus Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            input_dim (int): the number of input of each node
+            layer_dim (int): the number of nodes in this layer
+        """
+        print(f"{layer_dim}; Linear")
+        super().__init__()
+        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
+        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
+        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+
+    def activation (self, network_value):
+        return af.softplus(network_value)
+
+    def activation_prime (self, network_value):
+        return af.d_softplus(network_value)
 
 class BatchNormalization(Layer):
 

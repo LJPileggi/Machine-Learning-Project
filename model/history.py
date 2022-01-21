@@ -79,9 +79,9 @@ class Results ():
             for metric in metrics[set]
         }
         if hyp["eta_decay"] == -1:
-            self.name = f'{hyp["layers"][0][0:3]}{hyp["layers"][1]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
+            self.name = f'{layer[0][0:3], layer[1] for layer in hyp["layers"]}_{hyp["batch_size"]}_{hyp["eta"]}_nonvar_{hyp["lam"]}_{hyp["alpha"]}'
         else:
-            self.name = f'{hyp["layers"][0][0:3]}{hyp["layers"][1]}_{hyp["batch_size"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
+            self.name = f'{layer[0][0:3], layer[1] for layer in hyp["layers"]}_{hyp["eta"]}_{hyp["eta_decay"]}_{hyp["lam"]}_{hyp["alpha"]}'
 
     def add_history(self, history):
         self.histories.append(history)
