@@ -416,3 +416,24 @@ class Dropout(Layer): #potremmo benissimo trasformarlo in un layer tutto suo
 
     def get_weights(self):
         return [0]
+
+class OutputNorm(Layer):
+
+    def __init__(self, min_value, max_value):
+        """Constructor of the output normalizer Layer
+        In this constructor we intialize the weights and biases of the layer using a normalized uniform xavier
+
+        Args:
+            min_value (float): the minimum value present in the training set
+            max_value (float): the maximum value present in the training set
+        """
+        print(f"Output Normalizer")
+        super().__init__()
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def forward(self, inputs, training=True):
+        return inputs * (self.max_value - self.min_value) + self.min_value
+    
+    def backwards(self, error_signal):
+        return error_signal / (self.max_value - self.min_value)
