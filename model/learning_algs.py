@@ -48,7 +48,7 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
                 nn.update_weights((0.9*np.exp(-(epoch)/hyp.eta_decay)+0.1)*hyp.eta/len_batch, hyp.lam, hyp.alpha)
         
         #after each epoch
-        history.update_plots(nn, TR_preproc, train=TR, val=VL, test=TS)
+        history.update_plots(nn, train=TR, val=VL, test=TS)
         #print (f"{np.where(np.array([ele[0] for ele in TR]) != np.array([ele[0] for ele in TS]), 1., 0.)}")
         if(epoch % global_confs.check_step == 0):
             #once each check_step epoch

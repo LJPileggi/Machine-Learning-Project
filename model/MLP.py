@@ -3,7 +3,6 @@ import random
 import h5py
 
 import layer
-from model.dataloader import data_normalizer
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -59,6 +58,8 @@ class MLP:
 
 
     def scale_input(self, data):
+        if self.preproc["input"] == None:
+            return data
         key, a, b = self.preproc["input"]
         if(key == "stand"):
             means, devs = a, b
@@ -70,6 +71,8 @@ class MLP:
             raise NotImplementedError("unsupported key")
 
     def scale_output(self, data):
+        if self.preproc["output"] == None:
+            return data
         key, a, b = self.preproc["output"]
         if(key == "stand"):
             means, devs = a, b
@@ -81,6 +84,8 @@ class MLP:
             raise NotImplementedError("unsupported key")
     
     def unscale_output(self, data):
+        if self.preproc["output"] == None:
+            return data
         key, a, b = self.preproc["output"]
         if(key == "stand"):
             means, devs = a, b
@@ -105,12 +110,12 @@ class MLP:
         return output
 
     def h(self, input):
-        if preproc != None:
-            return self.unscale_output(self.forward(input, training=False))
-        if self.threshold == None:
-            return self.forward(input, training=False)
-        else:
-            return self.forward(input, training=False) > self.threshold
+        out =  self.forward(input, training=False)
+        return self.unscale_output(out)
+    
+    def classify(self, input):
+        out =  self.forward(input, training=False)
+        return out > self.threshold
 
     def backwards(self, error_signal):
         for layer in reversed(self.layer_set):

@@ -6,48 +6,26 @@ import os
 
 # miscclass and accuracy compute nn.h, with a threshold
 # mse and mee compute nn.forward, the direct output of the output layer
-def empirical_error(NN, set, metric, preproc=None):
+def empirical_error(NN, set, metric):
     if len(set) == 0:
         return None
     error = 0
     if metric == "missclass":
         for pattern in set:
-            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
+            error += np.max(abs(NN.classify(pattern[0]) - pattern[1]))
         return error/len(set)
     if metric == "accuracy":
         for pattern in set:
-            error += np.max(abs(NN.h(pattern[0]) - pattern[1]))
+            error += np.max(abs(NN.classify(pattern[0]) - pattern[1]))
         return 1-error/len(set)
     if metric == "mse":
-        if preproc[0][1] == None:
-            for pattern in set:
-                error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()
-            return error/len(set)
-        elif preproc[0][1][0] == "stand":
-            for pattern in set:
-                error += (((NN.forward(pattern[0], training=False) - pattern[1])*preproc[2])**2).sum()
-            return error/len(set)
-        elif preproc[0][1][0] == "norm":
-            for pattern in set:
-                error += (((NN.forward(pattern[0], training=False) - pattern[1])*(preproc[2]-preproc[1]))**2).sum()
-            return error/len(set)
-        else:
-            raise NotImplementedError("unknown preprocessing")
+        for pattern in set:
+            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()
+        return error/len(set)
     elif metric == "mee":
-        if preproc[0][1] == None:
-            for pattern in set:
-                error += ((NN.forward(pattern[0], training=False) - pattern[1])**2).sum()**1/2
-            return error/len(set)
-        elif preproc[0][1][0] == "stand":
-            for pattern in set:
-                error += (((NN.forward(pattern[0], training=False) - pattern[1])*preproc[2])**2).sum()**1/2
-            return error/len(set)
-        elif preproc[0][1][0] == "norm":
-            for pattern in set:
-                error += (((NN.forward(pattern[0], training=False) - pattern[1])*(preproc[2]-preproc[1]))**2).sum()**1/2
-            return error/len(set)
-        else:
-            raise NotImplementedError("unknown preprocessing")
+        for pattern in set:
+            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()**1/2
+        return error/len(set)
     else:
         raise NotImplementedError("unknown metric")
 
@@ -59,7 +37,7 @@ class History:
             for metric in metrics[set]
         }
 
-    def update_plots(self, nn, preproc=None, **sets):
+    def update_plots(self, nn, **sets):
         """ This function accept kwargs, whose names MUST BE
         THE SAME DATASETS OF THE CONFIG FILE.
         The name of each argument will be used as a key, and the
@@ -67,7 +45,7 @@ class History:
         Example: history.update_plots(nn, train=TR, test=TS)
         """
         for set, metric in self.plots:
-            error = empirical_error(nn, sets[set], metric, preproc)
+            error = empirical_error(nn, sets[set], metric)
             self.plots[set, metric].append(error)
         # for set_name, set_value in sets.items():
         #     for metric in self.plots[set_name]:
@@ -132,7 +110,7 @@ class Results ():
         #plt.figure(dpi=1200)
         #plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
         plt.rcParams["figure.figsize"] = (10*len(self.distinct_metrics), 7)
-        print('we\'re here')
+        #print('we\'re here')
         for n, metric in enumerate(self.distinct_metrics):
             # plt.subplot(len(self.distinct_metrics), 1, n+1)
             plt.subplot(1, len(self.distinct_metrics), n+1)
@@ -150,7 +128,7 @@ class Results ():
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
                     plt.legend()
-            print("made it")
+            #print("made it")
 
 
         plt.suptitle(self.name)
