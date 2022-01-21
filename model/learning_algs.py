@@ -113,7 +113,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path, preproc):
         print('Interrupted')
         return None
 
-def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path):
+def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path, preproc):
     try:
         print("started multiple trials")
         results = Results(hyp, global_confs.metrics)
@@ -121,7 +121,7 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path):
             print(f"trial nr. {n_trial}")
             TR, VL = TR, None
             global_confs.seed += n_trial*1729
-            history, nn = train(TR, VL, TS, global_confs, hyp)
+            history, nn = train(TR, VL, TS, global_confs, hyp, preproc)
             results.add_history(history)
             #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model ###
@@ -230,21 +230,15 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
         #training the configs of the previous step
         print("starting a grid search cycle")
         pool = Pool()
-            # try:
+        f = multiple_trials if global_conf.validation == "trials" else cross_val
         async_results = [
-            pool.apply_async(cross_val, (TR, TS, global_conf, hyp, output_path, graph_path, preproc)) 
+            pool.apply_async(f, (TR, TS, global_conf, hyp, output_path, graph_path, preproc)) 
             for hyp in configurations
         ]
         pool.close()
         pool.join()
         # result_it = pool.starmap(train, configurations)
         result_it = list(map(lambda async_result: async_result.get(), async_results))
-            # except KeyboardInterrupt:
-            #     print("forcing termination")
-            #     pool.terminate()
-            #     pool.join()
-            #     print("forced termination")
-            #     exit()
         results.extend (result_it)
         print("a cycle of nest has ended")
         print(f"models trained: {len(result_it)}")
