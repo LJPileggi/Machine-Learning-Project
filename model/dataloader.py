@@ -55,7 +55,7 @@ def data_normalizer(dataset):
 
 def get_normalizer(dataset):
     min_data, max_data = get_min_max(dataset)
-    return ("norm", min_data, max)
+    return ("norm", min_data, max_data)
 
     
 
