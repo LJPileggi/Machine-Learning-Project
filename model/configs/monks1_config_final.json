@@ -1,18 +1,18 @@
 {
 	"data_conf":{
-		"train_set": "monks-2.train.csv",
-		"test_set": "monks-2.test.csv",
-    	"output_path": "output/monks2/",
-    	"graph_path": "graphs/monks2/",
+		"train_set": "monks-1.train.csv",
+		"test_set": "monks-1.test.csv",
+    	"output_path": "output/monks1/",
+    	"graph_path": "graphs/monks1/",
 		"input_size": 17,
 		"output_size": 1
 	},
 
 	"global_conf": {
 		"task": "classification",
-	    "max_step": 300,
+	    "max_step": 500,
 	    "check_step": 10,
-		"maxfold": 5,
+		"maxfold": 1,
 		"validation": "trials",
 		"metrics": {"train": ["mse", "accuracy"],
 			"test":  ["mse", "accuracy"]
@@ -27,12 +27,12 @@
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [15, 10, 5],
+	    "eta": [18],
 	    "lam": [0],
 	    "alpha": [0.7],
 	    "batch_size": [-1],
 	    "hidden_units": [
-			[["sigmoidal", 2], ["sigmoidal", 1]]
+			[["sigmoidal", 3], ["sigmoidal", 1]]
 		]
 	}
 }

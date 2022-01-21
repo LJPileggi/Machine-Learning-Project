@@ -115,6 +115,7 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path):
         print("started multiple trials")
         results = Results(hyp, global_confs.metrics)
         for n_trial in range(global_confs.maxfold):
+            print(f"trial nr. {n_trial}")
             TR, VL = TR, None
             global_confs.seed += n_trial*1729
             history, nn = train(TR, VL, TS, global_confs, hyp)
