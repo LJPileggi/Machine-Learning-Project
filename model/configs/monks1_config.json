@@ -12,7 +12,8 @@
 		"task": "classification",
 	    "max_step": 400,
 	    "check_step": 10,
-		"maxfold": 0,
+		"maxfold": 5,
+		"validation": "trials",
 		"metrics": {"train": ["mse", "accuracy"],
 			"test":  ["mse", "accuracy"]
 		},
@@ -26,9 +27,9 @@
 
 	"hyperparameters":{
 		"eta_decay": [-1],
-	    "eta": [12],
+	    "eta": [12, 24],
 	    "lam": [0],
-	    "alpha": [0.3, 0.5, 0.7],
+	    "alpha": [0.3, 0.5],
 	    "batch_size": [-1],
 	    "hidden_units": [
 			[["sigmoidal", 3], ["sigmoidal", 1]]

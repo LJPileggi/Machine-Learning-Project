@@ -9,6 +9,7 @@
     "model": {
 	"global_conf": {
 	    "task": "regression",
+		"validation": "crossval",
 	    "epsilon": 1e-1,
 	    "max_step": 100,
 	    "check_step": 50,
