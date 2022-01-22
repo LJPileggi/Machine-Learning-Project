@@ -247,6 +247,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
         #building the config of the next step
         configurations = []
         #we should order w.r.t. which metric? on which set?
+        results = list(filter(lambda r: r.results[selected_metric]['variance'] <= global_conf.gs_max_variance, results))
         results.sort(key=lambda result: result.results[selected_metric]['mean'])
         best_hyper = [ best.hyperparameters for best in results[:3] ]
         #print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")

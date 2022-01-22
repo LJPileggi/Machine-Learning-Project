@@ -126,11 +126,11 @@ class Results ():
             plt.subplot(1, len(self.distinct_metrics), n+1)
             #print('start plot')
             if ("test", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- Var: {self.results["test", metric]["variance"]**0.5:.4f}')
+                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- dev: {self.results["test", metric]["variance"]**0.5:.4f}')
             elif ("val", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +- Var: {self.results["val", metric]["variance"]**0.5:.4f}')
+                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +-dev: {self.results["val", metric]["variance"]**0.5:.4f}')
             else:
-                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.3f} +- Var: {self.results["train", metric]["variance"]**0.5:.4f}')
+                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.3f} +- dev: {self.results["train", metric]["variance"]**0.5:.4f}')
             for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.
                 for set in self.distinct_sets:
                     plt.xlabel('Epochs')
