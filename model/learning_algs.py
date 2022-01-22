@@ -261,7 +261,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
     results.sort(key=lambda result: result.results[selected_metric]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
     print(f"i miglior modelli di questa nested sono: {best_hyper}")
-    fname = os.join(graph_path, "best_reults.txt")
+    fname = os.path.join(graph_path, "best_reults.txt")
     with open(fname, "w") as f:
         f.write(f"i miglior modelli di questa nested sono: {best_hyper}")
 
