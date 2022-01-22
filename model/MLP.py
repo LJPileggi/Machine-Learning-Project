@@ -56,50 +56,18 @@ class MLP:
         else:
             raise NotImplementedError("unsupported activation function in output layer")
 
-
-    def scale_input(self, data):
-        if self.preproc["input"] == None:
-            return data
-        key, a, b = self.preproc["input"]
-        if(key == "stand"):
-            means, devs = a, b
-            return (data-means)/devs
-        elif(key == "norm"):
-            mins, maxs = a, b
-            return (data-mins)/(maxs-mins)
-        else:
-            raise NotImplementedError("unsupported key")
-
-    def scale_output(self, data):
-        if self.preproc["output"] == None:
-            return data
-        key, a, b = self.preproc["output"]
-        if(key == "stand"):
-            means, devs = a, b
-            return (data-means)/devs
-        elif(key == "norm"):
-            mins, maxs = a, b
-            return (data-mins)/(maxs-mins)
-        else:
-            raise NotImplementedError("unsupported key")
+    def scale(self, data, component):
+        shift, scale = self.preproc[component]
+        return (data-shift)/scale
     
-    def unscale_output(self, data):
-        if self.preproc["output"] == None:
-            return data
-        key, a, b = self.preproc["output"]
-        if(key == "stand"):
-            means, devs = a, b
-            return data*devs + means
-        elif(key == "norm"):
-            mins, maxs = a, b
-            return data*(maxs-mins) + mins
-        else:
-            raise NotImplementedError("unsupported key")
+    def unscale(self, data, component):
+        shift, scale = self.preproc[component]
+        return data*scale + shift
 
     def scale_dataset(self, dataset):
         return [
-            (self.scale_input(pattern[0]), 
-             self.scale_output(pattern[1]))
+            (self.scale(pattern[0], "input"), 
+             self.scale(pattern[1], "output"))
             for pattern in dataset
         ]
 
@@ -109,11 +77,14 @@ class MLP:
             input = output
         return output
 
-    def h(self, input):
-        out =  self.forward(input, training=False)
-        return self.unscale_output(out)
+    def predict(self, input):
+        input = self.scale(input, "input")
+        output =  self.forward(input, training=False)
+        output = self.unscale(output, "output")
+        return output
     
     def classify(self, input):
+        input = self.scale(input, "input")
         out =  self.forward(input, training=False)
         return out > self.threshold
 
