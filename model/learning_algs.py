@@ -22,7 +22,8 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     #history.update_plots(nn, train=TR, val=VL, test=TS)
     
     #scaling inputs
-    scaledTR = nn.scale_dataset(TR)
+    #scaledTR = nn.scale_dataset(TR)
+    scaledTR = TR
 
     #training loop
     oldWeights = nn.get_weights()
