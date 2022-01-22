@@ -66,7 +66,7 @@ class MLP:
             return (data-means)/devs
         elif(key == "norm"):
             mins, maxs = a, b
-            (data-mins)/(maxs-mins)
+            return (data-mins)/(maxs-mins)
         else:
             raise NotImplementedError("unsupported key")
 
@@ -93,14 +93,14 @@ class MLP:
         elif(key == "norm"):
             mins, maxs = a, b
             return data*(maxs-mins) + mins
-            
         else:
             raise NotImplementedError("unsupported key")
 
     def scale_dataset(self, dataset):
         return [
-            (self.scale_input(pattern), self.scale_output(target))
-            for (pattern, target) in dataset
+            (self.scale_input(pattern[0]), 
+             self.scale_output(pattern[1]))
+            for pattern in dataset
         ]
 
     def forward(self, input, training=True):

@@ -5,7 +5,8 @@
 		"output_path": "output/mlcup/",
 		"graph_path": "graphs/mlcup/",
 		"input_size": 10,
-		"output_size": 2
+		"output_size": 2,
+		"preprocessing": "both_norm"
 	},
 
 	
@@ -16,24 +17,25 @@
 		"loss_patience": 1,
 		"wc_tolerance": 0,
 		"wc_patience": 1,
-		"max_step": 200,
-		"check_step": 30,
+		"max_step": 400,
+		"check_step": 20,
 		"metrics": {"train": ["mee", "mse"],
 					"val": 	 ["mee", "mse"]
 					},
 		"gs_preferred_metric": ["val", "mee"],
 		"searched_hyper": ["eta", "lam", "alpha"],
-		"maxfold": 4
+		"maxfold": 1
 	},
 
 	"hyperparameters":{
-	    "eta": [1, 0.1],
-	    "eta_decay": [-1],
-	    "lam": [1e-6],
-	    "alpha": [0.5],
+	    "eta": [0.5, 0.1, 0.01, 0.05],
+	    "eta_decay": [-1], 
+	    "lam": [1e-3, 1e-4, 1e-5],
+	    "alpha": [0.8],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["linear", 2]]
+			[["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["linear", 2]],
+			[["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["linear", 2]]
 		]
 	}
 }

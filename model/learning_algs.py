@@ -23,7 +23,7 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     
     #scaling inputs
     scaledTR = nn.scale_dataset(TR)
-
+    
     #training loop
     oldWeights = nn.get_weights()
     low_loss = 0
