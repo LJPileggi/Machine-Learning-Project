@@ -41,6 +41,12 @@ class MLP:
             elif activation == "relu":
                 self.layer_set.append(layer.ReLu(prec_dim, options))
                 prec_dim = options
+            elif activation == "silu":
+                self.layer_set.append(layer.SiLu(prec_dim, options))
+                prec_dim = options
+            elif activation == "softplus":
+                self.layer_set.append(layer.Softplus(prec_dim, options))
+                prec_dim = options
             elif activation == "BatchNormalization":
                 self.layer_set.append(layer.BatchNormalization(options))
             elif activation == "dropout":
