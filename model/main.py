@@ -11,6 +11,7 @@ from datetime import datetime
 import os
 import csv
 import time
+from multiprocessing import set_start_method
 
 
 def set_seed(seed):
@@ -136,6 +137,6 @@ def main():
     print("grid search complete!")
 
 
-
 if __name__ == '__main__':
+    set_start_method('spawn')
     main()
