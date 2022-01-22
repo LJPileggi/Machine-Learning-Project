@@ -89,13 +89,20 @@ class Results ():
     def add_history(self, history):
         self.histories.append(history)
 
-    def calculate_mean (self):
+    def calculate_mean (self, graph_path):
         for set, metric in self.results:
             for h in self.histories:
                 final_error = h.get_last_error(set, metric)
                 self.results[set, metric]["mean"] += final_error/len(self.histories)
                 self.results[set, metric]["variance"] += (final_error**2)/len(self.histories)
             self.results[set, metric]['variance'] -= self.results[set, metric]['mean']**2
+        
+        train_path = os.path.join(graph_path, "training")
+        if (not os.path.exists(train_path)):
+            os.makedirs(train_path)
+        filename = os.path.join(train_path, f"{self.name}_results.txt")
+        with open(filename, "w") as f:
+            f.write(str(self.results))
         print(self.results)
         return self.results
 

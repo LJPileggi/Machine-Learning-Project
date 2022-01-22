@@ -106,7 +106,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path, preproc):
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
         ### plotting loss###
-        results.calculate_mean()
+        results.calculate_mean(graph_path)
         results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
@@ -129,7 +129,7 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path, preproc)
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
         ### plotting loss###
-        results.calculate_mean()
+        results.calculate_mean(graph_path)
         results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
