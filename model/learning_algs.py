@@ -182,6 +182,7 @@ def get_children(hyper, searched_hyper, shrink):
                 else:
                     new_hyper.update({key:[value]})
             else:
+                shrink = shrink*(10**(np.floor(np.log10(value))))
                 new_hyper.update({key:[value-shrink, value, value+shrink]})
         else:
             new_hyper.update({key:[value]})
@@ -252,7 +253,7 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
         configurations = []
         for best in best_hyper:
             configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
-        shrink *= shrink
+        shrink *= 0.1
         
         
     results.sort(key=lambda result: result.results[selected_metric]['mean'])

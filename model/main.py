@@ -63,7 +63,7 @@ def main():
     parser.set_defaults(test=False)
     parser.set_defaults(traintest=False)
     parser.set_defaults(publish=False)
-    parser.set_defaults(shrink=0.1)
+    parser.set_defaults(shrink=1)
     parser.set_defaults(loop=1)
     parser.set_defaults(preprocessing=None)
     args = parser.parse_args()
