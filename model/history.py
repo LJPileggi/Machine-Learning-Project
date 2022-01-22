@@ -100,10 +100,10 @@ class Results ():
         train_path = os.path.join(graph_path, "training")
         if (not os.path.exists(train_path)):
             os.makedirs(train_path)
+        print(self.results)
         filename = os.path.join(train_path, f"{self.name}_results.txt")
         with open(filename, "w") as f:
             f.write(str(self.results))
-        print(self.results)
         return self.results
 
     #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
@@ -125,10 +125,10 @@ class Results ():
             # plt.subplot(len(self.distinct_metrics), 1, n+1)
             plt.subplot(1, len(self.distinct_metrics), n+1)
             #print('start plot')
-            if ("test", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- dev: {self.results["test", metric]["variance"]**0.5:.4f}')
-            elif ("val", metric) in self.results:
+            if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +-dev: {self.results["val", metric]["variance"]**0.5:.4f}')
+            elif ("test", metric) in self.results:
+                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- dev: {self.results["test", metric]["variance"]**0.5:.4f}')
             else:
                 plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.3f} +- dev: {self.results["train", metric]["variance"]**0.5:.4f}')
             for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.

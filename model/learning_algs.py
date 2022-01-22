@@ -250,15 +250,20 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
         results = list(filter(lambda r: r.results[selected_metric]['variance'] <= global_conf.gs_max_variance, results))
         results.sort(key=lambda result: result.results[selected_metric]['mean'])
         best_hyper = [ best.hyperparameters for best in results[:3] ]
-        #print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
+        print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
             configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
         shrink *= 0.1
         
         
+    results = list(filter(lambda r: r.results[selected_metric]['variance'] <= global_conf.gs_max_variance, results))
     results.sort(key=lambda result: result.results[selected_metric]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
-    #print(f"i miglior modelli di questa nested sono: {best_hyper}")
+    print(f"i miglior modelli di questa nested sono: {best_hyper}")
+    fname = os.join(graph_path, "best_reults.txt")
+    with open(fname, "w") as f:
+        f.write(f"i miglior modelli di questa nested sono: {best_hyper}")
+
 
     return best_hyper[0]
