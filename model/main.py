@@ -1,4 +1,6 @@
 import signal
+
+import joblib
 from dataloader import DataLoader
 from learning_algs import grid_search, train
 from types import SimpleNamespace
@@ -50,6 +52,8 @@ def main():
                         help='If you want to train and then test the model')
     parser.add_argument('--publish', action='store_true',
                         help='If you want to train and then test the model')
+    parser.add_argument('--model_path', 
+                        help='The trained model to test')
     parser.add_argument('--seed', type=int,
                         help='random seed')
     parser.add_argument('--loop', type=int,
@@ -114,9 +118,12 @@ def main():
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
-        if (not args.traintest):
-            best_hyper = hyperparameters
-        nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper, preproc)
+        if (args.model_path != None):
+            nn = joblib.load(args.model_path)
+        else:
+            if (not args.traintest):
+                best_hyper = hyperparameters
+            nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper, preproc)
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):
