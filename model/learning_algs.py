@@ -182,8 +182,8 @@ def get_children(hyper, searched_hyper, shrink):
                 else:
                     new_hyper.update({key:[value]})
             else:
-                shrink = shrink*(10**(np.floor(np.log10(value))))
-                new_hyper.update({key:[value-shrink, value, value+shrink]})
+                scaled_shrink = shrink*(10**(np.floor(np.log10(value))))
+                new_hyper.update({key:[value-scaled_shrink, value, value+scaled_shrink]})
         else:
             new_hyper.update({key:[value]})
 
