@@ -137,7 +137,7 @@ class Results ():
                     plt.yscale('log')
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
-                    plt.legend(prop={'size': 12})
+                    plt.legend(prop={'size': 15})
             #print("made it")
 
 
