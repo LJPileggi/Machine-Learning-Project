@@ -127,17 +127,16 @@ def main():
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):
-            BS = DataLoader.load_data_static(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), shuffle=False)
-            with open(os.path.join(output_path, "results.csv"), 'w') as csv_file:
+            BS, _ = DataLoader.load_data_static(config.data_conf["blind_set"], config.data_conf["input_size"], 0, config.data_conf.get("preprocessing"), shuffle=False)
+            with open(os.path.join(output_path, "results.csv"), 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file, delimiter=',')
-                for i, (inp, _) in enumerate(BS):
-                    out = nn.h(inp)
+                for i, (_, inp) in enumerate(BS):
+                    out = nn.predict(inp)
                     result = [i]
-                    result.extend(inp)
                     result.extend(out)
                     writer.writerow(result)
         else:
-            ts_err = empirical_error(TS, nn, 'mee') #questa linea ha senso rn?
+            ts_err = empirical_error(nn, TS, 'mee') #questa linea ha senso rn?
             print(ts_err)
     
     ##here goes testing
