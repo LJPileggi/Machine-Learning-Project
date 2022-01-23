@@ -18,6 +18,7 @@
 			"test":  ["mse", "accuracy"]
 		},
 		"gs_preferred_metric": ["train", "accuracy"],
+		"gs_max_variance": 0.01,
 		"searched_hyper": ["eta", "lam", "alpha"],
 		"loss_tolerance": 0,
 		"loss_patience": 4,
