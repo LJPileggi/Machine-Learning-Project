@@ -106,25 +106,12 @@ class Results ():
             f.write(str(self.results))
         return self.results
 
-    #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
-    #per quanto riguarda matplot lib possiamo fare in modo figo, ovvero che History ha un metodo che scrive sul canvas il proprio plot, mentre
-    #Results ha un metodo che scrive su file dopo aver richiamato più volte questo metodo di history.
-
     def create_graph (self, graph_path):
-        """
-        questa funzione dovrebbe creare i vari grafici. Crea un grafo per metrica, e dentro il grafico ci mette le statistiche di train, val e test tutte assieme
-        L'unico problema per ora è il titolo, che prende per assodato il fatto che vogliamo le medie e varianze di val.
-        Tutto il casino che sta sotto con i distinct è perchè vogliamo raggruppare per le metriche, che sono dopo i set nel bellissimo dizionario delle metriche
-        quindi se andassi per ordinamento dovrei cancellare e recuperare il grafico ogni volta. così è più complicato ma funziona
-        """
-        #plt.figure(dpi=1200)
         #plt.rcParams["figure.figsize"] = (10,7*len(self.distinct_metrics))
         plt.rcParams["figure.figsize"] = (10*len(self.distinct_metrics), 7)
-        #print('we\'re here')
         for n, metric in enumerate(self.distinct_metrics):
             # plt.subplot(len(self.distinct_metrics), 1, n+1)
             plt.subplot(1, len(self.distinct_metrics), n+1)
-            #print('start plot')
             if ("val", metric) in self.results:
                 plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +-dev: {self.results["val", metric]["variance"]**0.5:.4f}')
             elif ("test", metric) in self.results:
@@ -138,8 +125,6 @@ class Results ():
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
                     plt.legend(prop={'size': 15})
-            #print("made it")
-
 
         plt.suptitle(self.name)
         filename = f"{self.name}.png"
@@ -150,90 +135,3 @@ class Results ():
         plt.savefig(os.path.join(train_path, filename))
         #plt.show()
         plt.clf()
-
-    # def plot(self, path):
-    #     os.join(path, self.name)
-    #     plt.plot(self.history)
-    #     plt.plot(self.history[train])
-    #     plt.plot(self.history[train però mee])
-    #     plt.plot(self.history)
-    # def plot(self, path):
-    #     plt.title(f'Mean: {history["mean"]:.2f} +- Var: {history["variance"]**0.5:.2f}')
-    #     plt.xlabel('Epochs')
-    #     plt.yscale('log')
-    #     plt.ylabel('Loss')
-    #     for i, train in enumerate(history['training']):
-    #         epochs = range(len(train))
-    #         plt.plot(epochs, train, linestyle='-', label=f'Training_{i}_fold loss')
-    #     for i, val in enumerate(history['validation']):
-    #         epochs = [x*history['val_step'] for x in range(len(val))]
-    #         plt.plot(epochs, val, linestyle='--', label=f'Validation_{i}_fold loss')
-
-    #     # #val_path = os.path.join(graph_path, 'validation')
-    #     train_path = os.path.join(self.graph_path, 'training')
-    #     if (not os.path.exists(train_path)):
-    #         os.makedirs(train_path)
-    #     plt.legend()
-    #     plt.savefig(os.path.join(train_path, filename))
-    #     plt.clf()
-
-    #     plt.title(f'Average Weights change')
-    #     plt.xlabel('Epochs')
-    #     plt.yscale('log')
-    #     plt.ylabel('Values')
-    #     for i, wc in enumerate(history['weight_changes']):
-    #         epochs = [x*history['val_step'] for x in range(len(val))]
-    #         plt.plot(epochs, wc, linestyle='-.', label=f'WC_{i}_fold loss')
-    #     grad_path = os.path.join(self.graph_path, 'gradients')
-    #     if (not os.path.exists(grad_path)):
-    #         os.makedirs(grad_path)
-    #     plt.legend()
-    #     plt.savefig(os.path.join(grad_path, filename))
-    #     plt.clf()
-
-    #     # plt.title(f'Validation Loss - AVG +- VAR')
-    #     # plt.xlabel('Epochs')
-    #     # plt.yscale('log')
-    #     # plt.ylabel('Loss')
-
-    #     # if (not os.path.exists(val_path)):
-    #     #     os.makedirs(val_path)
-    #     # plt.legend()
-    #     # plt.savefig(os.path.join(val_path, filename))
-    #     # plt.clf()
-
-
-    # def create_final_graph (self, history, filename):
-    #     plt.title(f'Train and Test error - Final Test MEE: {history["testing"]:.2f}')
-    #     plt.xlabel('Epochs')
-    #     plt.yscale('log')
-    #     plt.ylabel('Loss')
-    #     train = history['training']
-    #     epochs = range(len(train))
-    #     plt.plot(epochs, train, linestyle='-', label=f'Training loss')
-    #     val = history['validation']
-    #     epochs = [x*history['val_step'] for x in range(len(val))]
-    #     plt.plot(epochs, val, linestyle='--', label=f'Test loss')
-
-    #     # #val_path = os.path.join(graph_path, 'validation')
-    #     train_path = os.path.join(self.graph_path, 'training')
-    #     if (not os.path.exists(train_path)):
-    #         os.makedirs(train_path)
-    #     plt.legend()
-    #     plt.savefig(os.path.join(train_path, filename))
-    #     plt.clf()
-
-    #     plt.title(f'Average Weights change')
-    #     plt.xlabel('Epochs')
-    #     plt.yscale('log')
-    #     plt.ylabel('Values')
-    #     wc = history['weight_changes']
-    #     epochs = [x*history['val_step'] for x in range(len(val))]
-    #     plt.plot(epochs, wc, linestyle='-.', label=f'WC loss')
-    #     grad_path = os.path.join(self.graph_path, 'gradients')
-    #     if (not os.path.exists(grad_path)):
-    #         os.makedirs(grad_path)
-    #     plt.legend()
-    #     plt.savefig(os.path.join(grad_path, filename))
-    #     plt.clf()
-

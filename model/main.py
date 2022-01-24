@@ -19,20 +19,6 @@ from multiprocessing import set_start_method
 def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
- 
-
-
-# def count(dl, global_confs, local_confs, output_path, graph_path, seed=4444):
-#     history = {}
-#     history['mean'] = 1.
-#     layers      = local_confs["layers"]
-#     batch_size  = local_confs["batch_size"]
-#     eta_decay   = local_confs["eta_decay"]#if == -1 no eta decay; 25 should be fine
-#     eta         = local_confs["eta"]
-#     lam         = local_confs["lambda"]
-#     alpha       = local_confs["alpha"] 
-#     history['hyperparameters'] = (layers, batch_size, eta, lam, alpha, eta_decay)
-#     return history
 
 def signal_handler(signal, frame):
     print('You pressed Ctrl+C!')
@@ -51,7 +37,7 @@ def main():
     parser.add_argument('--traintest', action='store_true',
                         help='If you want to train and then test the model')
     parser.add_argument('--publish', action='store_true',
-                        help='If you want to train and then test the model')
+                        help='If you want to publish your result using the blind test set')
     parser.add_argument('--model_path', 
                         help='The trained model to test')
     parser.add_argument('--seed', type=int,
@@ -113,10 +99,8 @@ def main():
     if (args.train or args.traintest):
         #executing training and model selection
         best_hyper = grid_search(TR, TS, global_conf, hyperparameters, output_path, graph_path, preproc, args.loop, args.shrink)
+        print("grid search complete!")
     if (args.test or args.traintest):
-        #getting the test set
-        #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
-        
         #obtaining the model
         if (args.model_path != None):
             nn = joblib.load(args.model_path)
@@ -136,12 +120,8 @@ def main():
                     result.extend(out)
                     writer.writerow(result)
         else:
-            ts_err = empirical_error(nn, TS, 'mee') #questa linea ha senso rn?
+            ts_err = empirical_error(nn, TS, 'mee')
             print(ts_err)
-    
-    ##here goes testing
-    print("grid search complete!")
-
 
 if __name__ == '__main__':
     set_start_method('spawn')

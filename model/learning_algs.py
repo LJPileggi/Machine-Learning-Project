@@ -14,12 +14,25 @@ from dataloader import DataLoader
 from history import History, Results
 
 def train(TR, VL, TS, global_confs, hyp, preproc):
+    """Train function
+    The main function used to train a model
+    Args:
+        TR (ndarray): The training set
+        VL (ndarrya): The validation set, it can be none
+        TS (ndarray): The test set, it can be none
+        global_confs (Singlenamespace): the global config, fixed for all of the models we are going to generate
+        hyp (Configuration): the hyperparameters that define the model we are going to train
+        preproc (ndarray): an array detailing how we are going to preprocess the input or output
+
+    Returns:
+        history (History): an history object with all the value of TR, VL, TS over the epochs of training
+        nn (MLP): the trained neural network
+    """
     hyp = SimpleNamespace(**hyp)
     history = History(global_confs.metrics)
     input_size = DataLoader.get_input_size_static(TR) 
     #initializing MLP and history
     nn = MLP (global_confs.seed, global_confs.task, input_size, hyp.layers, preproc)
-    #history.update_plots(nn, train=TR, val=VL, test=TS)
     
     #scaling inputs
     scaledTR = nn.scale_dataset(TR)
@@ -31,15 +44,10 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     for epoch in range (1, global_confs.max_step+1):
         for current_batch in DataLoader.dataset_partition_static(scaledTR, hyp.batch_size):
             patterns, labels = list(map(np.array, list(zip(*current_batch))))
-            #print(f"{patterns.shape} - {labels.shape}")
             outs = nn.forward(patterns)
             errors = labels - outs
-            #print(f"error - {errors.shape}")
             nn.backwards(errors)
-            #for pattern in current_batch:
-            #    out = nn.forward(pattern[0])
-            #    error = pattern[1] - out
-            #    nn.backwards(error)
+            
             #we are updating with eta/TS_size in order to compute LMS, not simply LS
             len_batch = len(scaledTR) #if batch_size != 1 else len(whole_TR)
             if hyp.eta_decay == -1:
@@ -49,7 +57,6 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
         
         #after each epoch
         history.update_plots(nn, train=TR, val=VL, test=TS)
-        #print (f"{np.where(np.array([ele[0] for ele in TR]) != np.array([ele[0] for ele in TS]), 1., 0.)}")
         if(epoch % global_confs.check_step == 0):
             #once each check_step epoch
             #print validation error
@@ -62,7 +69,7 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
             wc = np.mean(np.abs((oldWeights-newWeights)/(oldWeights+0.001)))
             oldWeights = newWeights
             #print both
-            print(f"{epoch} - banana - {metric}: {err} - wc: {wc}")
+            print(f"{epoch} - {metric}: {err} - wc: {wc}")
                
             #preferred metric stopping criterion
             desired_value = 1 if metric[1] == "accuracy" else 0
@@ -90,17 +97,11 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
 
 def cross_val(TR, TS, global_confs, hyp, output_path, graph_path, preproc):
     try:
-        #fare un for max_fold, e per ogni fold, recuperare il whole_TR, whole_VR ecc. Poi si prendono le medie del testing e si printano i grafici di tutti.
-        # results = {set: 
-        #             {metric: 
-        #                     {"mean": 0, "variance": 0} 
-        #              for metric in global_confs["metrics"]}
-        #            for set in global_confs["datasets"]}
         results = Results(hyp, global_confs.metrics)
         for n_fold, (TR, VL) in enumerate (DataLoader.get_slices_static(TR, global_confs.maxfold)):
             history, nn = train(TR, VL, TS, global_confs, hyp, preproc)
             results.add_history(history)
-            #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
+
             ### saving model ###
             filename =  f"model_{results.name}_{n_fold}fold.logami"
             path = os.path.join(output_path, filename)
@@ -123,7 +124,6 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path, preproc)
             global_confs.seed += n_trial*1729
             history, nn = train(TR, VL, TS, global_confs, hyp, preproc)
             results.add_history(history)
-            #print(f"accuracy - {history['name']}: {(history['testing'][n_fold])}")
             ### saving model ###
             filename =  f"model_{results.name}_{n_trial}trial.logami"
             path = os.path.join(output_path, filename)
@@ -135,36 +135,6 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path, preproc)
     except KeyboardInterrupt:
         print('Interrupted')
         return None
-
-# def get_children_paremetrs(hyper, shrink, parameters):    
-#     eta_new = [
-#         hyper['eta'], hyper['eta']+(shrink), hyper['eta']-(shrink)
-#         ]
-
-#     lam_new = [hyper['lam']]
-#     if (hyper['lam'] != 0):
-#         lam_new.append(10**(np.log10(hyper['lam']) + 3*(shrink))) #1e-4 --> 1e-3.9 e 1e-4.1
-#         lam_new.append(10**(np.log10(hyper['lam']) - 3*(shrink)))
-    
-#     alpha_new = [
-#         hyper['alpha'], hyper['alpha']+(shrink), hyper['alpha']-(shrink)
-#         ]
-
-#     def my_product(inp):
-#         return (dict(zip(inp.keys(), values)) for values in itertools.product(*inp.values()))
-    
-
-#     return [
-#             {"layers": hyper['layers'],
-#              "batch_size": hyper['batch_size'], 
-#              "eta_decay": hyper['eta_decay'],
-#              "eta": eta,
-#              "lambda": lam, 
-#              "alpha": alpha
-#             }
-#         for eta, lam, alpha, layers, batchsize, etadecay, in configs
-#     ]
-
 
 def copy_and_update(old_dict, new_dict):
     d = old_dict
