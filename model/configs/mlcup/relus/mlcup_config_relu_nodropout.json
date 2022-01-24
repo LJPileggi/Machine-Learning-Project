@@ -17,7 +17,7 @@
 		"wc_tolerance": 0,
 		"wc_patience": 1,
 		"max_step": 200,
-		"check_step": 30,
+		"check_step": 20,
 		"metrics": {"train": ["mee", "mse"],
 					"val": 	 ["mee", "mse"]
 					},
@@ -27,13 +27,13 @@
 	},
 
 	"hyperparameters":{
-	    "eta": [1, 0.1],
-	    "eta_decay": [-1],
-	    "lam": [1e-6],
+	    "eta": [0.001],
+	    "eta_decay": [-1], 
+	    "lam": [1e-4],
 	    "alpha": [0.5],
 	    "batch_size": [64],
 	    "hidden_units": [
-			[["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["relu", 10], ["linear", 2]]
+			[["relu", 100], ["BatchNormalization", 99], ["relu", 100], ["BatchNormalization", 99], ["relu", 100], ["BatchNormalization", 99], ["relu", 100], ["BatchNormalization", 99], ["linear", 2]]
 		]
 	}
 }

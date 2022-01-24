@@ -1,4 +1,6 @@
 import signal
+
+import joblib
 from dataloader import DataLoader
 from learning_algs import grid_search, train
 from types import SimpleNamespace
@@ -11,6 +13,7 @@ from datetime import datetime
 import os
 import csv
 import time
+from multiprocessing import set_start_method
 
 
 def set_seed(seed):
@@ -49,6 +52,8 @@ def main():
                         help='If you want to train and then test the model')
     parser.add_argument('--publish', action='store_true',
                         help='If you want to train and then test the model')
+    parser.add_argument('--model_path', 
+                        help='The trained model to test')
     parser.add_argument('--seed', type=int,
                         help='random seed')
     parser.add_argument('--loop', type=int,
@@ -62,7 +67,7 @@ def main():
     parser.set_defaults(test=False)
     parser.set_defaults(traintest=False)
     parser.set_defaults(publish=False)
-    parser.set_defaults(shrink=0.1)
+    parser.set_defaults(shrink=1)
     parser.set_defaults(loop=1)
     parser.set_defaults(preprocessing=None)
     args = parser.parse_args()
@@ -113,29 +118,31 @@ def main():
         #TS = dl.load_data_static(config["test_set"], config["input_size"], config["output_size"], config.get("preprocessing"))
         
         #obtaining the model
-        if (not args.traintest):
-            best_hyper = hyperparameters
-        nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper, preproc)
+        if (args.model_path != None):
+            nn = joblib.load(args.model_path)
+        else:
+            if (not args.traintest):
+                best_hyper = hyperparameters
+            nn = train(seed, config["input_size"], TR, None, TS, global_conf, best_hyper, preproc)
 
         #publishing the model or simply evaluating on the test set
         if (args.publish):
-            BS = DataLoader.load_data_static(config["blind_set"], config["input_size"], 0, config.get("preprocessing"), shuffle=False)
-            with open(os.path.join(output_path, "results.csv"), 'w') as csv_file:
+            BS, _ = DataLoader.load_data_static(config.data_conf["blind_set"], config.data_conf["input_size"], 0, config.data_conf.get("preprocessing"), shuffle=False)
+            with open(os.path.join(output_path, "results.csv"), 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file, delimiter=',')
-                for i, (inp, _) in enumerate(BS):
-                    out = nn.h(inp)
+                for i, (_, inp) in enumerate(BS):
+                    out = nn.predict(inp)
                     result = [i]
-                    result.extend(inp)
                     result.extend(out)
                     writer.writerow(result)
         else:
-            ts_err = empirical_error(TS, nn, 'mee') #questa linea ha senso rn?
+            ts_err = empirical_error(nn, TS, 'mee') #questa linea ha senso rn?
             print(ts_err)
     
     ##here goes testing
     print("grid search complete!")
 
 
-
 if __name__ == '__main__':
+    set_start_method('spawn')
     main()

@@ -20,11 +20,11 @@ def empirical_error(NN, set, metric):
         return 1-error/len(set)
     if metric == "mse":
         for pattern in set:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()
+            error += ((NN.predict(pattern[0]) - pattern[1])**2).sum()
         return error/len(set)
     elif metric == "mee":
         for pattern in set:
-            error += ((NN.h(pattern[0]) - pattern[1])**2).sum()**1/2
+            error += ((NN.predict(pattern[0]) - pattern[1])**2).sum()**1/2
         return error/len(set)
     else:
         raise NotImplementedError("unknown metric")
@@ -89,14 +89,21 @@ class Results ():
     def add_history(self, history):
         self.histories.append(history)
 
-    def calculate_mean (self):
+    def calculate_mean (self, graph_path):
         for set, metric in self.results:
             for h in self.histories:
                 final_error = h.get_last_error(set, metric)
                 self.results[set, metric]["mean"] += final_error/len(self.histories)
                 self.results[set, metric]["variance"] += (final_error**2)/len(self.histories)
             self.results[set, metric]['variance'] -= self.results[set, metric]['mean']**2
+        
+        train_path = os.path.join(graph_path, "training")
+        if (not os.path.exists(train_path)):
+            os.makedirs(train_path)
         print(self.results)
+        filename = os.path.join(train_path, f"{self.name}_results.txt")
+        with open(filename, "w") as f:
+            f.write(str(self.results))
         return self.results
 
     #con questo il problema risulta solo dei nomi, ma possiamo fare che self.name = self.histories[i].name + f"{i}_fold" e siamo a posto.
@@ -118,19 +125,19 @@ class Results ():
             # plt.subplot(len(self.distinct_metrics), 1, n+1)
             plt.subplot(1, len(self.distinct_metrics), n+1)
             #print('start plot')
-            if ("test", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- Var: {self.results["test", metric]["variance"]**0.5:.4f}')
-            elif ("val", metric) in self.results:
-                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +- Var: {self.results["val", metric]["variance"]**0.5:.4f}')
+            if ("val", metric) in self.results:
+                plt.title(f'{metric} - Mean: {self.results["val", metric]["mean"]:.3f} +-dev: {self.results["val", metric]["variance"]**0.5:.4f}')
+            elif ("test", metric) in self.results:
+                plt.title(f'{metric} - Mean: {self.results["test", metric]["mean"]:.3f} +- dev: {self.results["test", metric]["variance"]**0.5:.4f}')
             else:
-                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.3f} +- Var: {self.results["train", metric]["variance"]**0.5:.4f}')
+                plt.title(f'{metric} - Mean: {self.results["train", metric]["mean"]:.3f} +- dev: {self.results["train", metric]["variance"]**0.5:.4f}')
             for i, h in enumerate(self.histories): #in questo ciclo per ogni storia (quindi per ogni k_fold), disegna un plot per ogni set, con metrica fissa.
                 for set in self.distinct_sets:
                     plt.xlabel('Epochs')
                     plt.yscale('log')
                     plt.ylabel('Loss')
                     h.plot_in_graph(plt, set, metric, i)
-                    plt.legend()
+                    plt.legend(prop={'size': 15})
             #print("made it")
 
 

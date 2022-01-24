@@ -283,9 +283,9 @@ class SiLu(Layer):
         """
         print(f"{layer_dim}; Linear")
         super().__init__()
-        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
-        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
-        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        lower, upper = -math.sqrt(6/input_dim), math.sqrt(6/input_dim)
+        self._WM = np.random.uniform(low=lower, high=upper, size=(input_dim, layer_dim) ) #HeUniform weight initialization
+        self._biases = np.zeros(shape=(layer_dim,))
         self.a = a
 
     def activation (self, network_value):
@@ -308,9 +308,9 @@ class Softplus(Layer):
         """
         print(f"{layer_dim}; Linear")
         super().__init__()
-        lower, upper = -math.sqrt(6)/(math.sqrt(input_dim + layer_dim)), math.sqrt(6)/(math.sqrt(input_dim + layer_dim)) #normalized xavier
-        self._WM = np.random.uniform(low = lower, high = upper, size=(input_dim, layer_dim) )
-        self._biases = np.random.uniform(low = lower, high = upper, size=layer_dim )
+        lower, upper = -math.sqrt(6/input_dim), math.sqrt(6/input_dim)
+        self._WM = np.random.uniform(low=lower, high=upper, size=(input_dim, layer_dim) ) #HeUniform weight initialization
+        self._biases = np.zeros(shape=(layer_dim,))
         self.a = a
 
     def activation (self, network_value):

@@ -23,7 +23,7 @@ def train(TR, VL, TS, global_confs, hyp, preproc):
     
     #scaling inputs
     scaledTR = nn.scale_dataset(TR)
-
+    
     #training loop
     oldWeights = nn.get_weights()
     low_loss = 0
@@ -106,7 +106,7 @@ def cross_val(TR, TS, global_confs, hyp, output_path, graph_path, preproc):
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
         ### plotting loss###
-        results.calculate_mean()
+        results.calculate_mean(graph_path)
         results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
@@ -129,7 +129,7 @@ def multiple_trials(TR, TS, global_confs, hyp, output_path, graph_path, preproc)
             path = os.path.join(output_path, filename)
             joblib.dump (nn, path)
         ### plotting loss###
-        results.calculate_mean()
+        results.calculate_mean(graph_path)
         results.create_graph(graph_path)
         return results
     except KeyboardInterrupt:
@@ -182,7 +182,8 @@ def get_children(hyper, searched_hyper, shrink):
                 else:
                     new_hyper.update({key:[value]})
             else:
-                new_hyper.update({key:[value-shrink, value, value+shrink]})
+                scaled_shrink = shrink*(10**(np.floor(np.log10(value))))
+                new_hyper.update({key:[value-scaled_shrink, value, value+scaled_shrink]})
         else:
             new_hyper.update({key:[value]})
 
@@ -246,17 +247,23 @@ def grid_search(TR, TS, global_conf, hyper, output_path, graph_path, preproc, lo
         #building the config of the next step
         configurations = []
         #we should order w.r.t. which metric? on which set?
+        results = list(filter(lambda r: r.results[selected_metric]['variance'] <= global_conf.gs_max_variance, results))
         results.sort(key=lambda result: result.results[selected_metric]['mean'])
         best_hyper = [ best.hyperparameters for best in results[:3] ]
-        #print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
+        print(f"i migliori 3 modelli di sto ciclo sono: {best_hyper}")
         configurations = []
         for best in best_hyper:
             configurations.extend(get_children(best, global_conf.searched_hyper, shrink))
-        shrink *= shrink
+        shrink *= 0.1
         
         
+    results = list(filter(lambda r: r.results[selected_metric]['variance'] <= global_conf.gs_max_variance, results))
     results.sort(key=lambda result: result.results[selected_metric]['mean'])
     best_hyper = [ best.hyperparameters for best in results[:3] ]
-    #print(f"i miglior modelli di questa nested sono: {best_hyper}")
+    print(f"i miglior modelli di questa nested sono: {best_hyper}")
+    fname = os.path.join(graph_path, "best_reults.txt")
+    with open(fname, "w") as f:
+        f.write(f"i miglior modelli di questa nested sono: {best_hyper}")
+
 
     return best_hyper[0]

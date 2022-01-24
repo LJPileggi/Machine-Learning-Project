@@ -28,7 +28,7 @@ def data_standardizer(data):
 
 def get_standardizer(data):
     mean, _, dev = get_mean_variance_dev(data)
-    return ("stand", mean, dev)
+    return (mean, dev) # shift and scale
 
 def get_min_max(dataset):
     min_data, max_data = [comp for comp in dataset[0]], [comp for comp in dataset[0]]
@@ -55,7 +55,7 @@ def data_normalizer(dataset):
 
 def get_normalizer(dataset):
     min_data, max_data = get_min_max(dataset)
-    return ("norm", min_data, max_data)
+    return (min_data, max_data-min_data) #shift and scale
 
     
 
@@ -141,7 +141,7 @@ class DataLoader():
                     raise ValueError(f"wrong input or output sizes at line {reader.line_num}")
             
             #preprocesses data, if needed
-            preproc = {"input": None, "output": None}
+            preproc = {"input": (0, 1), "output": (0, 1)}
             if(preprocessing == None):
                 pass
             elif(preprocessing == "output_stand"):
@@ -158,6 +158,9 @@ class DataLoader():
             elif(preprocessing == "both_norm"):
                 preproc["output"] = get_normalizer(outputs)
                 preproc["input"] = get_normalizer(inputs)
+            elif(preprocessing == "stand_norm"):
+                preproc["output"] = get_normalizer(outputs)
+                preproc["input"] = get_standardizer(inputs)
             else:
                 raise NotImplementedError("unknown preprocessing")
             
