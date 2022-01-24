@@ -23,6 +23,7 @@
 					"val": 	 ["mee", "mse"]
 					},
 		"gs_preferred_metric": ["val", "mee"],
+		"gs_max_variance": 0.01,
 		"searched_hyper": ["eta", "lam", "alpha"],
 		"maxfold": 1
 	},
