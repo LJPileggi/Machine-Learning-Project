@@ -1,1 +1,5 @@
-We developed a Multilayer Perceptron, that we trained using backpropagation on both the MONK and MLCUP datasets; we explored several configurations of both architectures and hyperparameters. The best configuration has been selected through a grid search, estimating the generalization error with multiple initialization for the MONK, and through a 4-fold cross validation for MLCUP. The performances were assessed on the MONK test sets and MLCUP holdout internal dataset.
+We developed a Multilayer Perceptron, that we trained using backpropagation
+on both the MONK and MLCUP datasets. We explored several configurations of
+architectures and hyperparameters through grid search, selecting the best configu-
+ration through multiple initialisation and 4-fold cross validation respectively. The
+performances were then assessed on their respective test sets.
