@@ -13,7 +13,7 @@
 	    "max_step": 300,
 	    "check_step": 10,
 		"validation": "trials",
-		"maxfold": 10,
+		"maxfold": 1,
 		"metrics": {"train": ["mse", "accuracy"],
 			"test":  ["mse", "accuracy"]
 		},

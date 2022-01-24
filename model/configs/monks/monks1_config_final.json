@@ -12,7 +12,7 @@
 		"task": "classification",
 	    "max_step": 500,
 	    "check_step": 10,
-		"maxfold": 10,
+		"maxfold": 1,
 		"validation": "trials",
 		"metrics": {"train": ["mse", "accuracy"],
 			"test":  ["mse", "accuracy"]
